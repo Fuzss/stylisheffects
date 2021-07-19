@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "package": "fuzs.stylisheffects.mixin",
+  "refmap": "stylisheffects.refmap.json",
+  "plugin": "fuzs.stylisheffects.mixin.MixinConfigPlugin",
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
