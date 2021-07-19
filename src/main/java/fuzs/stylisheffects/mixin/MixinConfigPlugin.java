@@ -1,8 +1,7 @@
 package fuzs.stylisheffects.mixin;
 
-import fuzs.puzzleslib.mixin.IPuzzlesMixinConfigPlugin;
+import fuzs.stylisheffects.IPuzzlesMixinConfigPlugin;
 
-@SuppressWarnings("unused")
 public class MixinConfigPlugin implements IPuzzlesMixinConfigPlugin {
 
 }
