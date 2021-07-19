@@ -4,7 +4,13 @@
   "compatibilityLevel": "JAVA_8",
   "package": "fuzs.stylisheffects.mixin",
   "refmap": "stylisheffects.refmap.json",
-  "plugin": "fuzs.stylisheffects.mixin.MixinConfigPlugin",
+  "mixins": [
+    "compat.InventoryEffectRendererGuiHandlerMixin"
+  ],
+  "client": [
+    "client.InventoryScreenMixin",
+    "client.accessor.DisplayEffectsScreenAccessor"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
