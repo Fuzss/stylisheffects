@@ -52,6 +52,7 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
     private TextFormatting durationColor;
     private TextFormatting amplifierColor;
     private boolean coloredFrame;
+    private float widgetAlpha;
 
     @Override
     public void constructClient() {
@@ -85,6 +86,7 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
         builder.define("Colored Frame", false).comment("Color widget frame depending on effect type.").sync(v -> this.coloredFrame = v);
         builder.define("Duration Color", EFFECT_FORMATTING).comment("Effect duration color on widget. \"EFFECT\" value will use native effect color.", "Allowed Values: " + Stream.concat(Stream.of(EFFECT_FORMATTING), Stream.of(TextFormatting.values()).filter(TextFormatting::isColor).map(Enum::name)).collect(Collectors.joining(", "))).sync(v -> deserializeEffectFormatting(v, null, color -> this.durationColor = color));
         builder.define("Amplifier Color", this.defaultAmplifierColor.name()).comment("Effect amplifier color on widget. \"EFFECT\" value will use native effect color.", "Allowed Values: " + Stream.concat(Stream.of(EFFECT_FORMATTING), Stream.of(TextFormatting.values()).filter(TextFormatting::isColor).map(Enum::name)).collect(Collectors.joining(", "))).sync(v -> deserializeEffectFormatting(v, this.defaultAmplifierColor, color -> this.amplifierColor = color));
+        builder.define("Widget Alpha", 1.0).min(0.0).max(1.0).comment("Alpha value for widget.").sync(v -> this.widgetAlpha = v.floatValue());
         builder.pop();
         builder.push("tooltip");
         builder.define("Stylize Name", false).comment("Change effect name color depending on effect type.").sync(v -> this.stylizeName = v);
@@ -251,8 +253,7 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
                         width -= 30 * (maxWidth != -1 ? (harmfulCounter - 1) % maxWidth + 1 : harmfulCounter);
                     }
 
-                    RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-                    float alpha = 1.0F;
+                    float blinkingAlpha = this.widgetAlpha;
                     int colorOffset = 0;
                     if (effectinstance.isAmbient()) {
 
@@ -262,11 +263,12 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
                         colorOffset = effect.isBeneficial() ? 2 : 3;
                     }
 
+                    RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.widgetAlpha);
                     AbstractGui.blit(matrixStack, width, height, colorOffset * 29, 0, 29, 24, 256, 256);
                     if (!effectinstance.isAmbient() && effectinstance.getDuration() <= 200) {
 
                         int duration = 10 - effectinstance.getDuration() / 20;
-                        alpha = MathHelper.clamp((float) effectinstance.getDuration() / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F) + MathHelper.cos((float) effectinstance.getDuration() * (float)Math.PI / 5.0F) * MathHelper.clamp((float) duration / 10.0F * 0.25F, 0.0F, 0.25F);
+                        blinkingAlpha *= MathHelper.clamp((float) effectinstance.getDuration() / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F) + MathHelper.cos((float) effectinstance.getDuration() * (float)Math.PI / 5.0F) * MathHelper.clamp((float) duration / 10.0F * 0.25F, 0.0F, 0.25F);
                     }
 
                     if (mouseX >= width && mouseX <= width + 30 && mouseY > height && mouseY <= height + 26) {
@@ -275,8 +277,8 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
                     }
 
                     TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effect);
-                    effects.add(this.getEffectRenderer(matrixStack, effectinstance, textureatlassprite, width, height, alpha));
-                    effectinstance.renderHUDEffect(this.mc.gui, matrixStack, width, height, this.mc.gui.getBlitOffset(), alpha);
+                    effects.add(this.getEffectRenderer(matrixStack, effectinstance, textureatlassprite, width, height, blinkingAlpha));
+                    effectinstance.renderHUDEffect(this.mc.gui, matrixStack, width, height, this.mc.gui.getBlitOffset(), blinkingAlpha);
                 }
             }
 
@@ -291,6 +293,7 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
 
         return () -> {
 
+            RenderSystem.enableBlend();
             this.mc.getTextureManager().bind(textureatlassprite.atlas().location());
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, alpha);
             AbstractGui.blit(matrixStack, width + 5, height + (effectinstance.isAmbient() ? 3 : 2), this.mc.gui.getBlitOffset(), 18, 18, textureatlassprite);
@@ -301,9 +304,9 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
                 float r = (potionColor >> 16 & 255) / 255.0F;
                 float g = (potionColor >> 8 & 255) / 255.0F;
                 float b = (potionColor >> 0 & 255) / 255.0F;
-                RenderSystem.color4f(r * 0.25F, g * 0.25F, b * 0.25F, 1.0F);
+                RenderSystem.color4f(r * 0.25F, g * 0.25F, b * 0.25F, this.widgetAlpha);
                 AbstractGui.blit(matrixStack, width + 24, height + 3, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-                RenderSystem.color4f(r, g, b, 1.0F);
+                RenderSystem.color4f(r, g, b, this.widgetAlpha);
                 AbstractGui.blit(matrixStack, width + 23, height + 2, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             }
 
@@ -311,7 +314,7 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
 
                 StringTextComponent durationComponent = new StringTextComponent(getEffectDuration(effectinstance, 1.0F));
                 int potionColor = getEffectColor(this.durationColor, effectinstance);
-                AbstractGui.drawCenteredString(matrixStack, this.mc.font, durationComponent, width + 15, height + 14, potionColor);
+                AbstractGui.drawCenteredString(matrixStack, this.mc.font, durationComponent, width + 15, height + 14, (int) (this.widgetAlpha * 255.0F) << 24 | potionColor);
             }
         };
     }
