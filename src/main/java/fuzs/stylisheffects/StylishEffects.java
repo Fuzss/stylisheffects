@@ -18,12 +18,12 @@ public class StylishEffects {
 
     private static final ElementRegistry ELEMENT_REGISTRY = PuzzlesLib.create(MODID);
 
-    public static final AbstractElement POTION_TIME = ELEMENT_REGISTRY.register("potion_time", PotionTimeElement::new, Dist.CLIENT);
+    public static final AbstractElement POTION_TIME = ELEMENT_REGISTRY.register("potion_time", () -> new PotionTimeElement(), Dist.CLIENT);
 
     public StylishEffects() {
 
         PuzzlesLib.setup(true);
-        PuzzlesLib.setSideSideOnly();
+//        PuzzlesLib.setSideSideOnly();
     }
 
 }

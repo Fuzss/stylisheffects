@@ -5,10 +5,16 @@
   "package": "fuzs.stylisheffects.mixin",
   "refmap": "stylisheffects.refmap.json",
   "mixins": [
+    "AbstractChestedHorseEntityMixin",
+    "AbstractHorseEntityMixin",
+    "HorseEntityMixin",
+    "SkeletonHorseEntityMixin",
+    "ZombieHorseEntityMixin",
     "compat.InventoryEffectRendererGuiHandlerMixin"
   ],
   "client": [
     "client.InventoryScreenMixin",
+    "client.LivingRendererMixin",
     "client.accessor.DisplayEffectsScreenAccessor"
   ],
   "injectors": {
