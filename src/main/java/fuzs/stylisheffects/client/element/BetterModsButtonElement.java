@@ -3,7 +3,6 @@ package fuzs.stylisheffects.client.element;
 import fuzs.puzzleslib.config.option.OptionsBuilder;
 import fuzs.puzzleslib.element.AbstractElement;
 import fuzs.puzzleslib.element.side.IClientElement;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.widget.Widget;
@@ -24,74 +23,82 @@ public class BetterModsButtonElement extends AbstractElement implements IClientE
     private MainMenuMode mainMenuMode;
     private boolean modCount;
     private PauseScreenMode pauseScreenMode;
+    private boolean updateNotification;
+
+    private NotificationModUpdateScreen gameMenuNotification;
 
     @Override
     public String[] getDescription() {
-        return new String[0];
+        return new String[]{"Your mods button your way.", "Your mods button, where you want it, and how you want it."};
     }
 
     @Override
     public void constructClient() {
         this.addListener(this::onInitGui);
+        this.addListener(this::onDrawScreen);
     }
 
     @Override
     public void setupClientConfig(OptionsBuilder builder) {
         builder.define("Main Menu Mods Button", MainMenuMode.BELOW_REALMS).comment("Where to place mods button on main menu screen.").sync(v -> this.mainMenuMode = v);
         builder.define("Mod Count", true).comment("Add mod count to mods button.").sync(v -> this.modCount = v);
-        builder.define("Pause Screen Mods Button", PauseScreenMode.BELOW_BUGS).comment("Where to place mods button on pause menu screen.").sync(v -> this.pauseScreenMode = v);
+        builder.define("Pause Screen Mods Button", PauseScreenMode.ABOVE_OPTIONS).comment("Where to place mods button on pause menu screen.").sync(v -> this.pauseScreenMode = v);
+        builder.define("Update Notification", false).comment("Show a small green orb when mod updates are available.").sync(v -> this.updateNotification = v);
     }
 
     private void onInitGui(final GuiScreenEvent.InitGuiEvent.Post evt) {
-        Minecraft minecraft = Minecraft.getInstance();
         if (evt.getGui() instanceof MainMenuScreen) {
             if (this.mainMenuMode == null) {
                 return;
             }
             this.getButton(evt.getWidgetList(), "fml.menu.mods").ifPresent(evt::removeWidget);
-            ObfuscationReflectionHelper.setPrivateValue(MainMenuScreen.class, (MainMenuScreen) evt.getGui(), NotificationModUpdateScreen.init((MainMenuScreen) evt.getGui(), null), "modUpdateNotification");
-            final int buttonStart = evt.getGui().height / 4 + 48;
+            Button modsButton = null;
             switch (this.mainMenuMode) {
                 case BELOW_REALMS:
                     for (Widget widget : evt.getWidgetList()) {
-                        if (containsKey(widget, "menu.online")) {
-                            widget.setWidth(200);
-                            widget.x = evt.getGui().width / 2 - 100;
-                        }
-                        if (buttonStart + 72 + 12 <= widget.y) {
+                        if (evt.getGui().height / 4 + 48 + 72 + 12 <= widget.y) {
                             widget.y += 12;
                         } else {
                             widget.y -= 12;
                         }
                     }
-                    evt.addWidget(new Button(evt.getGui().width / 2 - 100, buttonStart + 24 * 3 - 12, 200, 20, this.getModsComponent(this.modCount, false), button -> {
-                        minecraft.setScreen(new ModListScreen(evt.getGui()));
-                    }));
+                    modsButton = new Button(evt.getGui().width / 2 - 100, evt.getGui().height / 4 + 48 + 24 * 3 - 12, 200, 20, this.getModsComponent(this.modCount, false), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
+                    // break missing on purpose
+                case NONE:
+                    this.getButton(evt.getWidgetList(), "menu.online").ifPresent(widget -> {
+                        widget.setWidth(200);
+                        widget.x = evt.getGui().width / 2 - 100;
+                    });
                     break;
-                case NEXT_TO_REALMS:
-                    for (Widget widget : evt.getWidgetList()) {
-                        if (containsKey(widget, "menu.online")) {
-                            widget.x = evt.getGui().width / 2 - 100;
-                            break;
-                        }
-                    }
-                    evt.addWidget(new Button(evt.getGui().width / 2 + 2, buttonStart + 24 * 2, 98, 20, this.getModsComponent(this.modCount, true), button -> {
-                        minecraft.setScreen(new ModListScreen(evt.getGui()));
-                    }));
+                case LEFT_TO_REALMS:
+                    modsButton = new Button(evt.getGui().width / 2 - 100, evt.getGui().height / 4 + 48 + 24 * 2, 98, 20, this.getModsComponent(this.modCount, true), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
+                    break;
+                case RIGHT_TO_REALMS:
+                    this.getButton(evt.getWidgetList(), "menu.online").ifPresent(widget -> widget.x = evt.getGui().width / 2 - 100);
+                    modsButton = new Button(evt.getGui().width / 2 + 2, evt.getGui().height / 4 + 48 + 24 * 2, 98, 20, this.getModsComponent(this.modCount, true), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
                     break;
                 case REPLACE_REALMS:
                     this.getButton(evt.getWidgetList(), "menu.online").ifPresent(evt::removeWidget);
-                    evt.addWidget(new Button(evt.getGui().width / 2 - 100, buttonStart + 24 * 2, 200, 20, this.getModsComponent(this.modCount, false), button -> {
-                        minecraft.setScreen(new ModListScreen(evt.getGui()));
-                    }));
+                    modsButton = new Button(evt.getGui().width / 2 - 100, evt.getGui().height / 4 + 48 + 24 * 2, 200, 20, this.getModsComponent(this.modCount, false), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
                     break;
             }
+            if (modsButton != null) evt.addWidget(modsButton);
+            ObfuscationReflectionHelper.setPrivateValue(MainMenuScreen.class, (MainMenuScreen) evt.getGui(), NotificationModUpdateScreen.init((MainMenuScreen) evt.getGui(), this.updateNotification ? modsButton : null), "modUpdateNotification");
         } else if (evt.getGui() instanceof IngameMenuScreen) {
             if (this.pauseScreenMode == null) {
                 return;
             }
+            Button modsButton = null;
             switch (this.pauseScreenMode) {
-                case BELOW_BUGS:
+                case ABOVE_OPTIONS:
                     for (Widget widget : evt.getWidgetList()) {
                         if (evt.getGui().height / 4 + 96 + -16 <= widget.y) {
                             widget.y += 12;
@@ -99,27 +106,48 @@ public class BetterModsButtonElement extends AbstractElement implements IClientE
                             widget.y -= 12;
                         }
                     }
-                    evt.addWidget(new Button(evt.getGui().width / 2 - 102, evt.getGui().height / 4 + 96 + -16 - 12, 204, 20, this.getModsComponent(this.modCount, false), button -> {
-                        minecraft.setScreen(new ModListScreen(evt.getGui()));
-                    }));
+                    modsButton = new Button(evt.getGui().width / 2 - 102, evt.getGui().height / 4 + 96 + -16 - 12, 204, 20, this.getModsComponent(this.modCount, false), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
+                    break;
+                case REPLACE_FEEDBACK:
+                    this.getButton(evt.getWidgetList(), "menu.sendFeedback").ifPresent(evt::removeWidget);
+                    modsButton = new Button(evt.getGui().width / 2 - 102, evt.getGui().height / 4 + 72 + -16, 98, 20, this.getModsComponent(this.modCount, true), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
                     break;
                 case REPLACE_BUGS:
                     this.getButton(evt.getWidgetList(), "menu.reportBugs").ifPresent(evt::removeWidget);
-                    evt.addWidget(new Button(evt.getGui().width / 2 + 4, evt.getGui().height / 4 + 72 + -16, 98, 20, this.getModsComponent(this.modCount, true), button -> {
-                        minecraft.setScreen(new ModListScreen(evt.getGui()));
-                    }));
+                    modsButton = new Button(evt.getGui().width / 2 + 4, evt.getGui().height / 4 + 72 + -16, 98, 20, this.getModsComponent(this.modCount, true), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
                     break;
             }
+            if (modsButton != null) evt.addWidget(modsButton);
+            this.gameMenuNotification = new NotificationModUpdateScreen(this.updateNotification ? modsButton : null);
+            this.gameMenuNotification.resize(evt.getGui().getMinecraft(), evt.getGui().width, evt.getGui().height);
+            this.gameMenuNotification.init();
+        }
+    }
+
+    private void onDrawScreen(final GuiScreenEvent.DrawScreenEvent evt) {
+        if (evt.getGui() instanceof IngameMenuScreen) {
+            this.gameMenuNotification.render(evt.getMatrixStack(), evt.getMouseX(), evt.getMouseY(), evt.getRenderPartialTicks());
         }
     }
 
     private Optional<Widget> getButton(List<Widget> widgets, String s) {
         for (Widget widget : widgets) {
-            if (containsKey(widget, s)) {
+            if (this.containsKey(widget, s)) {
                 return Optional.of(widget);
             }
         }
         return Optional.empty();
+    }
+
+    private boolean containsKey(Widget button, String key) {
+        final ITextComponent message = button.getMessage();
+        return message instanceof TranslationTextComponent && ((TranslationTextComponent) message).getKey().equals(key);
     }
 
     private ITextComponent getModsComponent(boolean withCount, boolean compact) {
@@ -131,16 +159,11 @@ public class BetterModsButtonElement extends AbstractElement implements IClientE
         return component;
     }
 
-    private static boolean containsKey(Widget button, String key) {
-        final ITextComponent message = button.getMessage();
-        return message instanceof TranslationTextComponent && ((TranslationTextComponent) message).getKey().equals(key);
-    }
-
     private enum MainMenuMode {
-        REPLACE_REALMS, BELOW_REALMS, NEXT_TO_REALMS
+        REPLACE_REALMS, BELOW_REALMS, LEFT_TO_REALMS, RIGHT_TO_REALMS, NONE
     }
 
     private enum PauseScreenMode {
-        REPLACE_BUGS, BELOW_BUGS
+        REPLACE_BUGS, REPLACE_FEEDBACK, ABOVE_OPTIONS, NONE
     }
 }
