@@ -40,7 +40,7 @@ public class BetterModsButtonElement extends AbstractElement implements IClientE
 
     @Override
     public void setupClientConfig(OptionsBuilder builder) {
-        builder.define("Main Menu Mods Button", MainMenuMode.BELOW_REALMS).comment("Where to place mods button on main menu screen.").sync(v -> this.mainMenuMode = v);
+        builder.define("Main Menu Mods Button", MainMenuMode.ABOVE_OPTIONS).comment("Where to place mods button on main menu screen.").sync(v -> this.mainMenuMode = v);
         builder.define("Mod Count", true).comment("Add mod count to mods button.").sync(v -> this.modCount = v);
         builder.define("Pause Screen Mods Button", PauseScreenMode.ABOVE_OPTIONS).comment("Where to place mods button on pause menu screen.").sync(v -> this.pauseScreenMode = v);
         builder.define("Update Notification", false).comment("Show a small green orb when mod updates are available.").sync(v -> this.updateNotification = v);
@@ -54,7 +54,7 @@ public class BetterModsButtonElement extends AbstractElement implements IClientE
             this.getButton(evt.getWidgetList(), "fml.menu.mods").ifPresent(evt::removeWidget);
             Button modsButton = null;
             switch (this.mainMenuMode) {
-                case BELOW_REALMS:
+                case ABOVE_OPTIONS:
                     for (Widget widget : evt.getWidgetList()) {
                         if (evt.getGui().height / 4 + 48 + 72 + 12 <= widget.y) {
                             widget.y += 12;
@@ -122,6 +122,25 @@ public class BetterModsButtonElement extends AbstractElement implements IClientE
                         evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
                     });
                     break;
+                case REPLACE_FEEDBACK_AND_BUGS:
+                    this.getButton(evt.getWidgetList(), "menu.sendFeedback").ifPresent(evt::removeWidget);
+                    this.getButton(evt.getWidgetList(), "menu.reportBugs").ifPresent(evt::removeWidget);
+                    modsButton = new Button(evt.getGui().width / 2 - 102, evt.getGui().height / 4 + 72 + -16, 204, 20, this.getModsComponent(this.modCount, false), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
+                    break;
+                case MOVE_LAN:
+                    this.getButton(evt.getWidgetList(), "menu.sendFeedback").ifPresent(evt::removeWidget);
+                    this.getButton(evt.getWidgetList(), "menu.reportBugs").ifPresent(evt::removeWidget);
+                    this.getButton(evt.getWidgetList(), "menu.shareToLan").ifPresent(widget -> {
+                        widget.setWidth(204);
+                        widget.x = evt.getGui().width / 2 - 102;
+                        widget.y = evt.getGui().height / 4 + 72 + -16;
+                    });
+                    modsButton = new Button(evt.getGui().width / 2 + 4, evt.getGui().height / 4 + 96 + -16, 98, 20, this.getModsComponent(this.modCount, true), button -> {
+                        evt.getGui().getMinecraft().setScreen(new ModListScreen(evt.getGui()));
+                    });
+                    break;
             }
             if (modsButton != null) evt.addWidget(modsButton);
             this.gameMenuNotification = new NotificationModUpdateScreen(this.updateNotification ? modsButton : null);
@@ -160,10 +179,10 @@ public class BetterModsButtonElement extends AbstractElement implements IClientE
     }
 
     private enum MainMenuMode {
-        REPLACE_REALMS, BELOW_REALMS, LEFT_TO_REALMS, RIGHT_TO_REALMS, NONE
+        REPLACE_REALMS, LEFT_TO_REALMS, RIGHT_TO_REALMS, ABOVE_OPTIONS, NONE
     }
 
     private enum PauseScreenMode {
-        REPLACE_BUGS, REPLACE_FEEDBACK, ABOVE_OPTIONS, NONE
+        REPLACE_FEEDBACK, REPLACE_BUGS, REPLACE_FEEDBACK_AND_BUGS, MOVE_LAN, ABOVE_OPTIONS, NONE
     }
 }
