@@ -3,7 +3,6 @@ package fuzs.stylisheffects;
 import fuzs.puzzleslib.PuzzlesLib;
 import fuzs.puzzleslib.element.AbstractElement;
 import fuzs.puzzleslib.element.ElementRegistry;
-import fuzs.stylisheffects.client.element.BetterModsButtonElement;
 import fuzs.stylisheffects.client.element.PotionTimeElement;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
@@ -21,7 +20,6 @@ public class StylishEffects {
     private static final ElementRegistry ELEMENT_REGISTRY = PuzzlesLib.create(MODID);
 
     public static final AbstractElement POTION_TIME = ELEMENT_REGISTRY.register("potion_time", () -> new PotionTimeElement(), Dist.CLIENT);
-    public static final AbstractElement BETTER_MODS_BUTTON = ELEMENT_REGISTRY.register("better_mods_button", () -> new BetterModsButtonElement(), Dist.CLIENT);
 
     public StylishEffects() {
 

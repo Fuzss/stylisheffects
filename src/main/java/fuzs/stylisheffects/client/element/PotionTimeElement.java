@@ -197,7 +197,6 @@ public class PotionTimeElement extends AbstractElement implements IClientElement
 
     private Optional<EffectInstance> drawPotionIcons(MatrixStack matrixStack, int x, int y, int mouseX, int mouseY, final int maxWidth) {
 
-        assert this.mc.player != null;
         Collection<EffectInstance> activePotionEffects = this.mc.player.getActiveEffects();
         Optional<EffectInstance> hoveredEffect = Optional.empty();
         if (!activePotionEffects.isEmpty()) {
