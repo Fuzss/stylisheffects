@@ -1,30 +1,28 @@
 package fuzs.stylisheffects;
 
-import fuzs.puzzleslib.PuzzlesLib;
-import fuzs.puzzleslib.element.AbstractElement;
-import fuzs.puzzleslib.element.ElementRegistry;
-import fuzs.stylisheffects.client.element.PotionTimeElement;
-import net.minecraftforge.api.distmarker.Dist;
+import fuzs.puzzleslib.config.v2.AbstractConfig;
+import fuzs.puzzleslib.config.v2.ConfigHolder;
+import fuzs.puzzleslib.config.v2.ConfigHolderImpl;
+import fuzs.stylisheffects.config.ClientConfig;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@SuppressWarnings("Convert2MethodRef")
 @Mod(StylishEffects.MODID)
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class StylishEffects {
 
     public static final String MODID = "stylisheffects";
     public static final String NAME = "Stylish Effects";
     public static final Logger LOGGER = LogManager.getLogger(NAME);
 
-    private static final ElementRegistry ELEMENT_REGISTRY = PuzzlesLib.create(MODID);
+    @SuppressWarnings("Convert2MethodRef")
+    public static final ConfigHolder<ClientConfig, AbstractConfig> CONFIG = ConfigHolder.client(() -> new ClientConfig());
 
-    public static final AbstractElement POTION_TIME = ELEMENT_REGISTRY.register("potion_time", () -> new PotionTimeElement(), Dist.CLIENT);
-
-    public StylishEffects() {
-
-        PuzzlesLib.setup(true);
-        PuzzlesLib.setSideOnly();
+    @SubscribeEvent
+    public static void onConstructMod(final FMLConstructModEvent evt) {
+        ((ConfigHolderImpl<?, ?>) CONFIG).addConfigs(MODID);
     }
-
 }
