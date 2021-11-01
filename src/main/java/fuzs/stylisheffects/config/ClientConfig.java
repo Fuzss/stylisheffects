@@ -6,11 +6,13 @@ import net.minecraft.util.text.TextFormatting;
 
 public class ClientConfig extends AbstractConfig {
     @Config
-    private GeneralConfig generalConfig = new GeneralConfig();
+    private InventoryRendererConfig inventoryRenderer = new InventoryRendererConfig();
     @Config
-    private InventoryEffectConfig inventoryEffects = new InventoryEffectConfig();
+    private HudRendererConfig hudRenderer = new HudRendererConfig();
     @Config
-    private HudEffectConfig hudEffectsConfig = new HudEffectConfig();
+    private VanillaWidgetConfig vanillaWidget = new VanillaWidgetConfig();
+    @Config
+    private CompactWidgetConfig compactWidget = new CompactWidgetConfig();
 
     public ClientConfig() {
         super("");
@@ -18,20 +20,24 @@ public class ClientConfig extends AbstractConfig {
 
     @Override
     protected void afterConfigReload() {
-        this.inventoryEffects().afterConfigReload();
-        this.hudEffectsConfig().afterConfigReload();
+        this.vanillaWidget().afterConfigReload();
+        this.compactWidget().afterConfigReload();
     }
 
-    public GeneralConfig generalConfig() {
-        return this.generalConfig;
+    public InventoryRendererConfig inventoryRenderer() {
+        return this.inventoryRenderer;
     }
 
-    public InventoryEffectConfig inventoryEffects() {
-        return this.inventoryEffects;
+    public HudRendererConfig hudRenderer() {
+        return this.hudRenderer;
     }
 
-    public HudEffectConfig hudEffectsConfig() {
-        return this.hudEffectsConfig;
+    public VanillaWidgetConfig vanillaWidget() {
+        return this.vanillaWidget;
+    }
+
+    public CompactWidgetConfig compactWidget() {
+        return this.compactWidget;
     }
 
     public enum EffectRenderer {
@@ -47,25 +53,24 @@ public class ClientConfig extends AbstractConfig {
     }
 
     public enum ScreenSide {
-        LEFT, RIGHT
-    }
+        LEFT, RIGHT;
 
-    public static class GeneralConfig extends AbstractConfig {
-        @Config(description = "Effect renderer to be used in hud.")
-        public EffectRenderer hudEffectsRenderer = EffectRenderer.VANILLA;
-        @Config(description = "Effect renderer to be used in inventory.")
-        public EffectRenderer inventoryEffectRenderer = EffectRenderer.COMPACT;
-        @Config(description = "Render active status effects in every container, not just in the player inventory.")
-        public boolean effectsEverywhere = true;
+        public boolean right() {
+            return this == RIGHT;
+        }
 
-        public GeneralConfig() {
-            super("general");
+        public ScreenSide inverse() {
+            return this.right() ? LEFT : RIGHT;
         }
     }
 
-    public static abstract class EffectConfig extends AbstractConfig {
-        public static final String EFFECT_FORMATTING = "EFFECT";
+    public enum OverflowMode {
+        CONDENSE, HIDE
+    }
 
+    public static abstract class EffectRendererConfig extends AbstractConfig {
+        @Config(description = "Effect renderer to be used.")
+        public EffectRenderer rendererType = EffectRenderer.COMPACT;
         @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1, max = 255)
         public int maxWidth = 255;
@@ -74,59 +79,111 @@ public class ClientConfig extends AbstractConfig {
         public int maxHeight = 255;
         @Config(description = "Screen side to render status effects on.")
         public ScreenSide screenSide = ScreenSide.RIGHT;
-        @Config(description = "Display string to be used for an effect duration that is too long to show.")
-        public LongDurationString longDurationString = LongDurationString.INFINITY;
-        @Config(description = "Scale for effect widgets.")
-        @Config.FloatRange(min = 1.0F, max = 24.0F)
-        public float widgetScale = 8.0F;
+//        @Config(description = "Scale for effect widgets.")
+//        @Config.FloatRange(min = 1.0F, max = 24.0F)
+//        public float widgetScale = 8.0F;
         @Config(description = "Alpha value for effect widgets.")
         @Config.FloatRange(min = 0.0F, max = 1.0F)
         public float widgetAlpha = 1.0F;
-        @Config(description = "Should the effects icon start to blink when the effect is running out.")
-        public boolean blinkingAlpha = true;
-        @Config(description = "Show a tooltip when hovering over an effect widget in the inventory.")
+        @Config(description = "What to do when there are more effects to display than there is room on-screen.")
+        public OverflowMode overflowMode = OverflowMode.CONDENSE;
+
+        public EffectRendererConfig(String name) {
+            super(name);
+        }
+    }
+
+    public static class InventoryRendererConfig extends EffectRendererConfig {
+        @Config(description = "Render active status effects in every container, not just in the player inventory.")
+        public boolean effectsEverywhere = true;
+        @Config(description = "Show a tooltip when hovering over an effect widget.")
         public boolean hoveringTooltip = true;
         @Config(description = "Show remaining status effect duration on tooltip.")
-        public boolean tooltipDuration = false;
-        @Config(description = "Top corner to draw effect amplifier in for \"COMPACT\" effect renderer, or none.")
-        public EffectAmplifier effectAmplifier = EffectAmplifier.TOP_RIGHT;
-        @Config(name = "duration_color", description = "Effect name color for \"VANILLA\" effect renderer. Setting this to \"EFFECT\" will use potion color.")
-        @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
-        private String nameColorRaw = "WHITE";
+        public boolean tooltipDuration = true;
+
+        public InventoryRendererConfig() {
+            super("inventory_renderer");
+            this.screenSide = ScreenSide.LEFT;
+        }
+    }
+    public static class HudRendererConfig extends EffectRendererConfig {
+        @Config(description = "Offset on x-axis.")
+        @Config.IntRange(min = 0)
+        public int offsetX = 0;
+        @Config(description = "Offset on y-axis.")
+        @Config.IntRange(min = 0)
+        public int offsetY = 0;
+
+        public HudRendererConfig() {
+            super("hud_renderer");
+            this.screenSide = ScreenSide.RIGHT;
+        }
+    }
+
+    public static abstract class EffectWidgetConfig extends AbstractConfig {
+        public static final String EFFECT_FORMATTING = "EFFECT";
+
+        @Config(description = "Should the effects icon start to blink when the effect is running out.")
+        public boolean blinkingAlpha = true;
+        @Config(description = "Display string to be used for an effect duration that is too long to show.")
+        public LongDurationString longDurationString = LongDurationString.INFINITY;
         @Config(name = "duration_color", description = "Effect duration color. Setting this to \"EFFECT\" will use potion color.")
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
-        private String durationColorRaw = EFFECT_FORMATTING;
-        @Config(name = "amplifier_color", description = "Effect amplifier color for \"COMPACT\" effect renderer. Setting this to \"EFFECT\" will use potion color.")
-        @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
-        private String amplifierColorRaw = "WHITE";
+        protected String durationColorRaw = EFFECT_FORMATTING;
 
-        public TextFormatting nameColor;
         public TextFormatting durationColor;
-        public TextFormatting amplifierColor;
 
-        public EffectConfig(String name) {
+        public EffectWidgetConfig(String name) {
             super(name);
         }
 
         @Override
         protected void afterConfigReload() {
-            this.nameColor = TextFormatting.getByName(this.nameColorRaw);
             this.durationColor = TextFormatting.getByName(this.durationColorRaw);
-            this.amplifierColor = TextFormatting.getByName(this.amplifierColorRaw);
         }
     }
 
-    public static class InventoryEffectConfig extends EffectConfig {
-        public InventoryEffectConfig() {
-            super("inventory");
-            this.screenSide = ScreenSide.LEFT;
+    public static class VanillaWidgetConfig extends EffectWidgetConfig {
+        @Config(name = "name_color", description = "Effect name color. Setting this to \"EFFECT\" will use potion color.")
+        @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
+        private String nameColorRaw = "WHITE";
+
+        public TextFormatting nameColor;
+
+        public VanillaWidgetConfig() {
+            super("vanilla_widget");
             this.longDurationString = LongDurationString.VANILLA;
+            this.durationColorRaw = "GRAY";
+        }
+
+        @Override
+        protected void afterConfigReload() {
+            super.afterConfigReload();
+            this.nameColor = TextFormatting.getByName(this.nameColorRaw);
         }
     }
 
-    public static class HudEffectConfig extends EffectConfig {
-        public HudEffectConfig() {
-            super("hud");
+    public static class CompactWidgetConfig extends EffectWidgetConfig {
+        @Config(description = "Top corner to draw effect amplifier in, or none.")
+        public EffectAmplifier effectAmplifier = EffectAmplifier.TOP_RIGHT;
+        @Config(name = "amplifier_color", description = "Effect amplifier color. Setting this to \"EFFECT\" will use potion color.")
+        @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
+        private String amplifierColorRaw = "WHITE";
+        @Config(description = "Draw harmful effects on a separate line from beneficial ones.")
+        public boolean separateEffects = true;
+
+        public TextFormatting amplifierColor;
+
+        public CompactWidgetConfig() {
+            super("compact_widget");
+            this.longDurationString = LongDurationString.INFINITY;
+            this.durationColorRaw = EFFECT_FORMATTING;
+        }
+
+        @Override
+        protected void afterConfigReload() {
+            super.afterConfigReload();
+            this.amplifierColor = TextFormatting.getByName(this.amplifierColorRaw);
         }
     }
 }

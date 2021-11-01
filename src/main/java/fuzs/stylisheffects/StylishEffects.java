@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 @Mod(StylishEffects.MODID)
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class StylishEffects {
-
     public static final String MODID = "stylisheffects";
     public static final String NAME = "Stylish Effects";
     public static final Logger LOGGER = LogManager.getLogger(NAME);

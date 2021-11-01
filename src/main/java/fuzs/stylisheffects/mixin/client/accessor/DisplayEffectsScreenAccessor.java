@@ -9,5 +9,4 @@ public interface DisplayEffectsScreenAccessor {
 
     @Accessor
     void setDoRenderEffects(boolean doRenderEffects);
-
 }
