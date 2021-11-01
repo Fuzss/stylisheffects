@@ -15,8 +15,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.*;
 import net.minecraftforge.common.extensions.IForgeEffectInstance;
+import org.apache.commons.lang3.tuple.Pair;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRenderAreas {
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MODID,"textures/gui/mob_effect_background.png");
 
-    protected final int inBetweenSpace = 1;
     protected final EffectRendererType type;
 
     protected AbstractGui screen;
@@ -66,25 +65,26 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     @Override
     public List<Rectangle2d> getRenderAreas() {
         if (this.activeEffects != null) {
-            return this.getEffectPositions(this.activeEffects).values().stream()
+            return this.getEffectPositions(this.activeEffects).stream()
+                    .map(Pair::getValue)
                     .map(pos -> new Rectangle2d(pos[0], pos[1], this.getWidth(), this.getHeight()))
                     .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
 
-    public abstract Map<EffectInstance, int[]> getEffectPositions(List<EffectInstance> activeEffects);
+    public abstract List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects);
 
     protected int[] coordsToEffectPosition(int coordX, int coordY) {
         int[] renderPositions = new int[2];
         switch (this.screenSide) {
             case LEFT:
-                renderPositions[0] = this.startX - (this.getWidth() + this.inBetweenSpace) * (coordX + 1);
-                renderPositions[1] = this.startY + (this.getHeight() + this.inBetweenSpace) * coordY;
+                renderPositions[0] = this.startX - (this.getWidth() + 1) - (this.getWidth() + this.config().widgetSpace) * coordX;
+                renderPositions[1] = this.startY + 1 + this.getAdjustedHeight() * coordY;
                 break;
             case RIGHT:
-                renderPositions[0] = this.startX + this.inBetweenSpace + (this.getWidth() + this.inBetweenSpace) * coordX;
-                renderPositions[1] = this.startY + (this.getHeight() + this.inBetweenSpace) * coordY;
+                renderPositions[0] = this.startX + 1 + (this.getWidth() + this.config().widgetSpace) * coordX;
+                renderPositions[1] = this.startY + 1 + this.getAdjustedHeight() * coordY;
                 break;
             default:
                 throw new IllegalStateException("unreachable statement");
@@ -93,7 +93,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     public void renderEffects(MatrixStack matrixStack, Minecraft minecraft) {
-        for (Map.Entry<EffectInstance, int[]> entry : this.getEffectPositions(this.activeEffects).entrySet()) {
+        for (Pair<EffectInstance, int[]> entry : this.getEffectPositions(this.activeEffects)) {
             this.renderWidget(matrixStack, entry.getValue()[0], entry.getValue()[1], minecraft, entry.getKey());
         }
     }
@@ -106,11 +106,20 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         return 1.0F;
     }
 
-    public abstract int getMaxHorizontalEffects();
+    protected abstract int getMaxColumns();
 
-    public int getMaxVerticalEffects() {
-        return MathHelper.clamp(this.availableHeight / (this.getHeight() + this.inBetweenSpace), 1, this.config().maxHeight);
+    private int getAdjustedHeight() {
+        if (this.getRows() > this.getMaxRows()) {
+            return (this.getHeight() + this.config().widgetSpace) * this.getMaxRows() / Math.max(1, this.getRows() - 1);
+        }
+        return this.getHeight() + this.config().widgetSpace;
     }
+
+    public int getMaxRows() {
+        return MathHelper.clamp(this.availableHeight / (this.getHeight() + this.config().widgetSpace), 1, this.config().maxHeight);
+    }
+
+    public abstract int getRows();
 
     protected ClientConfig.EffectRendererConfig config() {
         switch (this.type) {
@@ -155,7 +164,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     public Optional<EffectInstance> getHoveredEffect(int mouseX, int mouseY) {
-        for (Map.Entry<EffectInstance, int[]> entry : this.getEffectPositions(this.activeEffects).entrySet()) {
+        for (Map.Entry<EffectInstance, int[]> entry : Lists.reverse(this.getEffectPositions(this.activeEffects))) {
             if (this.isMouseOver(entry.getValue()[0], entry.getValue()[1], mouseX, mouseY)) {
                 return Optional.of(entry.getKey());
             }

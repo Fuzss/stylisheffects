@@ -6,13 +6,9 @@ import net.minecraft.util.text.TextFormatting;
 
 public class ClientConfig extends AbstractConfig {
     @Config
-    private InventoryRendererConfig inventoryRenderer = new InventoryRendererConfig();
+    private RenderersConfig renderers = new RenderersConfig();
     @Config
-    private HudRendererConfig hudRenderer = new HudRendererConfig();
-    @Config
-    private VanillaWidgetConfig vanillaWidget = new VanillaWidgetConfig();
-    @Config
-    private CompactWidgetConfig compactWidget = new CompactWidgetConfig();
+    private WidgetsConfig widgets = new WidgetsConfig();
 
     public ClientConfig() {
         super("");
@@ -25,19 +21,19 @@ public class ClientConfig extends AbstractConfig {
     }
 
     public InventoryRendererConfig inventoryRenderer() {
-        return this.inventoryRenderer;
+        return this.renderers.inventoryRenderer;
     }
 
     public HudRendererConfig hudRenderer() {
-        return this.hudRenderer;
+        return this.renderers.hudRenderer;
     }
 
     public VanillaWidgetConfig vanillaWidget() {
-        return this.vanillaWidget;
+        return this.widgets.vanillaWidget;
     }
 
     public CompactWidgetConfig compactWidget() {
-        return this.compactWidget;
+        return this.widgets.compactWidget;
     }
 
     public enum EffectRenderer {
@@ -65,7 +61,29 @@ public class ClientConfig extends AbstractConfig {
     }
 
     public enum OverflowMode {
-        CONDENSE, HIDE
+        CONDENSE, SKIP
+    }
+
+    public static class RenderersConfig extends AbstractConfig {
+        @Config
+        InventoryRendererConfig inventoryRenderer = new InventoryRendererConfig();
+        @Config
+        HudRendererConfig hudRenderer = new HudRendererConfig();
+
+        public RenderersConfig() {
+            super("renderers");
+        }
+    }
+
+    public static class WidgetsConfig extends AbstractConfig {
+        @Config
+        VanillaWidgetConfig vanillaWidget = new VanillaWidgetConfig();
+        @Config
+        CompactWidgetConfig compactWidget = new CompactWidgetConfig();
+
+        public WidgetsConfig() {
+            super("widgets");
+        }
     }
 
     public static abstract class EffectRendererConfig extends AbstractConfig {
@@ -87,6 +105,9 @@ public class ClientConfig extends AbstractConfig {
         public float widgetAlpha = 1.0F;
         @Config(description = "What to do when there are more effects to display than there is room on-screen.")
         public OverflowMode overflowMode = OverflowMode.CONDENSE;
+        @Config(description = "Space between individual effect widgets.")
+        @Config.IntRange(min = 0)
+        public int widgetSpace = 1;
 
         public EffectRendererConfig(String name) {
             super(name);
@@ -104,6 +125,7 @@ public class ClientConfig extends AbstractConfig {
         public InventoryRendererConfig() {
             super("inventory_renderer");
             this.screenSide = ScreenSide.LEFT;
+            this.overflowMode = OverflowMode.CONDENSE;
         }
     }
     public static class HudRendererConfig extends EffectRendererConfig {
@@ -117,19 +139,24 @@ public class ClientConfig extends AbstractConfig {
         public HudRendererConfig() {
             super("hud_renderer");
             this.screenSide = ScreenSide.RIGHT;
+            this.overflowMode = OverflowMode.SKIP;
         }
     }
 
     public static abstract class EffectWidgetConfig extends AbstractConfig {
         public static final String EFFECT_FORMATTING = "EFFECT";
 
-        @Config(description = "Should the effects icon start to blink when the effect is running out.")
+        @Config(description = "Should the effect icon start to blink when the effect is running out.")
         public boolean blinkingAlpha = true;
         @Config(description = "Display string to be used for an effect duration that is too long to show.")
         public LongDurationString longDurationString = LongDurationString.INFINITY;
         @Config(name = "duration_color", description = "Effect duration color. Setting this to \"EFFECT\" will use potion color.")
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
-        protected String durationColorRaw = EFFECT_FORMATTING;
+        protected String durationColorRaw = "GRAY";
+        @Config(description = "Should ambient effect widgets have a cyan colored border.")
+        public boolean ambientBorder = true;
+        @Config(description = "Show duration for ambient effects.")
+        public boolean ambientDuration = true;
 
         public TextFormatting durationColor;
 
@@ -153,7 +180,7 @@ public class ClientConfig extends AbstractConfig {
         public VanillaWidgetConfig() {
             super("vanilla_widget");
             this.longDurationString = LongDurationString.VANILLA;
-            this.durationColorRaw = "GRAY";
+            this.ambientDuration = true;
         }
 
         @Override
@@ -177,7 +204,7 @@ public class ClientConfig extends AbstractConfig {
         public CompactWidgetConfig() {
             super("compact_widget");
             this.longDurationString = LongDurationString.INFINITY;
-            this.durationColorRaw = EFFECT_FORMATTING;
+            this.ambientDuration = false;
         }
 
         @Override

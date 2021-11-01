@@ -1,21 +1,20 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.texture.PotionSpriteUploader;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.text.IFormattableTextComponent;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 public class VanillaEffectRenderer extends AbstractEffectRenderer {
     public VanillaEffectRenderer(EffectRendererType type) {
@@ -33,15 +32,20 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    public int getMaxHorizontalEffects() {
+    public int getMaxColumns() {
         return 1;
     }
 
     @Override
-    public Map<EffectInstance, int[]> getEffectPositions(List<EffectInstance> activeEffects) {
-        Map<EffectInstance, int[]> effectToPos = Maps.newHashMap();
-        for (int i = 0, size = Math.min(activeEffects.size(), this.getMaxVerticalEffects()); i < size; i++) {
-            effectToPos.put(activeEffects.get(i), this.coordsToEffectPosition(0, i));
+    public int getRows() {
+        return this.activeEffects.size();
+    }
+
+    @Override
+    public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
+        List<Pair<EffectInstance, int[]>> effectToPos = Lists.newArrayList();
+        for (int i = 0, size = this.config().overflowMode == ClientConfig.OverflowMode.SKIP ? Math.min(activeEffects.size(), this.getMaxRows()) : activeEffects.size(); i < size; i++) {
+            effectToPos.add(Pair.of(activeEffects.get(i), this.coordsToEffectPosition(0, i)));
         }
         return effectToPos;
     }
@@ -51,7 +55,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
         RenderSystem.enableBlend();
         minecraft.getTextureManager().bind(EFFECT_BACKGROUND);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
-        AbstractGui.blit(matrixStack, posX, posY, 0, effectinstance.isAmbient() ? this.getHeight() : 0, this.getWidth(), this.getHeight(), 256, 256);
+        AbstractGui.blit(matrixStack, posX, posY, 0, StylishEffects.CONFIG.client().vanillaWidget().ambientBorder && effectinstance.isAmbient() ? this.getHeight() : 0, this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectSprite(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawCustomEffect(matrixStack, posX, posY, effectinstance);
         this.drawEffectText(matrixStack, posX, posY, minecraft, effectinstance);
@@ -74,10 +78,12 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
             }
             int nameColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().vanillaWidget().nameColor, effectinstance);
             minecraft.font.drawShadow(matrixStack, component, posX + 10 + 18, posY + 7, (int) (this.config().widgetAlpha * 255.0F) << 24 | nameColor);
-            this.getEffectDuration(effectinstance, StylishEffects.CONFIG.client().vanillaWidget().longDurationString).ifPresent(duration -> {
-                int durationColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().vanillaWidget().durationColor, effectinstance);
-                minecraft.font.drawShadow(matrixStack, duration, posX + 10 + 18, posY + 7 + 10, (int) (this.config().widgetAlpha * 255.0F) << 24 | durationColor);
-            });
+            if (StylishEffects.CONFIG.client().vanillaWidget().ambientDuration || !effectinstance.isAmbient()) {
+                this.getEffectDuration(effectinstance, StylishEffects.CONFIG.client().vanillaWidget().longDurationString).ifPresent(duration -> {
+                    int durationColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().vanillaWidget().durationColor, effectinstance);
+                    minecraft.font.drawShadow(matrixStack, duration, posX + 10 + 18, posY + 7 + 10, (int) (this.config().widgetAlpha * 255.0F) << 24 | durationColor);
+                });
+            }
         }
     }
 }

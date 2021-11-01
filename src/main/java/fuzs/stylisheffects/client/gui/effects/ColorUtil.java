@@ -25,6 +25,9 @@ public class ColorUtil {
         return potionColor;
     }
 
+    /**
+     * from https://stackoverflow.com/questions/141855/programmatically-lighten-a-color
+     */
     private static void redistributeColors(int[] color) {
         int max = Math.max(color[0], Math.max(color[1], color[2]));
         if (max > 255) {

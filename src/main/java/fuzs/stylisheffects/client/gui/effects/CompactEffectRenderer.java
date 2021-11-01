@@ -1,6 +1,6 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import fuzs.stylisheffects.StylishEffects;
@@ -11,11 +11,13 @@ import net.minecraft.client.renderer.texture.PotionSpriteUploader;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
+import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 public class CompactEffectRenderer extends AbstractEffectRenderer {
     private static final ResourceLocation TINY_NUMBERS_TEXTURE = new ResourceLocation(StylishEffects.MODID,"textures/font/tiny_numbers.png");
@@ -35,20 +37,36 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    public int getMaxHorizontalEffects() {
-        return MathHelper.clamp(this.availableWidth / (this.getWidth() + this.inBetweenSpace), 1, this.config().maxWidth);
+    public int getMaxColumns() {
+        return MathHelper.clamp(this.availableWidth / (this.getWidth() + this.config().widgetSpace), 1, this.config().maxWidth);
     }
 
     @Override
-    public Map<EffectInstance, int[]> getEffectPositions(List<EffectInstance> activeEffects) {
-        final int beneficialEffects = (int) activeEffects.stream()
+    public int getRows() {
+        if (StylishEffects.CONFIG.client().compactWidget().separateEffects) {
+            final int beneficialEffects = this.getBeneficialAmount(this.activeEffects);
+            return this.splitByColumns(beneficialEffects) + this.splitByColumns(this.activeEffects.size() - beneficialEffects);
+        } else {
+            return this.splitByColumns(this.activeEffects.size());
+        }
+    }
+
+    private int splitByColumns(int amountToSplit) {
+        return (int) Math.ceil(amountToSplit / (float) this.getMaxColumns());
+    }
+
+    private int getBeneficialAmount(List<EffectInstance> activeEffects) {
+        return  (int) activeEffects.stream()
                 .map(EffectInstance::getEffect)
                 .filter(Effect::isBeneficial)
                 .count();
-        int beneficialRows = (int) Math.ceil(beneficialEffects / (float) this.getMaxHorizontalEffects());
+    }
+
+    @Override
+    public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
+        final int beneficialRows = this.splitByColumns(this.getBeneficialAmount(activeEffects));
         int beneficialCounter = 0, harmfulCounter = 0;
-        int maxHeight = this.getMaxVerticalEffects();
-        Map<EffectInstance, int[]> effectToPos = Maps.newHashMap();
+        List<Pair<EffectInstance, int[]>> effectToPos = Lists.newArrayList();
         for (EffectInstance effect : activeEffects) {
             int counter;
             final boolean beneficial = !StylishEffects.CONFIG.client().compactWidget().separateEffects || effect.getEffect().isBeneficial();
@@ -57,14 +75,17 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
             } else {
                 counter = harmfulCounter++;
             }
-            int posX = counter % this.getMaxHorizontalEffects();
-            int posY = counter / this.getMaxHorizontalEffects();
+            int posX = counter % this.getMaxColumns();
+            int posY = counter / this.getMaxColumns();
             if (!beneficial) {
                 posY += beneficialRows;
             }
-            if (posY < maxHeight) {
-                effectToPos.put(effect, this.coordsToEffectPosition(posX, posY));
+            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxRows()) {
+                effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
             }
+        }
+        if (StylishEffects.CONFIG.client().compactWidget().separateEffects) {
+            effectToPos.sort(Comparator.<Pair<EffectInstance, int[]>, Boolean>comparing(o -> o.getLeft().getEffect().isBeneficial()).reversed());
         }
         if (beneficialCounter + harmfulCounter != activeEffects.size()) throw new RuntimeException("effects amount mismatch");
         return effectToPos;
@@ -75,7 +96,7 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         RenderSystem.enableBlend();
         minecraft.getTextureManager().bind(EFFECT_BACKGROUND);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
-        AbstractGui.blit(matrixStack, posX, posY, effectinstance.isAmbient() ? this.getWidth() : 0, 64, this.getWidth(), this.getHeight(), 256, 256);
+        AbstractGui.blit(matrixStack, posX, posY, StylishEffects.CONFIG.client().compactWidget().ambientBorder && effectinstance.isAmbient() ? this.getWidth() : 0, 64, this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectAmplifier(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawEffectSprite(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawCustomEffect(matrixStack, posX, posY, effectinstance);
@@ -90,12 +111,17 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
             float red = (potionColor >> 16 & 255) / 255.0F;
             float green = (potionColor >> 8 & 255) / 255.0F;
             float blue = (potionColor >> 0 & 255) / 255.0F;
+            final int offsetX = amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? 3 : 23;
+            final int offsetY = 2;
             // drop shadow
-            RenderSystem.color4f(red * 0.25F, green * 0.25F, blue * 0.25F, this.config().widgetAlpha);
-            AbstractGui.blit(matrixStack, posX + (amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? 4 : 24), posY + 3, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            RenderSystem.color4f(0.0F, 0.0F, 0.0F, this.config().widgetAlpha);
+            AbstractGui.blit(matrixStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            AbstractGui.blit(matrixStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             // actual number
             RenderSystem.color4f(red, green, blue, this.config().widgetAlpha);
-            AbstractGui.blit(matrixStack, posX + (amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? 3 : 23), posY + 2, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
         }
     }
 
@@ -105,14 +131,23 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         minecraft.getTextureManager().bind(textureatlassprite.atlas().location());
         final float blinkingAlpha = StylishEffects.CONFIG.client().compactWidget().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
-        AbstractGui.blit(matrixStack, posX + 5, posY + (effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
+        // draw icon a bit further down when no time is displayed to trim empty space
+        AbstractGui.blit(matrixStack, posX + 5, posY + (!StylishEffects.CONFIG.client().vanillaWidget().ambientDuration && effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
     }
 
+    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     private void drawEffectText(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
-        if (!effectinstance.isAmbient()) {
+        if (StylishEffects.CONFIG.client().vanillaWidget().ambientDuration || !effectinstance.isAmbient()) {
             this.getEffectDuration(effectinstance, StylishEffects.CONFIG.client().compactWidget().longDurationString).ifPresent(durationComponent -> {
                 int potionColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().compactWidget().durationColor, effectinstance);
-                AbstractGui.drawCenteredString(matrixStack, minecraft.font, durationComponent, posX + 15, posY + 14, (int) (this.config().widgetAlpha * 255.0F) << 24 | potionColor);
+                final int alpha = (int) (this.config().widgetAlpha * 255.0F) << 24;
+                IReorderingProcessor ireorderingprocessor = durationComponent.getVisualOrderText();
+                // render shadow on every side due avoid clashing with colorful background
+                minecraft.font.draw(matrixStack, ireorderingprocessor, posX + 14 - minecraft.font.width(ireorderingprocessor) / 2, posY + 14, alpha);
+                minecraft.font.draw(matrixStack, ireorderingprocessor, posX + 16 - minecraft.font.width(ireorderingprocessor) / 2, posY + 14, alpha);
+                minecraft.font.draw(matrixStack, ireorderingprocessor, posX + 15 - minecraft.font.width(ireorderingprocessor) / 2, posY + 13, alpha);
+                minecraft.font.draw(matrixStack, ireorderingprocessor, posX + 15 - minecraft.font.width(ireorderingprocessor) / 2, posY + 15, alpha);
+                minecraft.font.draw(matrixStack, ireorderingprocessor, posX + 15 - minecraft.font.width(ireorderingprocessor) / 2, posY + 14, alpha | potionColor);
             });
         }
     }
