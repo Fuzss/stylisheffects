@@ -89,12 +89,12 @@ public class ClientConfig extends AbstractConfig {
     public static abstract class EffectRendererConfig extends AbstractConfig {
         @Config(description = "Effect renderer to be used.")
         public EffectRenderer rendererType = EffectRenderer.COMPACT;
-        @Config(description = "Maximum amount of status effects rendered in a single row.")
+        @Config(description = "Maximum amount of status effects rendered in a single row. Not all widget types support this option.")
         @Config.IntRange(min = 1, max = 255)
-        public int maxWidth = 255;
+        public int maxColumns = 255;
         @Config(description = "Maximum amount of status effects rendered in a single column.")
         @Config.IntRange(min = 1, max = 255)
-        public int maxHeight = 255;
+        public int maxRows = 255;
         @Config(description = "Screen side to render status effects on.")
         public ScreenSide screenSide = ScreenSide.RIGHT;
 //        @Config(description = "Scale for effect widgets.")

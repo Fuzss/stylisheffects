@@ -42,6 +42,11 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
+    protected int getTopOffset() {
+        return 0;
+    }
+
+    @Override
     public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
         List<Pair<EffectInstance, int[]>> effectToPos = Lists.newArrayList();
         for (int i = 0, size = this.config().overflowMode == ClientConfig.OverflowMode.SKIP ? Math.min(activeEffects.size(), this.getMaxRows()) : activeEffects.size(); i < size; i++) {
@@ -77,7 +82,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
                 component.append(" ").append(new TranslationTextComponent("enchantment.level." + (effectinstance.getAmplifier() + 1)));
             }
             int nameColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().vanillaWidget().nameColor, effectinstance);
-            minecraft.font.drawShadow(matrixStack, component, posX + 10 + 18, posY + 7, (int) (this.config().widgetAlpha * 255.0F) << 24 | nameColor);
+            minecraft.font.drawShadow(matrixStack, component, posX + 10 + 18, posY + 7 + (!StylishEffects.CONFIG.client().vanillaWidget().ambientDuration && effectinstance.isAmbient() ? 4 : 0), (int) (this.config().widgetAlpha * 255.0F) << 24 | nameColor);
             if (StylishEffects.CONFIG.client().vanillaWidget().ambientDuration || !effectinstance.isAmbient()) {
                 this.getEffectDuration(effectinstance, StylishEffects.CONFIG.client().vanillaWidget().longDurationString).ifPresent(duration -> {
                     int durationColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().vanillaWidget().durationColor, effectinstance);

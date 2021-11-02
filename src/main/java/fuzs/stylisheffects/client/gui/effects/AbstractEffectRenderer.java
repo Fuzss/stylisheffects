@@ -24,14 +24,14 @@ import java.util.stream.Collectors;
 public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRenderAreas {
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MODID,"textures/gui/mob_effect_background.png");
 
-    protected final EffectRendererType type;
+    private final EffectRendererType type;
 
-    protected AbstractGui screen;
-    protected int availableWidth;
-    protected int availableHeight;
-    protected int startX;
-    protected int startY;
-    protected ClientConfig.ScreenSide screenSide;
+    private AbstractGui screen;
+    private int availableWidth;
+    private int availableHeight;
+    private int startX;
+    private int startY;
+    private ClientConfig.ScreenSide screenSide;
     protected List<EffectInstance> activeEffects;
 
     public AbstractEffectRenderer(EffectRendererType type) {
@@ -75,16 +75,18 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
 
     public abstract List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects);
 
+    protected abstract int getTopOffset();
+
     protected int[] coordsToEffectPosition(int coordX, int coordY) {
         int[] renderPositions = new int[2];
         switch (this.screenSide) {
             case LEFT:
                 renderPositions[0] = this.startX - (this.getWidth() + 1) - (this.getWidth() + this.config().widgetSpace) * coordX;
-                renderPositions[1] = this.startY + 1 + this.getAdjustedHeight() * coordY;
+                renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
                 break;
             case RIGHT:
                 renderPositions[0] = this.startX + 1 + (this.getWidth() + this.config().widgetSpace) * coordX;
-                renderPositions[1] = this.startY + 1 + this.getAdjustedHeight() * coordY;
+                renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
                 break;
             default:
                 throw new IllegalStateException("unreachable statement");
@@ -106,17 +108,27 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         return 1.0F;
     }
 
-    protected abstract int getMaxColumns();
+    private int getAvailableWidth() {
+        return Math.min(this.availableWidth, this.config().maxColumns * (this.getWidth() + this.config().widgetSpace));
+    }
+
+    private int getAvailableHeight() {
+        return Math.min(this.availableHeight, this.config().maxRows * (this.getHeight() + this.config().widgetSpace));
+    }
+
+    public int getMaxColumns() {
+        return MathHelper.clamp(this.getAvailableWidth() / (this.getWidth() + this.config().widgetSpace), 1, this.config().maxColumns);
+    }
 
     private int getAdjustedHeight() {
-        if (this.getRows() > this.getMaxRows()) {
-            return (this.getHeight() + this.config().widgetSpace) * this.getMaxRows() / Math.max(1, this.getRows() - 1);
+        if (this.config().overflowMode == ClientConfig.OverflowMode.CONDENSE && this.getRows() > this.getMaxRows()) {
+            return (this.getAvailableHeight() - this.getHeight()) / Math.max(1, this.getRows() - 1);
         }
         return this.getHeight() + this.config().widgetSpace;
     }
 
     public int getMaxRows() {
-        return MathHelper.clamp(this.availableHeight / (this.getHeight() + this.config().widgetSpace), 1, this.config().maxHeight);
+        return MathHelper.clamp(this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpace), 1, this.config().maxRows);
     }
 
     public abstract int getRows();

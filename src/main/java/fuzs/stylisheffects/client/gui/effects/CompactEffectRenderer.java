@@ -13,7 +13,6 @@ import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Comparator;
@@ -37,11 +36,6 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    public int getMaxColumns() {
-        return MathHelper.clamp(this.availableWidth / (this.getWidth() + this.config().widgetSpace), 1, this.config().maxWidth);
-    }
-
-    @Override
     public int getRows() {
         if (StylishEffects.CONFIG.client().compactWidget().separateEffects) {
             final int beneficialEffects = this.getBeneficialAmount(this.activeEffects);
@@ -49,6 +43,11 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         } else {
             return this.splitByColumns(this.activeEffects.size());
         }
+    }
+
+    @Override
+    protected int getTopOffset() {
+        return 1;
     }
 
     private int splitByColumns(int amountToSplit) {
@@ -132,12 +131,12 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         final float blinkingAlpha = StylishEffects.CONFIG.client().compactWidget().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
         // draw icon a bit further down when no time is displayed to trim empty space
-        AbstractGui.blit(matrixStack, posX + 5, posY + (!StylishEffects.CONFIG.client().vanillaWidget().ambientDuration && effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
+        AbstractGui.blit(matrixStack, posX + 5, posY + (!StylishEffects.CONFIG.client().compactWidget().ambientDuration && effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
     }
 
     @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     private void drawEffectText(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
-        if (StylishEffects.CONFIG.client().vanillaWidget().ambientDuration || !effectinstance.isAmbient()) {
+        if (StylishEffects.CONFIG.client().compactWidget().ambientDuration || !effectinstance.isAmbient()) {
             this.getEffectDuration(effectinstance, StylishEffects.CONFIG.client().compactWidget().longDurationString).ifPresent(durationComponent -> {
                 int potionColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().compactWidget().durationColor, effectinstance);
                 final int alpha = (int) (this.config().widgetAlpha * 255.0F) << 24;
