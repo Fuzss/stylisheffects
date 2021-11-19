@@ -1,16 +1,12 @@
 buildscript {
-
     repositories {
-
         mavenCentral()
         maven { url = 'https://maven.minecraftforge.net' }
         maven { url = 'https://repo.spongepowered.org/maven' }
         maven { url = 'https://maven.parchmentmc.org' }
         maven { url = "https://cursemaven.com" }
     }
-
     dependencies {
-
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
         classpath group: 'org.parchmentmc', name: 'librarian', version: '1.+'
@@ -18,7 +14,6 @@ buildscript {
 }
 
 plugins {
-
     id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
@@ -39,46 +34,35 @@ ext.modauthor = "${modAuthor}"
 ext.nextmcversion = getNextVersion(project.mcversion)
 ext.puzzlesversion = "${puzzlesVersion.substring(1, puzzlesVersion.indexOf("-"))}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
 minecraft {
-
     mappings channel: "${mappingsChannel}", version: "${mappingsVersion}"
-
     runs {
-
         client {
-
             // https://forums.minecraftforge.net/topic/82228-1152-3110-intellij-and-gradlew-forge-hotswap-and-dcevm-tutorial/
             if (project.hasProperty('hotswapAgent') && project.findProperty('enableHotswap').toBoolean()) {
-
                 jvmArgs '-ea', '-Xms1G', '-Xmx4G', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5010', '-XXaltjvm=dcevm', '-XX:+UnlockExperimentalVMOptions', "-javaagent:${hotswapAgent}"
             } else {
-
                 jvmArgs '-ea', '-Xms1G', '-Xmx4G'
             }
-
+            property 'fml.earlyprogresswindow', 'false'
+            // mixin properties
             args '--mixin.config', "META-INF/${project.modid}.mixins.json".toString()
-            properties 'fml.earlyprogresswindow': 'false', 'mixin.env.remapRefMap': 'true', 'mixin.env.refMapRemappingFile': "${project.projectDir}/build/createSrgToMcp/output.srg".toString()
+            properties 'mixin.env.remapRefMap': 'true', 'mixin.env.refMapRemappingFile': "${project.projectDir}/build/createSrgToMcp/output.srg".toString()
         }
-
         server {
-
             jvmArgs '-ea', '-Xms1G', '-Xmx4G'
-            args 'nogui', '--mixin.config', "META-INF/${project.modid}.mixins.json".toString()
+            arg 'nogui'
+            // mixin properties
+            args '--mixin.config', "META-INF/${project.modid}.mixins.json".toString()
             properties 'mixin.env.remapRefMap': 'true', 'mixin.env.refMapRemappingFile': "${project.projectDir}/build/createSrgToMcp/output.srg".toString()
         }
     }
 }
 
-//configurations {
-//
-//    shade
-//}
-
 repositories {
-
     mavenLocal()
     maven { url = "https://cursemaven.com" }
     maven {
@@ -94,24 +78,20 @@ repositories {
 }
 
 dependencies {
-
     minecraft "net.minecraftforge:forge:${forgeVersion}"
-    annotationProcessor 'org.spongepowered:mixin:0.8.3:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
 
     // compile against the JEI API but do not include it at runtime
-    compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.0.107")
+    compileOnly fg.deobf("mezz.jei:jei-1.17.1:8.2.0.36")
     // at runtime, use the full JEI jar
-    runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.0.107")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.17.1:8.2.0.36")
 
-    runtimeOnly fg.deobf("curse.maven:configured-457570:3434071")
-    runtimeOnly fg.deobf("curse.maven:catalogue-459701:3399554")
-    runtimeOnly fg.deobf("curse.maven:bettermodsbutton-541584:3508146")
+    // don't enable these for puzzles, they'll be forced upon all dependencies then via maven
+    runtimeOnly fg.deobf("curse.maven:catalogue-459701:3529459")
+    runtimeOnly fg.deobf("curse.maven:bettermodsbutton-541584:3519040")
+    runtimeOnly fg.deobf("curse.maven:configmenusforge-544048:3520852")
 
-    // shadow demo
-//    implementation "com.github.Ocelot5836:Sonar:ef5b90d"
-//    shade "com.github.Ocelot5836:Sonar:ef5b90d"
-
-    // local maven
+    // from local maven, those builds are not obfuscated
     implementation "fuzs.puzzleslib:PuzzlesLib:${puzzlesVersion}"
     // try use curse maven when local maven is not available
     // file id is end of url (7 digits usually) when on file details page on curse
@@ -119,12 +99,10 @@ dependencies {
 }
 
 mixin {
-
     add sourceSets.main, "META-INF/${project.modid}.refmap.json"
 }
 
 processResources {
-
     duplicatesStrategy DuplicatesStrategy.INCLUDE
 
     // this will ensure that this task is redone when the versions change.
@@ -140,7 +118,7 @@ processResources {
     inputs.property "minForgeVersion", "${minForgeVersion}"
     inputs.property "minMinecraftVersion", "${minMinecraftVersion}"
     inputs.property "nextMinecraftVersion", project.nextmcversion
-    inputs.property "minPuzzlesVersion", project.puzzlesversion
+    inputs.property "minPuzzlesVersion", "${minPuzzlesVersion}"
     inputs.property "packFormat", "${packFormat}"
 
     // replace stuff in mods.toml and pack.mcmeta
@@ -158,7 +136,7 @@ processResources {
                 'minForgeVersion':      "${minForgeVersion}",
                 'minMinecraftVersion':  "${minMinecraftVersion}",
                 "nextMinecraftVersion": project.nextmcversion,
-                "minPuzzlesVersion":    project.puzzlesversion
+                "minPuzzlesVersion":    "${minPuzzlesVersion}"
         )
     }
 
@@ -183,41 +161,12 @@ ext.jarAttributes = [
         "MixinConfigs"              : "META-INF/${project.modid}.mixins.json"
 ]
 
-//import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-//
-//task relocateShadowJar(type: ConfigureShadowRelocation) {
-//
-//    // Configure Auto Relocation
-//    target = tasks.shadowJar
-//}
-//
-//tasks.shadowJar.dependsOn tasks.relocateShadowJar
-//
-//shadowJar {
-//
-//    from rootProject.file("LICENSE")
-//    configurations = [project.configurations.shade]
-//    // relocation is done via ConfigureShadowRelocation task
-//    // make this main jar without any classifier if it exists
-//    classifier ""
-//}
-//
-//reobf {
-//
-//    shadowJar {}
-//}
-//
-//build.dependsOn reobfShadowJar
-
 def createJarTask(def name, def type, def sources) {
-
     return tasks.create(name, Jar) {
-
         from sources
         from rootProject.file("LICENSE")
         from rootProject.file("CHANGELOG.md")
         classifier = type
-
         manifest { attributes(project.jarAttributes) }
         dependsOn classes
         group 'jar'
@@ -225,14 +174,8 @@ def createJarTask(def name, def type, def sources) {
 }
 
 def createSignJarTask(def name, def jarTask) {
-
     return tasks.create(name, net.minecraftforge.gradle.common.tasks.SignJar) {
-
-        onlyIf {
-
-            project.hasProperty('keyStore')
-        }
-
+        onlyIf { project.hasProperty('keyStore') }
         keyStore = project.findProperty('keyStore')
         alias = project.findProperty('keyStoreAlias')
         storePass = project.findProperty('keyStorePass')
@@ -244,7 +187,6 @@ def createSignJarTask(def name, def jarTask) {
 }
 
 jar {
-
     from sourceSets.main.output.classesDirs
     from sourceSets.main.output.resourcesDir
     from rootProject.file("LICENSE")
@@ -256,36 +198,27 @@ jar {
 createJarTask("deobfJar", "deobf", [sourceSets.main.output])
 createJarTask("sourceJar", "sources", sourceSets.main.allSource)
 createJarTask("javadocJar", "javadoc", javadoc)
-
 createSignJarTask("signJar", jar)
-//createSignJarTask("signShadowJar", shadowJar)
 createSignJarTask("signDeobfJar", deobfJar)
 createSignJarTask("signSourceJar", sourceJar)
 createSignJarTask("signJavadocJar", javadocJar)
 
 // finalize all jar build tasks with a signing task
 def jarTasks = [jar, deobfJar, sourceJar, javadocJar]
-//def jarTasks = [jar, shadowJar, deobfJar, sourceJar, javadocJar]
 jarTasks.each { task -> task.finalizedBy tasks.findByName("sign" + task.name.substring(0, 1).toUpperCase() + task.name.substring(1))}
 
 signJar.mustRunAfter 'reobfJar'
-//signShadowJar.mustRunAfter 'reobfShadowJar'
 
 artifacts {
-
     archives jar
-//    archives shadowJar
 //    archives deobfJar
 //    archives sourceJar
 //    archives javadocJar
 }
 
 publishing {
-
     publications {
-
         mavenJava (MavenPublication) {
-
             artifact deobfJar
             artifact sourceJar
             artifact javadocJar
@@ -295,17 +228,11 @@ publishing {
 }
 
 curseforge {
-
     def changelogName = 'CHANGELOG.md'
     def changelogFile = file(changelogName)
-    if (!changelogFile.canRead()) {
-
-        throw new FileNotFoundException("Could not read file ".concat(changelogName))
-    }
-
+    if (!changelogFile.canRead()) { throw new FileNotFoundException("Could not read file ".concat(changelogName)) }
     apiKey = project.findProperty('curseApiToken')
     project {
-
         id = project.findProperty('curseProjectId')
         changelogType = 'markdown'
         changelog = changelogFile
@@ -313,16 +240,13 @@ curseforge {
         addGameVersion project.findProperty('projectLoader')
         project.findProperty('curseProjectVersion').replaceAll(" ", "").split(",").each { version -> addGameVersion version }
         mainArtifact jar
-//        mainArtifact shadowJar
         addArtifact sourceJar
         relations {
             requiredDependency 'puzzles-lib'
             optionalDependency 'potion-descriptions'
         }
     }
-
     options {
-
         // doesn't upload, only prints json to console
 //        debug = true
         javaVersionAutoDetect = false
@@ -331,41 +255,24 @@ curseforge {
 }
 
 task copyJarToDir(type: Copy) {
-
-    onlyIf {
-
-        project.hasProperty('buildJarOutputDir') && project.hasProperty('uniqueBuildNumber')
-    }
-
+    onlyIf { project.hasProperty('buildJarOutputDir') && project.hasProperty('uniqueBuildNumber') }
     if (project.findProperty('copyBuildJar').toBoolean()) {
-
         // shortcut for jar.outputs.files
         from jar
-//        from shadowJar
         into project.findProperty('buildJarOutputDir')
         // add build number to be able to distinguish jars when testing thorough official launcher
         // build number is stored in global gradle.properties
-        rename { fileName -> fileName.replace("v${project.modversion}", "v${project.modversion}-build${uniqueBuildNumber}") }
+        rename { fileName -> fileName.replace("v${project.modversion}", "v${project.modversion}.${uniqueBuildNumber}") }
     }
 }
 
 task incrementBuildNumber {
-
-    onlyIf {
-
-        project.hasProperty('uniqueBuildNumber')
-    }
-
+    onlyIf { project.hasProperty('uniqueBuildNumber') }
     doLast {
-
         def propertiesName = 'gradle.properties'
         // build number is stored in global gradle.properties
         def propertiesFile = new File(project.gradle.gradleUserHomeDir, propertiesName)
-        if (!propertiesFile.canRead()) {
-
-            throw new FileNotFoundException("Could not read file ".concat(propertiesName))
-        }
-
+        if (!propertiesFile.canRead()) { throw new FileNotFoundException("Could not read file ".concat(propertiesName)) }
         def buildNumberMatcher = Pattern.compile("uniqueBuildNumber=(\\d+)").matcher(propertiesFile.getText())
         buildNumberMatcher.find()
         def versionCode = Integer.parseInt(buildNumberMatcher.group(1))
@@ -423,7 +330,6 @@ import groovy.json.*
 import java.util.regex.Pattern
 
 def static getNextVersion(String puzzlesVersion) {
-
     def puzzlesVersionMatcher = Pattern.compile("(\\d+\\.\\d+)").matcher(puzzlesVersion)
     puzzlesVersionMatcher.find()
     def currentVersion = puzzlesVersionMatcher.group(1)
@@ -431,7 +337,6 @@ def static getNextVersion(String puzzlesVersion) {
 }
 
 signing {
-
     sign publishing.publications.mavenJava
 }
 
@@ -441,5 +346,4 @@ signMavenJavaPublication.dependsOn project.signSourceJar
 tasks.getByPath('curseforge').finalizedBy project.refreshUpdateJson
 // only copy when building manually
 project.copyJarToDir.dependsOn signJar
-//project.copyJarToDir.dependsOn signShadowJar
 build.finalizedBy project.copyJarToDir, project.incrementBuildNumber

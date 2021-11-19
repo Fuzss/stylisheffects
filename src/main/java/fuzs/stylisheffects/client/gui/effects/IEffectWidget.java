@@ -1,14 +1,13 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.potion.EffectInstance;
+import net.minecraft.world.effect.MobEffectInstance;
 
 public interface IEffectWidget {
-
     int getWidth();
 
     int getHeight();
 
-    void renderWidget(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance);
+    void renderWidget(PoseStack matrixStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance);
 }

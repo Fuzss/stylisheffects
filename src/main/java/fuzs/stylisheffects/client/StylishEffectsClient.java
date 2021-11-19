@@ -3,6 +3,8 @@ package fuzs.stylisheffects.client;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.handler.EffectScreenHandler;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.client.gui.OverlayRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -13,18 +15,19 @@ import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 public class StylishEffectsClient {
     @SubscribeEvent
     public static void onConstructMod(final FMLConstructModEvent evt) {
-        EffectScreenHandler handler = new EffectScreenHandler();
-        MinecraftForge.EVENT_BUS.addListener(handler::onPotionShift);
-        MinecraftForge.EVENT_BUS.addListener(handler::onInitGuiPost);
-        MinecraftForge.EVENT_BUS.addListener(handler::onDrawBackground);
-        MinecraftForge.EVENT_BUS.addListener(handler::onDrawScreenPost);
-        MinecraftForge.EVENT_BUS.addListener(handler::onRenderGameOverlayPre);
-        MinecraftForge.EVENT_BUS.addListener(handler::onRenderGameOverlayText);
+        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onPotionShift);
+        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onInitGuiPost);
+        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onDrawBackground);
+        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onDrawScreenPost);
     }
 
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent evt) {
-        EffectScreenHandler.createEffectRenderers();
-        StylishEffects.CONFIG.addClientCallback(EffectScreenHandler::createEffectRenderers);
+        OverlayRegistry.enableOverlay(ForgeIngameGui.POTION_ICONS_ELEMENT, false);
+        OverlayRegistry.registerOverlayBelow(ForgeIngameGui.HUD_TEXT_ELEMENT, "Mod Potion Icons", (gui, poseStack, partialTicks, screenWidth, screenHeight) -> {
+            EffectScreenHandler.INSTANCE.onRenderGameOverlayText(poseStack, screenWidth, screenHeight);
+        });
+        EffectScreenHandler.INSTANCE.createEffectRenderers();
+        StylishEffects.CONFIG.addClientCallback(EffectScreenHandler.INSTANCE::createEffectRenderers);
     }
 }

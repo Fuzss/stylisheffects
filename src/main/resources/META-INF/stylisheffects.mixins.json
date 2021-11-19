@@ -1,14 +1,14 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_16",
   "package": "fuzs.stylisheffects.mixin",
   "refmap": "META-INF/stylisheffects.refmap.json",
   "mixins": [
     "compat.InventoryEffectRendererGuiHandlerMixin"
   ],
   "client": [
-    "client.accessor.DisplayEffectsScreenAccessor"
+    "client.accessor.EffectRenderingInventoryScreenAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

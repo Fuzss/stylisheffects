@@ -1,8 +1,8 @@
 package fuzs.stylisheffects;
 
-import fuzs.puzzleslib.config.v2.AbstractConfig;
-import fuzs.puzzleslib.config.v2.ConfigHolder;
-import fuzs.puzzleslib.config.v2.ConfigHolderImpl;
+import fuzs.puzzleslib.config.AbstractConfig;
+import fuzs.puzzleslib.config.ConfigHolder;
+import fuzs.puzzleslib.config.ConfigHolderImpl;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;

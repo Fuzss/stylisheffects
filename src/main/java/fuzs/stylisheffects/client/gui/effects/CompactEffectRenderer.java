@@ -1,18 +1,19 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.renderer.texture.PotionSpriteUploader;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.util.IReorderingProcessor;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.MobEffectTextureManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Comparator;
@@ -49,19 +50,19 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         return 1;
     }
 
-    private int getBeneficialAmount(List<EffectInstance> activeEffects) {
+    private int getBeneficialAmount(List<MobEffectInstance> activeEffects) {
         return  (int) activeEffects.stream()
-                .map(EffectInstance::getEffect)
-                .filter(Effect::isBeneficial)
+                .map(MobEffectInstance::getEffect)
+                .filter(MobEffect::isBeneficial)
                 .count();
     }
 
     @Override
-    public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
+    public List<Pair<MobEffectInstance, int[]>> getEffectPositions(List<MobEffectInstance> activeEffects) {
         final int beneficialRows = this.splitByColumns(this.getBeneficialAmount(activeEffects));
         int beneficialCounter = 0, harmfulCounter = 0;
-        List<Pair<EffectInstance, int[]>> effectToPos = Lists.newArrayList();
-        for (EffectInstance effect : activeEffects) {
+        List<Pair<MobEffectInstance, int[]>> effectToPos = Lists.newArrayList();
+        for (MobEffectInstance effect : activeEffects) {
             int counter;
             final boolean beneficial = !StylishEffects.CONFIG.client().compactWidget().separateEffects || effect.getEffect().isBeneficial();
             if (beneficial) {
@@ -80,28 +81,30 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         }
         // sorting is need for rendering in condensed mode (when too many effects are active and the widget overlap) so that widget overlap in the right order
         if (StylishEffects.CONFIG.client().compactWidget().separateEffects) {
-            effectToPos.sort(Comparator.<Pair<EffectInstance, int[]>, Boolean>comparing(o -> o.getLeft().getEffect().isBeneficial()).reversed());
+            effectToPos.sort(Comparator.<Pair<MobEffectInstance, int[]>, Boolean>comparing(o -> o.getLeft().getEffect().isBeneficial()).reversed());
         }
         if (beneficialCounter + harmfulCounter != activeEffects.size()) throw new RuntimeException("effects amount mismatch");
         return effectToPos;
     }
 
     @Override
-    public void renderWidget(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
+    public void renderWidget(PoseStack matrixStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
         RenderSystem.enableBlend();
-        minecraft.getTextureManager().bind(EFFECT_BACKGROUND);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
-        AbstractGui.blit(matrixStack, posX, posY, StylishEffects.CONFIG.client().compactWidget().ambientBorder && effectinstance.isAmbient() ? this.getWidth() : 0, 64, this.getWidth(), this.getHeight(), 256, 256);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, EFFECT_BACKGROUND);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
+        GuiComponent.blit(matrixStack, posX, posY, StylishEffects.CONFIG.client().compactWidget().ambientBorder && effectinstance.isAmbient() ? this.getWidth() : 0, 64, this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectAmplifier(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawEffectSprite(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawCustomEffect(matrixStack, posX, posY, effectinstance);
         this.drawEffectText(matrixStack, posX, posY, minecraft, effectinstance);
     }
 
-    private void drawEffectAmplifier(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
+    private void drawEffectAmplifier(PoseStack matrixStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
         final ClientConfig.EffectAmplifier amplifier = StylishEffects.CONFIG.client().compactWidget().effectAmplifier;
         if (amplifier != ClientConfig.EffectAmplifier.NONE && effectinstance.getAmplifier() >= 1 && effectinstance.getAmplifier() <= 9) {
-            minecraft.getTextureManager().bind(TINY_NUMBERS_TEXTURE);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShaderTexture(0, TINY_NUMBERS_TEXTURE);
             int potionColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().compactWidget().amplifierColor, effectinstance);
             float red = (potionColor >> 16 & 255) / 255.0F;
             float green = (potionColor >> 8 & 255) / 255.0F;
@@ -109,34 +112,34 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
             final int offsetX = amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? 3 : 23;
             final int offsetY = 2;
             // drop shadow
-            RenderSystem.color4f(0.0F, 0.0F, 0.0F, this.config().widgetAlpha);
-            AbstractGui.blit(matrixStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-            AbstractGui.blit(matrixStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-            AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-            AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, this.config().widgetAlpha);
+            GuiComponent.blit(matrixStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            GuiComponent.blit(matrixStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            GuiComponent.blit(matrixStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            GuiComponent.blit(matrixStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             // actual number
-            RenderSystem.color4f(red, green, blue, this.config().widgetAlpha);
-            AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+            RenderSystem.setShaderColor(red, green, blue, this.config().widgetAlpha);
+            GuiComponent.blit(matrixStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
         }
     }
 
-    private void drawEffectSprite(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
-        PotionSpriteUploader potionspriteuploader = minecraft.getMobEffectTextures();
+    private void drawEffectSprite(PoseStack matrixStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
+        MobEffectTextureManager potionspriteuploader = minecraft.getMobEffectTextures();
         TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effectinstance.getEffect());
-        minecraft.getTextureManager().bind(textureatlassprite.atlas().location());
+        RenderSystem.setShaderTexture(0, textureatlassprite.atlas().location());
         final float blinkingAlpha = StylishEffects.CONFIG.client().compactWidget().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
         // draw icon a bit further down when no time is displayed to trim empty space
-        AbstractGui.blit(matrixStack, posX + 5, posY + (!StylishEffects.CONFIG.client().compactWidget().ambientDuration && effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
+        GuiComponent.blit(matrixStack, posX + 5, posY + (!StylishEffects.CONFIG.client().compactWidget().ambientDuration && effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
     }
 
     @SuppressWarnings("IntegerDivisionInFloatingPointContext")
-    private void drawEffectText(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
+    private void drawEffectText(PoseStack matrixStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
         if (StylishEffects.CONFIG.client().compactWidget().ambientDuration || !effectinstance.isAmbient()) {
             this.getEffectDuration(effectinstance, StylishEffects.CONFIG.client().compactWidget().longDurationString).ifPresent(durationComponent -> {
                 int potionColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.client().compactWidget().durationColor, effectinstance);
                 final int alpha = (int) (this.config().widgetAlpha * 255.0F) << 24;
-                IReorderingProcessor ireorderingprocessor = durationComponent.getVisualOrderText();
+                FormattedCharSequence ireorderingprocessor = durationComponent.getVisualOrderText();
                 // render shadow on every side due avoid clashing with colorful background
                 minecraft.font.draw(matrixStack, ireorderingprocessor, posX + 14 - minecraft.font.width(ireorderingprocessor) / 2, posY + 14, alpha);
                 minecraft.font.draw(matrixStack, ireorderingprocessor, posX + 16 - minecraft.font.width(ireorderingprocessor) / 2, posY + 14, alpha);

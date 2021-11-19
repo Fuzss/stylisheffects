@@ -1,8 +1,8 @@
 package fuzs.stylisheffects.config;
 
-import fuzs.puzzleslib.config.v2.AbstractConfig;
-import fuzs.puzzleslib.config.v2.annotation.Config;
-import net.minecraft.util.text.TextFormatting;
+import fuzs.puzzleslib.config.AbstractConfig;
+import fuzs.puzzleslib.config.annotation.Config;
+import net.minecraft.ChatFormatting;
 
 public class ClientConfig extends AbstractConfig {
     @Config
@@ -158,7 +158,7 @@ public class ClientConfig extends AbstractConfig {
         @Config(description = "Show duration for ambient effects.")
         public boolean ambientDuration = true;
 
-        public TextFormatting durationColor;
+        public ChatFormatting durationColor;
 
         public EffectWidgetConfig(String name) {
             super(name);
@@ -166,7 +166,7 @@ public class ClientConfig extends AbstractConfig {
 
         @Override
         protected void afterConfigReload() {
-            this.durationColor = TextFormatting.getByName(this.durationColorRaw);
+            this.durationColor = ChatFormatting.getByName(this.durationColorRaw);
         }
     }
 
@@ -175,7 +175,7 @@ public class ClientConfig extends AbstractConfig {
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
         private String nameColorRaw = "WHITE";
 
-        public TextFormatting nameColor;
+        public ChatFormatting nameColor;
 
         public VanillaWidgetConfig() {
             super("vanilla_widget");
@@ -186,7 +186,7 @@ public class ClientConfig extends AbstractConfig {
         @Override
         protected void afterConfigReload() {
             super.afterConfigReload();
-            this.nameColor = TextFormatting.getByName(this.nameColorRaw);
+            this.nameColor = ChatFormatting.getByName(this.nameColorRaw);
         }
     }
 
@@ -199,7 +199,7 @@ public class ClientConfig extends AbstractConfig {
         @Config(description = "Draw harmful effects on a separate line from beneficial ones. This is turned on in vanilla.")
         public boolean separateEffects = false;
 
-        public TextFormatting amplifierColor;
+        public ChatFormatting amplifierColor;
 
         public CompactWidgetConfig() {
             super("compact_widget");
@@ -210,7 +210,7 @@ public class ClientConfig extends AbstractConfig {
         @Override
         protected void afterConfigReload() {
             super.afterConfigReload();
-            this.amplifierColor = TextFormatting.getByName(this.amplifierColorRaw);
+            this.amplifierColor = ChatFormatting.getByName(this.amplifierColorRaw);
         }
     }
 }

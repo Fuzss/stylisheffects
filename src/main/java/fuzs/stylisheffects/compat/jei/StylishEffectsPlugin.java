@@ -4,8 +4,8 @@ import fuzs.stylisheffects.StylishEffects;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.resources.ResourceLocation;
 
 @JeiPlugin
 public class StylishEffectsPlugin implements IModPlugin {
@@ -16,6 +16,6 @@ public class StylishEffectsPlugin implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
-        registration.addGenericGuiContainerHandler(ContainerScreen.class, new EffectRendererGuiHandler<>());
+        registration.addGenericGuiContainerHandler(AbstractContainerScreen.class, new EffectRendererGuiHandler<>());
     }
 }

@@ -1,12 +1,12 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import com.google.common.collect.Lists;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.PotionUtils;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.alchemy.PotionUtils;
 
 public class ColorUtil {
-    public static int getEffectColor(TextFormatting color, EffectInstance effectinstance) {
+    public static int getEffectColor(ChatFormatting color, MobEffectInstance effectinstance) {
         if (color != null) return color.getColor();
         return brightenColor(PotionUtils.getColor(Lists.newArrayList(effectinstance)));
     }
