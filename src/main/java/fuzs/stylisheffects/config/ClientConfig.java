@@ -89,9 +89,9 @@ public class ClientConfig extends AbstractConfig {
     public static abstract class EffectRendererConfig extends AbstractConfig {
         @Config(description = "Effect renderer to be used.")
         public EffectRenderer rendererType = EffectRenderer.COMPACT;
-        @Config(description = "Maximum amount of status effects rendered in a single row. Not all widget types support this option.")
+        @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1, max = 255)
-        public int maxColumns = 255;
+        public int maxColumns = 8;
         @Config(description = "Maximum amount of status effects rendered in a single column.")
         @Config.IntRange(min = 1, max = 255)
         public int maxRows = 255;
@@ -125,7 +125,7 @@ public class ClientConfig extends AbstractConfig {
         public InventoryRendererConfig() {
             super("inventory_renderer");
             this.screenSide = ScreenSide.LEFT;
-            this.overflowMode = OverflowMode.CONDENSE;
+            this.widgetAlpha = 1.0F;
         }
     }
     public static class HudRendererConfig extends EffectRendererConfig {
@@ -139,7 +139,7 @@ public class ClientConfig extends AbstractConfig {
         public HudRendererConfig() {
             super("hud_renderer");
             this.screenSide = ScreenSide.RIGHT;
-            this.overflowMode = OverflowMode.SKIP;
+            this.widgetAlpha = 0.85F;
         }
     }
 
@@ -196,8 +196,8 @@ public class ClientConfig extends AbstractConfig {
         @Config(name = "amplifier_color", description = "Effect amplifier color. Setting this to \"EFFECT\" will use potion color.")
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
         private String amplifierColorRaw = "WHITE";
-        @Config(description = "Draw harmful effects on a separate line from beneficial ones.")
-        public boolean separateEffects = true;
+        @Config(description = "Draw harmful effects on a separate line from beneficial ones. This is turned on in vanilla.")
+        public boolean separateEffects = false;
 
         public TextFormatting amplifierColor;
 

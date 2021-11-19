@@ -120,7 +120,7 @@ dependencies {
 
 mixin {
 
-    add sourceSets.main, "${project.modid}.refmap.json"
+    add sourceSets.main, "META-INF/${project.modid}.refmap.json"
 }
 
 processResources {

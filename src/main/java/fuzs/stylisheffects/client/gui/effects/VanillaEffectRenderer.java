@@ -32,25 +32,21 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    public int getMaxColumns() {
-        return 1;
-    }
-
-    @Override
-    public int getRows() {
-        return this.activeEffects.size();
-    }
-
-    @Override
     protected int getTopOffset() {
         return 0;
     }
 
     @Override
     public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
+        int counter = 0;
         List<Pair<EffectInstance, int[]>> effectToPos = Lists.newArrayList();
-        for (int i = 0, size = this.config().overflowMode == ClientConfig.OverflowMode.SKIP ? Math.min(activeEffects.size(), this.getMaxRows()) : activeEffects.size(); i < size; i++) {
-            effectToPos.add(Pair.of(activeEffects.get(i), this.coordsToEffectPosition(0, i)));
+        for (EffectInstance effect : activeEffects) {
+            int posX = counter % this.getMaxColumns();
+            int posY = counter / this.getMaxColumns();
+            counter++;
+            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxRows()) {
+                effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
+            }
         }
         return effectToPos;
     }

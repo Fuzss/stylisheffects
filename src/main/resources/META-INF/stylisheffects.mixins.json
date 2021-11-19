@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
   "package": "fuzs.stylisheffects.mixin",
-  "refmap": "stylisheffects.refmap.json",
+  "refmap": "META-INF/stylisheffects.refmap.json",
   "mixins": [
     "compat.InventoryEffectRendererGuiHandlerMixin"
   ],

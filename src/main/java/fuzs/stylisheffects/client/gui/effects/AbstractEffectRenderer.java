@@ -131,7 +131,13 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         return MathHelper.clamp(this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpace), 1, this.config().maxRows);
     }
 
-    public abstract int getRows();
+    public int getRows() {
+        return this.splitByColumns(this.activeEffects.size());
+    }
+
+    protected int splitByColumns(int amountToSplit) {
+        return (int) Math.ceil(amountToSplit / (float) this.getMaxColumns());
+    }
 
     protected ClientConfig.EffectRendererConfig config() {
         switch (this.type) {

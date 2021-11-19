@@ -40,18 +40,13 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         if (StylishEffects.CONFIG.client().compactWidget().separateEffects) {
             final int beneficialEffects = this.getBeneficialAmount(this.activeEffects);
             return this.splitByColumns(beneficialEffects) + this.splitByColumns(this.activeEffects.size() - beneficialEffects);
-        } else {
-            return this.splitByColumns(this.activeEffects.size());
         }
+        return super.getRows();
     }
 
     @Override
     protected int getTopOffset() {
         return 1;
-    }
-
-    private int splitByColumns(int amountToSplit) {
-        return (int) Math.ceil(amountToSplit / (float) this.getMaxColumns());
     }
 
     private int getBeneficialAmount(List<EffectInstance> activeEffects) {
@@ -83,6 +78,7 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
                 effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
             }
         }
+        // sorting is need for rendering in condensed mode (when too many effects are active and the widget overlap) so that widget overlap in the right order
         if (StylishEffects.CONFIG.client().compactWidget().separateEffects) {
             effectToPos.sort(Comparator.<Pair<EffectInstance, int[]>, Boolean>comparing(o -> o.getLeft().getEffect().isBeneficial()).reversed());
         }
