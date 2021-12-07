@@ -8,6 +8,8 @@
     "compat.InventoryEffectRendererGuiHandlerMixin"
   ],
   "client": [
+    "client.DisplayEffectsScreenMixin",
+    "client.accessor.ContainerAccessor",
     "client.accessor.DisplayEffectsScreenAccessor"
   ],
   "injectors": {

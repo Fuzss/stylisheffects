@@ -25,7 +25,6 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MODID,"textures/gui/mob_effect_background.png");
 
     private final EffectRendererType type;
-
     private AbstractGui screen;
     private int availableWidth;
     private int availableHeight;

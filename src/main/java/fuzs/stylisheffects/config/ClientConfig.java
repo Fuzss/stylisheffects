@@ -1,8 +1,15 @@
 package fuzs.stylisheffects.config;
 
+import com.google.common.collect.Lists;
+import fuzs.puzzleslib.config.ConfigManager;
 import fuzs.puzzleslib.config.v2.AbstractConfig;
 import fuzs.puzzleslib.config.v2.annotation.Config;
+import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.List;
+import java.util.Set;
 
 public class ClientConfig extends AbstractConfig {
     @Config
@@ -18,6 +25,7 @@ public class ClientConfig extends AbstractConfig {
     protected void afterConfigReload() {
         this.vanillaWidget().afterConfigReload();
         this.compactWidget().afterConfigReload();
+        this.inventoryRenderer().afterConfigReload();
     }
 
     public InventoryRendererConfig inventoryRenderer() {
@@ -115,17 +123,28 @@ public class ClientConfig extends AbstractConfig {
     }
 
     public static class InventoryRendererConfig extends EffectRendererConfig {
-        @Config(description = "Render active status effects in every container, not just in the player inventory.")
+        @Config(description = "Render active status effects in every menu screen, not just in the player inventory.")
         public boolean effectsEverywhere = true;
+        @Config(description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
+        private List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container");
+        @Config(description = "Print menu type to game chat whenever a new menu screen is opened. Only intended to find menu types to be added to \"menuBlacklistRaw\".")
+        public boolean debugContainerTypes = false;
         @Config(description = "Show a tooltip when hovering over an effect widget.")
         public boolean hoveringTooltip = true;
         @Config(description = "Show remaining status effect duration on tooltip.")
         public boolean tooltipDuration = true;
 
+        public Set<ContainerType<?>> menuBlacklist;
+
         public InventoryRendererConfig() {
             super("inventory_renderer");
             this.screenSide = ScreenSide.LEFT;
             this.widgetAlpha = 1.0F;
+        }
+
+        @Override
+        protected void afterConfigReload() {
+            this.menuBlacklist = ConfigManager.deserializeToSet(this.menuBlacklistRaw, ForgeRegistries.CONTAINERS);
         }
     }
     public static class HudRendererConfig extends EffectRendererConfig {

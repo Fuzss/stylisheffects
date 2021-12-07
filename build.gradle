@@ -102,10 +102,14 @@ dependencies {
     compileOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.0.107")
     // at runtime, use the full JEI jar
     runtimeOnly fg.deobf("mezz.jei:jei-1.16.5:7.7.0.107")
+    // for testing screen interaction
+    runtimeOnly fg.deobf("curse.maven:cosmeticarmorreworked-237307:3540310")
+    runtimeOnly fg.deobf("curse.maven:curiosapi-309927:3456953")
+    runtimeOnly fg.deobf("curse.maven:relics-445274:3507284")
 
-    runtimeOnly fg.deobf("curse.maven:configured-457570:3434071")
-    runtimeOnly fg.deobf("curse.maven:catalogue-459701:3399554")
-    runtimeOnly fg.deobf("curse.maven:bettermodsbutton-541584:3508146")
+    runtimeOnly fg.deobf("curse.maven:catalogue-459701:3529457")
+    runtimeOnly fg.deobf("curse.maven:bettermodsbutton-541584:3519038")
+    runtimeOnly fg.deobf("curse.maven:configmenusforge-544048:3520850")
 
     // shadow demo
 //    implementation "com.github.Ocelot5836:Sonar:ef5b90d"

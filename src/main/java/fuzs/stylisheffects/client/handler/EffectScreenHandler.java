@@ -5,18 +5,24 @@ import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import fuzs.stylisheffects.client.gui.effects.CompactEffectRenderer;
 import fuzs.stylisheffects.client.gui.effects.VanillaEffectRenderer;
 import fuzs.stylisheffects.config.ClientConfig;
+import fuzs.stylisheffects.mixin.client.accessor.ContainerAccessor;
 import fuzs.stylisheffects.mixin.client.accessor.DisplayEffectsScreenAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.DisplayEffectsScreen;
 import net.minecraft.client.gui.recipebook.IRecipeShownListener;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.gui.screen.inventory.InventoryScreen;
-import net.minecraftforge.client.event.GuiContainerEvent;
+import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextComponentUtils;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 
@@ -48,24 +54,20 @@ public class EffectScreenHandler {
     }
 
     @SubscribeEvent
+    public void onGuiOpen(final GuiOpenEvent evt) {
+        if (evt.getGui() instanceof ContainerScreen && StylishEffects.CONFIG.client().inventoryRenderer().debugContainerTypes) {
+            // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
+            final ContainerType<?> type = ((ContainerAccessor) ((ContainerScreen<?>) evt.getGui()).getMenu()).getMenuType();
+            if (type != null) {
+                final ITextComponent component = new StringTextComponent(ForgeRegistries.CONTAINERS.getKey(type).toString());
+                Minecraft.getInstance().gui.getChat().addMessage(new TranslationTextComponent("debug.menu.opening", TextComponentUtils.wrapInSquareBrackets(component)));
+            }
+        }
+    }
+
+    @SubscribeEvent
     public void onPotionShift(final GuiScreenEvent.PotionShiftEvent evt) {
         evt.setCanceled(true);
-    }
-
-    @SubscribeEvent
-    public void onInitGuiPost(final GuiScreenEvent.InitGuiEvent.Post evt) {
-        if (evt.getGui() instanceof DisplayEffectsScreen) {
-            // disable vanilla rendering in creative mode inventory, survival inventory has to be disabled separately
-            // this is not needed by us, we just check before rendering as survival inventory does
-            ((DisplayEffectsScreenAccessor) evt.getGui()).setDoRenderEffects(false);
-        }
-    }
-
-    @SubscribeEvent
-    public void onDrawBackground(final GuiContainerEvent.DrawBackground evt) {
-        if (evt.getGuiContainer() instanceof InventoryScreen) {
-            ((DisplayEffectsScreenAccessor) evt.getGuiContainer()).setDoRenderEffects(false);
-        }
     }
 
     @SubscribeEvent
@@ -102,8 +104,15 @@ public class EffectScreenHandler {
     }
 
     public static boolean supportsEffectsDisplay(Screen screen) {
+        if (screen instanceof ContainerScreen) {
+            // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
+            final ContainerType<?> type = ((ContainerAccessor) ((ContainerScreen<?>) screen).getMenu()).getMenuType();
+            if (type != null && StylishEffects.CONFIG.client().inventoryRenderer().menuBlacklist.contains(type)) {
+                return false;
+            }
+        }
         if (screen instanceof DisplayEffectsScreen) {
-            return true;
+            return ((DisplayEffectsScreenAccessor) screen).getDoRenderEffects() || StylishEffects.CONFIG.client().inventoryRenderer().screenSide == ClientConfig.ScreenSide.RIGHT;
         }
         if (StylishEffects.CONFIG.client().inventoryRenderer().effectsEverywhere && screen instanceof ContainerScreen) {
             if (screen instanceof IRecipeShownListener) {

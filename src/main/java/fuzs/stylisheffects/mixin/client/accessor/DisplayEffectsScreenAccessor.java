@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(DisplayEffectsScreen.class)
 public interface DisplayEffectsScreenAccessor {
-
     @Accessor
-    void setDoRenderEffects(boolean doRenderEffects);
+    boolean getDoRenderEffects();
 }
