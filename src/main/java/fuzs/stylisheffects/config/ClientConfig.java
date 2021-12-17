@@ -99,7 +99,7 @@ public class ClientConfig extends AbstractConfig {
         public EffectRenderer rendererType = EffectRenderer.COMPACT;
         @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1, max = 255)
-        public int maxColumns = 8;
+        public int maxColumns = 5;
         @Config(description = "Maximum amount of status effects rendered in a single column.")
         @Config.IntRange(min = 1, max = 255)
         public int maxRows = 255;
@@ -116,6 +116,8 @@ public class ClientConfig extends AbstractConfig {
         @Config(description = "Space between individual effect widgets.")
         @Config.IntRange(min = 0)
         public int widgetSpace = 1;
+        @Config(description = "Respect vanilla's \"hideParticles\" flag which prevents a status effect from showing.")
+        public boolean respectHideParticles = true;
 
         public EffectRendererConfig(String name) {
             super(name);
@@ -140,6 +142,7 @@ public class ClientConfig extends AbstractConfig {
             super("inventory_renderer");
             this.screenSide = ScreenSide.LEFT;
             this.widgetAlpha = 1.0F;
+            this.respectHideParticles = false;
         }
 
         @Override
@@ -159,6 +162,7 @@ public class ClientConfig extends AbstractConfig {
             super("hud_renderer");
             this.screenSide = ScreenSide.RIGHT;
             this.widgetAlpha = 0.85F;
+            this.respectHideParticles = true;
         }
     }
 

@@ -77,10 +77,10 @@ public class EffectScreenHandler {
         final AbstractEffectRenderer hudRenderer = EffectScreenHandler.hudRenderer;
         if (hudRenderer != null) {
             final Minecraft minecraft = Minecraft.getInstance();
-            if (!minecraft.player.getActiveEffects().isEmpty()) {
+            hudRenderer.setActiveEffects(minecraft.player.getActiveEffects());
+            if (hudRenderer.isActive()) {
                 final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().hudRenderer().screenSide;
                 hudRenderer.setScreenDimensions(minecraft.gui, evt.getWindow().getGuiScaledWidth(), evt.getWindow().getGuiScaledHeight(), screenSide.right() ? evt.getWindow().getGuiScaledWidth() : 0, 0, screenSide);
-                hudRenderer.setActiveEffects(minecraft.player.getActiveEffects());
                 hudRenderer.renderEffects(evt.getMatrixStack(), minecraft);
             }
         }
@@ -93,12 +93,14 @@ public class EffectScreenHandler {
         if (inventoryRenderer != null && supportsEffectsDisplay(evt.getGui())) {
             ContainerScreen<?> screen = (ContainerScreen<?>) evt.getGui();
             final Minecraft minecraft = screen.getMinecraft();
-            if (!minecraft.player.getActiveEffects().isEmpty()) {
+            inventoryRenderer.setActiveEffects(minecraft.player.getActiveEffects());
+            if (inventoryRenderer.isActive()) {
                 final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().inventoryRenderer().screenSide;
                 inventoryRenderer.setScreenDimensions(screen, !screenSide.right() ? screen.getGuiLeft() : screen.width - (screen.getGuiLeft() + screen.getXSize()), screen.getYSize(), !screenSide.right() ? screen.getGuiLeft() : screen.getGuiLeft() + screen.getXSize(), screen.getGuiTop(), screenSide);
-                inventoryRenderer.setActiveEffects(minecraft.player.getActiveEffects());
                 inventoryRenderer.renderEffects(evt.getMatrixStack(), minecraft);
-                inventoryRenderer.getHoveredEffectTooltip(evt.getMouseX(), evt.getMouseY()).ifPresent(tooltip -> evt.getGui().renderComponentTooltip(evt.getMatrixStack(), tooltip, evt.getMouseX(), evt.getMouseY()));
+                inventoryRenderer.getHoveredEffectTooltip(evt.getMouseX(), evt.getMouseY()).ifPresent(tooltip -> {
+                    evt.getGui().renderComponentTooltip(evt.getMatrixStack(), tooltip, evt.getMouseX(), evt.getMouseY());
+                });
             }
         }
     }

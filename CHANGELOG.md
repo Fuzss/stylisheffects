@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v1.1.1-1.16.5] - 2021-12-17
+### Added
+- Added a config option for how the vanilla `hideParticles` flag should be respected
+
 ## [v1.1.0-1.16.5] - 2021-12-07
 ### Added
 - Added two new config options for excluding a container screen from showing active status effects

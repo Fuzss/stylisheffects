@@ -54,16 +54,24 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     public final void setActiveEffects(Collection<EffectInstance> activeEffects) {
-        if (activeEffects.isEmpty()) throw new IllegalArgumentException("Rendering empty effects list not supported");
+        if (activeEffects.isEmpty()) {
+            this.activeEffects = null;
+            return;
+        }
         this.activeEffects = activeEffects.stream()
+                .filter(e -> !this.config().respectHideParticles || e.showIcon())
                 .filter(this.type::test)
                 .sorted()
                 .collect(Collectors.toList());
     }
 
+    public final boolean isActive() {
+        return this.activeEffects != null && !this.activeEffects.isEmpty();
+    }
+
     @Override
     public List<Rectangle2d> getRenderAreas() {
-        if (this.activeEffects != null) {
+        if (this.isActive()) {
             return this.getEffectPositions(this.activeEffects).stream()
                     .map(Pair::getValue)
                     .map(pos -> new Rectangle2d(pos[0], pos[1], this.getWidth(), this.getHeight()))
