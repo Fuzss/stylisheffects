@@ -15,6 +15,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class VanillaEffectRenderer extends AbstractEffectRenderer {
     public VanillaEffectRenderer(EffectRendererType type) {
@@ -37,14 +38,19 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
+    public Function<EffectRendererType, AbstractEffectRenderer> getFallbackRenderer() {
+        return CompactEffectRenderer::new;
+    }
+
+    @Override
     public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
         int counter = 0;
         List<Pair<EffectInstance, int[]>> effectToPos = Lists.newArrayList();
         for (EffectInstance effect : activeEffects) {
-            int posX = counter % this.getMaxColumns();
-            int posY = counter / this.getMaxColumns();
+            int posX = counter % this.getMaxClampedColumns();
+            int posY = counter / this.getMaxClampedColumns();
             counter++;
-            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxRows()) {
+            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxClampedRows()) {
                 effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
             }
         }

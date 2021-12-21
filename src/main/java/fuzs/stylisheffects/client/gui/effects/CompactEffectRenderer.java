@@ -69,12 +69,12 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
             } else {
                 counter = harmfulCounter++;
             }
-            int posX = counter % this.getMaxColumns();
-            int posY = counter / this.getMaxColumns();
+            int posX = counter % this.getMaxClampedColumns();
+            int posY = counter / this.getMaxClampedColumns();
             if (!beneficial) {
                 posY += beneficialRows;
             }
-            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxRows()) {
+            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxClampedRows()) {
                 effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
             }
         }

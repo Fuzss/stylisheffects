@@ -130,7 +130,7 @@ public class ClientConfig extends AbstractConfig {
     public static class InventoryRendererConfig extends EffectRendererConfig {
         @Config(description = "Render active status effects in every menu screen, not just in the player inventory.")
         public boolean effectsEverywhere = true;
-        @Config(description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
+        @Config(name = "menu_blacklist", description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
         private List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container");
         @Config(description = "Print menu type to game chat whenever a new menu screen is opened. Only intended to find menu types to be added to \"menuBlacklistRaw\".")
         public boolean debugContainerTypes = false;
@@ -140,7 +140,7 @@ public class ClientConfig extends AbstractConfig {
         public boolean tooltipDuration = true;
         @Config(description = "Minimum screen border distance for effect widgets.")
         @Config.IntRange(min = 0)
-        public int screenBorderDistance = 10;
+        public int screenBorderDistance = 3;
 
         public Set<ContainerType<?>> menuBlacklist;
 

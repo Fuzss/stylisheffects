@@ -7,6 +7,7 @@ import fuzs.stylisheffects.client.gui.effects.VanillaEffectRenderer;
 import fuzs.stylisheffects.config.ClientConfig;
 import fuzs.stylisheffects.mixin.client.accessor.ContainerAccessor;
 import fuzs.stylisheffects.mixin.client.accessor.DisplayEffectsScreenAccessor;
+import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.DisplayEffectsScreen;
 import net.minecraft.client.gui.recipebook.IRecipeShownListener;
@@ -25,6 +26,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class EffectScreenHandler {
     @Nullable
@@ -32,20 +35,35 @@ public class EffectScreenHandler {
     @Nullable
     public static AbstractEffectRenderer hudRenderer;
 
-    public static void createEffectRenderers() {
-        inventoryRenderer = createEffectRenderer(StylishEffects.CONFIG.client().inventoryRenderer().rendererType, AbstractEffectRenderer.EffectRendererType.INVENTORY);
-        hudRenderer = createEffectRenderer(StylishEffects.CONFIG.client().hudRenderer().rendererType, AbstractEffectRenderer.EffectRendererType.HUD);
+    public static void createHudRenderer() {
+        Consumer<AbstractEffectRenderer> setScreenDimensions = renderer -> {
+            Minecraft minecraft = Minecraft.getInstance();
+            final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().hudRenderer().screenSide;
+            final MainWindow window = minecraft.getWindow();
+            renderer.setScreenDimensions(minecraft.gui, window.getGuiScaledWidth(), window.getGuiScaledHeight(), screenSide.right() ? window.getGuiScaledWidth() : 0, 0, screenSide);
+        };
+        hudRenderer = createEffectRenderer(StylishEffects.CONFIG.client().hudRenderer().rendererType, AbstractEffectRenderer.EffectRendererType.HUD, setScreenDimensions);
     }
 
     @Nullable
-    private static AbstractEffectRenderer createEffectRenderer(ClientConfig.EffectRenderer rendererType, AbstractEffectRenderer.EffectRendererType effectRendererType) {
+    private static AbstractEffectRenderer createEffectRenderer(ClientConfig.EffectRenderer rendererType, AbstractEffectRenderer.EffectRendererType effectRendererType, Consumer<AbstractEffectRenderer> setScreenDimensions) {
         switch (rendererType) {
             case VANILLA:
-                return new VanillaEffectRenderer(effectRendererType);
+                return createRendererOrFallback(effectRendererType, VanillaEffectRenderer::new, setScreenDimensions);
             case COMPACT:
-                return new CompactEffectRenderer(effectRendererType);
+                return createRendererOrFallback(effectRendererType, CompactEffectRenderer::new, setScreenDimensions);
         }
         return null;
+    }
+
+    private static AbstractEffectRenderer createRendererOrFallback(AbstractEffectRenderer.EffectRendererType type, Function<AbstractEffectRenderer.EffectRendererType, AbstractEffectRenderer> effectRendererFactory, Consumer<AbstractEffectRenderer> setScreenDimensions) {
+        AbstractEffectRenderer renderer = effectRendererFactory.apply(type);
+        setScreenDimensions.accept(renderer);
+        while (!renderer.isValid()) {
+            renderer = renderer.getFallbackRenderer().apply(type);
+            setScreenDimensions.accept(renderer);
+        }
+        return renderer;
     }
 
     @SubscribeEvent
@@ -55,15 +73,32 @@ public class EffectScreenHandler {
 
     @SubscribeEvent
     public void onGuiOpen(final GuiOpenEvent evt) {
-        if (evt.getGui() instanceof ContainerScreen)
-            if (StylishEffects.CONFIG.client().inventoryRenderer().debugContainerTypes) {
-                // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
-                final ContainerType<?> type = ((ContainerAccessor) ((ContainerScreen<?>) evt.getGui()).getMenu()).getMenuType();
-                if (type != null) {
-                    final ITextComponent component = new StringTextComponent(ForgeRegistries.CONTAINERS.getKey(type).toString());
-                    Minecraft.getInstance().gui.getChat().addMessage(new TranslationTextComponent("debug.menu.opening", TextComponentUtils.wrapInSquareBrackets(component)));
-                }
+        if (evt.getGui() instanceof ContainerScreen && StylishEffects.CONFIG.client().inventoryRenderer().debugContainerTypes) {
+            // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
+            final ContainerType<?> type = ((ContainerAccessor) ((ContainerScreen<?>) evt.getGui()).getMenu()).getMenuType();
+            if (type != null) {
+                final ITextComponent component = new StringTextComponent(ForgeRegistries.CONTAINERS.getKey(type).toString());
+                Minecraft.getInstance().gui.getChat().addMessage(new TranslationTextComponent("debug.menu.opening", TextComponentUtils.wrapInSquareBrackets(component)));
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onInitGuiPost(final GuiScreenEvent.InitGuiEvent.Post evt) {
+        inventoryRenderer = null;
+    }
+
+    private void extracted(Screen screen) {
+        if (inventoryRenderer != null) return;
+        if (supportsEffectsDisplay(screen)) {
+            Consumer<AbstractEffectRenderer> setScreenDimensions = renderer -> {
+                ContainerScreen<?> containerScreen = (ContainerScreen<?>) screen;
+                final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().inventoryRenderer().screenSide;
+                renderer.setScreenDimensions(containerScreen, !screenSide.right() ? containerScreen.getGuiLeft() : containerScreen.width - (containerScreen.getGuiLeft() + containerScreen.getXSize()), containerScreen.getYSize(), !screenSide.right() ? containerScreen.getGuiLeft() : containerScreen.getGuiLeft() + containerScreen.getXSize(), containerScreen.getGuiTop(), screenSide);
+            };
+            inventoryRenderer = createEffectRenderer(StylishEffects.CONFIG.client().inventoryRenderer().rendererType, AbstractEffectRenderer.EffectRendererType.INVENTORY, setScreenDimensions);
+        }
+        inventoryRenderer = AbstractEffectRenderer.EMPTY;
     }
 
     @SubscribeEvent
@@ -78,11 +113,11 @@ public class EffectScreenHandler {
         final AbstractEffectRenderer hudRenderer = EffectScreenHandler.hudRenderer;
         if (hudRenderer != null) {
             final Minecraft minecraft = Minecraft.getInstance();
-            hudRenderer.setActiveEffects(minecraft.player.getActiveEffects());
-            if (hudRenderer.isActive()) {
-                final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().hudRenderer().screenSide;
-                hudRenderer.setScreenDimensions(minecraft.gui, evt.getWindow().getGuiScaledWidth(), evt.getWindow().getGuiScaledHeight(), screenSide.right() ? evt.getWindow().getGuiScaledWidth() : 0, 0, screenSide);
-                hudRenderer.renderEffects(evt.getMatrixStack(), minecraft);
+            if (minecraft.screen == null || !supportsEffectsDisplay(minecraft.screen)) {
+                hudRenderer.setActiveEffects(minecraft.player.getActiveEffects());
+                if (hudRenderer.isActive()) {
+                    hudRenderer.renderEffects(evt.getMatrixStack(), minecraft);
+                }
             }
         }
     }
@@ -91,13 +126,10 @@ public class EffectScreenHandler {
     public void onDrawScreenPost(final GuiScreenEvent.DrawScreenEvent.Post evt) {
         // field may get changed during config reload from different thread
         final AbstractEffectRenderer inventoryRenderer = EffectScreenHandler.inventoryRenderer;
-        if (inventoryRenderer != null && supportsEffectsDisplay(evt.getGui())) {
-            ContainerScreen<?> screen = (ContainerScreen<?>) evt.getGui();
-            final Minecraft minecraft = screen.getMinecraft();
+        if (inventoryRenderer != null) {
+            final Minecraft minecraft = evt.getGui().getMinecraft();
             inventoryRenderer.setActiveEffects(minecraft.player.getActiveEffects());
             if (inventoryRenderer.isActive()) {
-                final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().inventoryRenderer().screenSide;
-                inventoryRenderer.setScreenDimensions(screen, !screenSide.right() ? screen.getGuiLeft() : screen.width - (screen.getGuiLeft() + screen.getXSize()), screen.getYSize(), !screenSide.right() ? screen.getGuiLeft() : screen.getGuiLeft() + screen.getXSize(), screen.getGuiTop(), screenSide);
                 inventoryRenderer.renderEffects(evt.getMatrixStack(), minecraft);
                 inventoryRenderer.getHoveredEffectTooltip(evt.getMouseX(), evt.getMouseY()).ifPresent(tooltip -> {
                     evt.getGui().renderComponentTooltip(evt.getMatrixStack(), tooltip, evt.getMouseX(), evt.getMouseY());
@@ -106,7 +138,7 @@ public class EffectScreenHandler {
         }
     }
 
-    public static boolean supportsEffectsDisplay(Screen screen) {
+    private static boolean supportsEffectsDisplay(Screen screen) {
         if (screen instanceof ContainerScreen) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
             final ContainerType<?> type = ((ContainerAccessor) ((ContainerScreen<?>) screen).getMenu()).getMenuType();

@@ -18,11 +18,38 @@ import net.minecraftforge.common.extensions.IForgeEffectInstance;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRenderAreas {
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MODID,"textures/gui/mob_effect_background.png");
+    public static final AbstractEffectRenderer EMPTY = new AbstractEffectRenderer(null) {
+        @Override
+        public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
+            return null;
+        }
+
+        @Override
+        protected int getTopOffset() {
+            return 0;
+        }
+
+        @Override
+        public int getWidth() {
+            return 0;
+        }
+
+        @Override
+        public int getHeight() {
+            return 0;
+        }
+
+        @Override
+        public void renderWidget(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
+
+        }
+    };
 
     private final EffectRendererType type;
     private AbstractGui screen;
@@ -33,7 +60,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     private ClientConfig.ScreenSide screenSide;
     protected List<EffectInstance> activeEffects;
 
-    public AbstractEffectRenderer(EffectRendererType type) {
+    protected AbstractEffectRenderer(EffectRendererType type) {
         this.type = type;
     }
 
@@ -72,6 +99,14 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
 
     public final boolean isActive() {
         return this.activeEffects != null && !this.activeEffects.isEmpty();
+    }
+
+    public final boolean isValid() {
+        return this.getMaxRows() > 0 && this.getMaxColumns() > 0;
+    }
+
+    public Function<EffectRendererType, AbstractEffectRenderer> getFallbackRenderer() {
+        return type -> EMPTY;
     }
 
     @Override
@@ -128,19 +163,27 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         return Math.min(this.availableHeight, this.config().maxRows * (this.getHeight() + this.config().widgetSpaceY));
     }
 
-    public int getMaxColumns() {
-        return MathHelper.clamp(this.getAvailableWidth() / (this.getWidth() + this.config().widgetSpaceX), 1, this.config().maxColumns);
+    private int getMaxColumns() {
+        return this.getAvailableWidth() / (this.getWidth() + this.config().widgetSpaceX);
+    }
+
+    public int getMaxClampedColumns() {
+        return MathHelper.clamp(this.getMaxColumns(), 1, this.config().maxColumns);
     }
 
     private int getAdjustedHeight() {
-        if (this.config().overflowMode == ClientConfig.OverflowMode.CONDENSE && this.getRows() > this.getMaxRows()) {
+        if (this.config().overflowMode == ClientConfig.OverflowMode.CONDENSE && this.getRows() > this.getMaxClampedRows()) {
             return (this.getAvailableHeight() - this.getHeight()) / Math.max(1, this.getRows() - 1);
         }
         return this.getHeight() + this.config().widgetSpaceY;
     }
 
-    public int getMaxRows() {
-        return MathHelper.clamp(this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpaceY), 1, this.config().maxRows);
+    private int getMaxRows() {
+        return this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpaceY);
+    }
+
+    public int getMaxClampedRows() {
+        return MathHelper.clamp(this.getMaxRows(), 1, this.config().maxRows);
     }
 
     public int getRows() {
@@ -148,7 +191,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     protected int splitByColumns(int amountToSplit) {
-        return (int) Math.ceil(amountToSplit / (float) this.getMaxColumns());
+        return (int) Math.ceil(amountToSplit / (float) this.getMaxClampedColumns());
     }
 
     protected ClientConfig.EffectRendererConfig config() {

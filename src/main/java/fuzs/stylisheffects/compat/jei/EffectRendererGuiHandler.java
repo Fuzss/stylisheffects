@@ -14,17 +14,12 @@ import java.util.Collections;
 import java.util.List;
 
 class EffectRendererGuiHandler<T extends Container> implements IGuiContainerHandler<ContainerScreen<T>> {
-
     @Override
     public List<Rectangle2d> getGuiExtraAreas(ContainerScreen<T> screen) {
         // field may get changed during config reload from different thread
         final AbstractEffectRenderer inventoryRenderer = EffectScreenHandler.inventoryRenderer;
-        if (inventoryRenderer != null && EffectScreenHandler.supportsEffectsDisplay(screen)) {
-            Minecraft minecraft = screen.getMinecraft();
-            Collection<EffectInstance> activePotionEffects = minecraft.player.getActiveEffects();
-            if (!activePotionEffects.isEmpty()) {
-                return EffectScreenHandler.inventoryRenderer.getRenderAreas();
-            }
+        if (inventoryRenderer != null) {
+            return EffectScreenHandler.inventoryRenderer.getRenderAreas();
         }
         return Collections.emptyList();
     }
