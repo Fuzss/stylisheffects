@@ -55,14 +55,15 @@ public class EffectScreenHandler {
 
     @SubscribeEvent
     public void onGuiOpen(final GuiOpenEvent evt) {
-        if (evt.getGui() instanceof ContainerScreen && StylishEffects.CONFIG.client().inventoryRenderer().debugContainerTypes) {
-            // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
-            final ContainerType<?> type = ((ContainerAccessor) ((ContainerScreen<?>) evt.getGui()).getMenu()).getMenuType();
-            if (type != null) {
-                final ITextComponent component = new StringTextComponent(ForgeRegistries.CONTAINERS.getKey(type).toString());
-                Minecraft.getInstance().gui.getChat().addMessage(new TranslationTextComponent("debug.menu.opening", TextComponentUtils.wrapInSquareBrackets(component)));
+        if (evt.getGui() instanceof ContainerScreen)
+            if (StylishEffects.CONFIG.client().inventoryRenderer().debugContainerTypes) {
+                // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
+                final ContainerType<?> type = ((ContainerAccessor) ((ContainerScreen<?>) evt.getGui()).getMenu()).getMenuType();
+                if (type != null) {
+                    final ITextComponent component = new StringTextComponent(ForgeRegistries.CONTAINERS.getKey(type).toString());
+                    Minecraft.getInstance().gui.getChat().addMessage(new TranslationTextComponent("debug.menu.opening", TextComponentUtils.wrapInSquareBrackets(component)));
+                }
             }
-        }
     }
 
     @SubscribeEvent

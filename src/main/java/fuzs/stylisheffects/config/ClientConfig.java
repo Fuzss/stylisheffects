@@ -113,9 +113,12 @@ public class ClientConfig extends AbstractConfig {
         public float widgetAlpha = 1.0F;
         @Config(description = "What to do when there are more effects to display than there is room on-screen.")
         public OverflowMode overflowMode = OverflowMode.CONDENSE;
-        @Config(description = "Space between individual effect widgets.")
+        @Config(description = "Space between individual effect widgets on x-axis.")
         @Config.IntRange(min = 0)
-        public int widgetSpace = 1;
+        public int widgetSpaceX = 1;
+        @Config(description = "Space between individual effect widgets on y-axis.")
+        @Config.IntRange(min = 0)
+        public int widgetSpaceY = 1;
         @Config(description = "Respect vanilla's \"hideParticles\" flag which prevents a status effect from showing.")
         public boolean respectHideParticles = true;
 
@@ -135,6 +138,9 @@ public class ClientConfig extends AbstractConfig {
         public boolean hoveringTooltip = true;
         @Config(description = "Show remaining status effect duration on tooltip.")
         public boolean tooltipDuration = true;
+        @Config(description = "Minimum screen border distance for effect widgets.")
+        @Config.IntRange(min = 0)
+        public int screenBorderDistance = 10;
 
         public Set<ContainerType<?>> menuBlacklist;
 

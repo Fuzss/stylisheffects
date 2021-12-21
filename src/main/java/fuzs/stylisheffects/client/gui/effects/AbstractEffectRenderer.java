@@ -44,12 +44,17 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         this.startX = startX;
         this.startY = startY;
         this.screenSide = screenSide;
-        if (this.type == EffectRendererType.HUD) {
-            this.screenSide = this.screenSide.inverse();
-            this.availableWidth -= ((ClientConfig.HudRendererConfig) this.config()).offsetX;
-            this.availableHeight -= ((ClientConfig.HudRendererConfig) this.config()).offsetY;
-            this.startX += (this.screenSide.right() ? 1 : -1) * ((ClientConfig.HudRendererConfig) this.config()).offsetX;
-            this.startY += ((ClientConfig.HudRendererConfig) this.config()).offsetY;
+        switch (this.type) {
+            case HUD:
+                this.screenSide = this.screenSide.inverse();
+                this.availableWidth -= ((ClientConfig.HudRendererConfig) this.config()).offsetX;
+                this.availableHeight -= ((ClientConfig.HudRendererConfig) this.config()).offsetY;
+                this.startX += (this.screenSide.right() ? 1 : -1) * ((ClientConfig.HudRendererConfig) this.config()).offsetX;
+                this.startY += ((ClientConfig.HudRendererConfig) this.config()).offsetY;
+                break;
+            case INVENTORY:
+                this.availableWidth -= ((ClientConfig.InventoryRendererConfig) this.config()).screenBorderDistance;
+                break;
         }
     }
 
@@ -88,11 +93,11 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         int[] renderPositions = new int[2];
         switch (this.screenSide) {
             case LEFT:
-                renderPositions[0] = this.startX - (this.getWidth() + 1) - (this.getWidth() + this.config().widgetSpace) * coordX;
+                renderPositions[0] = this.startX - (this.getWidth() + 1) - (this.getWidth() + this.config().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
                 break;
             case RIGHT:
-                renderPositions[0] = this.startX + 1 + (this.getWidth() + this.config().widgetSpace) * coordX;
+                renderPositions[0] = this.startX + 1 + (this.getWidth() + this.config().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
                 break;
             default:
@@ -116,26 +121,26 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     private int getAvailableWidth() {
-        return Math.min(this.availableWidth, this.config().maxColumns * (this.getWidth() + this.config().widgetSpace));
+        return Math.min(this.availableWidth, this.config().maxColumns * (this.getWidth() + this.config().widgetSpaceX));
     }
 
     private int getAvailableHeight() {
-        return Math.min(this.availableHeight, this.config().maxRows * (this.getHeight() + this.config().widgetSpace));
+        return Math.min(this.availableHeight, this.config().maxRows * (this.getHeight() + this.config().widgetSpaceY));
     }
 
     public int getMaxColumns() {
-        return MathHelper.clamp(this.getAvailableWidth() / (this.getWidth() + this.config().widgetSpace), 1, this.config().maxColumns);
+        return MathHelper.clamp(this.getAvailableWidth() / (this.getWidth() + this.config().widgetSpaceX), 1, this.config().maxColumns);
     }
 
     private int getAdjustedHeight() {
         if (this.config().overflowMode == ClientConfig.OverflowMode.CONDENSE && this.getRows() > this.getMaxRows()) {
             return (this.getAvailableHeight() - this.getHeight()) / Math.max(1, this.getRows() - 1);
         }
-        return this.getHeight() + this.config().widgetSpace;
+        return this.getHeight() + this.config().widgetSpaceY;
     }
 
     public int getMaxRows() {
-        return MathHelper.clamp(this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpace), 1, this.config().maxRows);
+        return MathHelper.clamp(this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpaceY), 1, this.config().maxRows);
     }
 
     public int getRows() {
