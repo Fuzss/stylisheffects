@@ -24,32 +24,6 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRenderAreas {
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MODID,"textures/gui/mob_effect_background.png");
-    public static final AbstractEffectRenderer EMPTY = new AbstractEffectRenderer(null) {
-        @Override
-        public List<Pair<EffectInstance, int[]>> getEffectPositions(List<EffectInstance> activeEffects) {
-            return null;
-        }
-
-        @Override
-        protected int getTopOffset() {
-            return 0;
-        }
-
-        @Override
-        public int getWidth() {
-            return 0;
-        }
-
-        @Override
-        public int getHeight() {
-            return 0;
-        }
-
-        @Override
-        public void renderWidget(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
-
-        }
-    };
 
     private final EffectRendererType type;
     private AbstractGui screen;
@@ -102,11 +76,11 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     public final boolean isValid() {
-        return this.getMaxRows() > 0 && this.getMaxColumns() > 0;
+        return !this.config().allowFallback || this.getMaxRows() > 0 && this.getMaxColumns() > 0;
     }
 
     public Function<EffectRendererType, AbstractEffectRenderer> getFallbackRenderer() {
-        return type -> EMPTY;
+        return type -> null;
     }
 
     @Override
@@ -209,7 +183,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         if (this.screen instanceof DisplayEffectsScreen) {
             effectinstance.renderInventoryEffect((DisplayEffectsScreen<?>) this.screen, matrixStack, posX, posY, this.screen.getBlitOffset());
         } else if (this.screen instanceof IngameGui) {
-            effectinstance.renderHUDEffect(this.screen, matrixStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * this.config().widgetAlpha);
+            effectinstance.renderHUDEffect(this.screen, matrixStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * (float) this.config().widgetAlpha);
         }
     }
 

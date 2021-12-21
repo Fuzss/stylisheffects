@@ -61,7 +61,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
     public void renderWidget(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
         RenderSystem.enableBlend();
         minecraft.getTextureManager().bind(EFFECT_BACKGROUND);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, (float) this.config().widgetAlpha);
         AbstractGui.blit(matrixStack, posX, posY, 0, StylishEffects.CONFIG.client().vanillaWidget().ambientBorder && effectinstance.isAmbient() ? this.getHeight() : 0, this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectSprite(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawCustomEffect(matrixStack, posX, posY, effectinstance);
@@ -73,7 +73,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
         TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effectinstance.getEffect());
         minecraft.getTextureManager().bind(textureatlassprite.atlas().location());
         final float blinkingAlpha = StylishEffects.CONFIG.client().vanillaWidget().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.config().widgetAlpha);
         AbstractGui.blit(matrixStack, posX + 6, posY + 7, 0, 18, 18, textureatlassprite);
     }
 

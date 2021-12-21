@@ -17,9 +17,9 @@ class EffectRendererGuiHandler<T extends Container> implements IGuiContainerHand
     @Override
     public List<Rectangle2d> getGuiExtraAreas(ContainerScreen<T> screen) {
         // field may get changed during config reload from different thread
-        final AbstractEffectRenderer inventoryRenderer = EffectScreenHandler.inventoryRenderer;
+        final AbstractEffectRenderer inventoryRenderer = EffectScreenHandler.createRendererOrFallback(screen);
         if (inventoryRenderer != null) {
-            return EffectScreenHandler.inventoryRenderer.getRenderAreas();
+            return inventoryRenderer.getRenderAreas();
         }
         return Collections.emptyList();
     }

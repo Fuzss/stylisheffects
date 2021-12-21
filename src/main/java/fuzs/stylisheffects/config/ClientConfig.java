@@ -105,12 +105,9 @@ public class ClientConfig extends AbstractConfig {
         public int maxRows = 255;
         @Config(description = "Screen side to render status effects on.")
         public ScreenSide screenSide = ScreenSide.RIGHT;
-//        @Config(description = "Scale for effect widgets.")
-//        @Config.FloatRange(min = 1.0F, max = 24.0F)
-//        public float widgetScale = 8.0F;
         @Config(description = "Alpha value for effect widgets.")
-        @Config.FloatRange(min = 0.0F, max = 1.0F)
-        public float widgetAlpha = 1.0F;
+        @Config.DoubleRange(min = 0.0, max = 1.0)
+        public double widgetAlpha = 1.0;
         @Config(description = "What to do when there are more effects to display than there is room on-screen.")
         public OverflowMode overflowMode = OverflowMode.CONDENSE;
         @Config(description = "Space between individual effect widgets on x-axis.")
@@ -121,6 +118,8 @@ public class ClientConfig extends AbstractConfig {
         public int widgetSpaceY = 1;
         @Config(description = "Respect vanilla's \"hideParticles\" flag which prevents a status effect from showing.")
         public boolean respectHideParticles = true;
+        @Config(description = "Allow effect renderer to fall back to a more compact version (when available) if not enough screen space exists. Otherwise effect widgets might run off-screen.")
+        public boolean allowFallback = true;
 
         public EffectRendererConfig(String name) {
             super(name);
@@ -147,8 +146,9 @@ public class ClientConfig extends AbstractConfig {
         public InventoryRendererConfig() {
             super("inventory_renderer");
             this.screenSide = ScreenSide.LEFT;
-            this.widgetAlpha = 1.0F;
+            this.widgetAlpha = 1.0;
             this.respectHideParticles = false;
+            this.allowFallback = true;
         }
 
         @Override
@@ -167,8 +167,9 @@ public class ClientConfig extends AbstractConfig {
         public HudRendererConfig() {
             super("hud_renderer");
             this.screenSide = ScreenSide.RIGHT;
-            this.widgetAlpha = 0.85F;
+            this.widgetAlpha = 0.85;
             this.respectHideParticles = true;
+            this.allowFallback = false;
         }
     }
 

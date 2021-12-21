@@ -16,7 +16,6 @@ public class StylishEffectsClient {
         EffectScreenHandler handler = new EffectScreenHandler();
         MinecraftForge.EVENT_BUS.addListener(handler::onPotionShift);
         MinecraftForge.EVENT_BUS.addListener(handler::onGuiOpen);
-        MinecraftForge.EVENT_BUS.addListener(handler::onInitGuiPost);
         MinecraftForge.EVENT_BUS.addListener(handler::onDrawScreenPost);
         MinecraftForge.EVENT_BUS.addListener(handler::onRenderGameOverlayPre);
         MinecraftForge.EVENT_BUS.addListener(handler::onRenderGameOverlayText);
@@ -24,6 +23,7 @@ public class StylishEffectsClient {
 
     @SubscribeEvent
     public static void onClientSetup(final FMLClientSetupEvent evt) {
+        // can't do this during construct as configs won't be loaded then
         EffectScreenHandler.createHudRenderer();
         StylishEffects.CONFIG.addClientCallback(EffectScreenHandler::createHudRenderer);
     }

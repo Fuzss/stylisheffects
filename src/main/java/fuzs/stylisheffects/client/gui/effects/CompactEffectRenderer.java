@@ -90,7 +90,7 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
     public void renderWidget(MatrixStack matrixStack, int posX, int posY, Minecraft minecraft, EffectInstance effectinstance) {
         RenderSystem.enableBlend();
         minecraft.getTextureManager().bind(EFFECT_BACKGROUND);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, (float) this.config().widgetAlpha);
         AbstractGui.blit(matrixStack, posX, posY, StylishEffects.CONFIG.client().compactWidget().ambientBorder && effectinstance.isAmbient() ? this.getWidth() : 0, 64, this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectAmplifier(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawEffectSprite(matrixStack, posX, posY, minecraft, effectinstance);
@@ -109,13 +109,13 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
             final int offsetX = amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? 3 : 23;
             final int offsetY = 2;
             // drop shadow
-            RenderSystem.color4f(0.0F, 0.0F, 0.0F, this.config().widgetAlpha);
+            RenderSystem.color4f(0.0F, 0.0F, 0.0F, (float) this.config().widgetAlpha);
             AbstractGui.blit(matrixStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             AbstractGui.blit(matrixStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             // actual number
-            RenderSystem.color4f(red, green, blue, this.config().widgetAlpha);
+            RenderSystem.color4f(red, green, blue, (float) this.config().widgetAlpha);
             AbstractGui.blit(matrixStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
         }
     }
@@ -125,7 +125,7 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effectinstance.getEffect());
         minecraft.getTextureManager().bind(textureatlassprite.atlas().location());
         final float blinkingAlpha = StylishEffects.CONFIG.client().compactWidget().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.config().widgetAlpha);
         // draw icon a bit further down when no time is displayed to trim empty space
         AbstractGui.blit(matrixStack, posX + 5, posY + (!StylishEffects.CONFIG.client().compactWidget().ambientDuration && effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
     }
