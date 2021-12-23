@@ -70,12 +70,12 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
             } else {
                 counter = harmfulCounter++;
             }
-            int posX = counter % this.getMaxColumns();
-            int posY = counter / this.getMaxColumns();
+            int posX = counter % this.getMaxClampedColumns();
+            int posY = counter / this.getMaxClampedColumns();
             if (!beneficial) {
                 posY += beneficialRows;
             }
-            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxRows()) {
+            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxClampedRows()) {
                 effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
             }
         }
@@ -92,7 +92,7 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         RenderSystem.enableBlend();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, EFFECT_BACKGROUND);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.config().widgetAlpha);
         GuiComponent.blit(matrixStack, posX, posY, StylishEffects.CONFIG.client().compactWidget().ambientBorder && effectinstance.isAmbient() ? this.getWidth() : 0, 64, this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectAmplifier(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawEffectSprite(matrixStack, posX, posY, minecraft, effectinstance);
@@ -112,13 +112,13 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
             final int offsetX = amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? 3 : 23;
             final int offsetY = 2;
             // drop shadow
-            RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, this.config().widgetAlpha);
+            RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, (float) this.config().widgetAlpha);
             GuiComponent.blit(matrixStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             GuiComponent.blit(matrixStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             GuiComponent.blit(matrixStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             GuiComponent.blit(matrixStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
             // actual number
-            RenderSystem.setShaderColor(red, green, blue, this.config().widgetAlpha);
+            RenderSystem.setShaderColor(red, green, blue, (float) this.config().widgetAlpha);
             GuiComponent.blit(matrixStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
         }
     }
@@ -128,7 +128,7 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effectinstance.getEffect());
         RenderSystem.setShaderTexture(0, textureatlassprite.atlas().location());
         final float blinkingAlpha = StylishEffects.CONFIG.client().compactWidget().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.config().widgetAlpha);
         // draw icon a bit further down when no time is displayed to trim empty space
         GuiComponent.blit(matrixStack, posX + 5, posY + (!StylishEffects.CONFIG.client().compactWidget().ambientDuration && effectinstance.isAmbient() ? 3 : 2), 0, 18, 18, textureatlassprite);
     }

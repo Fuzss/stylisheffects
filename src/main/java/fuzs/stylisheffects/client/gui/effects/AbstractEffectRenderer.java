@@ -25,13 +25,13 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRenderAreas {
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MODID,"textures/gui/mob_effect_background.png");
 
     private final EffectRendererType type;
-
     private GuiComponent screen;
     private int availableWidth;
     private int availableHeight;
@@ -40,7 +40,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     private ClientConfig.ScreenSide screenSide;
     protected List<MobEffectInstance> activeEffects;
 
-    public AbstractEffectRenderer(EffectRendererType type) {
+    protected AbstractEffectRenderer(EffectRendererType type) {
         this.type = type;
     }
 
@@ -51,26 +51,45 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         this.startX = startX;
         this.startY = startY;
         this.screenSide = screenSide;
-        if (this.type == EffectRendererType.HUD) {
-            this.screenSide = this.screenSide.inverse();
-            this.availableWidth -= ((ClientConfig.HudRendererConfig) this.config()).offsetX;
-            this.availableHeight -= ((ClientConfig.HudRendererConfig) this.config()).offsetY;
-            this.startX += (this.screenSide.right() ? 1 : -1) * ((ClientConfig.HudRendererConfig) this.config()).offsetX;
-            this.startY += ((ClientConfig.HudRendererConfig) this.config()).offsetY;
+        switch (this.type) {
+            case HUD -> {
+                this.screenSide = this.screenSide.inverse();
+                this.availableWidth -= ((ClientConfig.HudRendererConfig) this.config()).offsetX;
+                this.availableHeight -= ((ClientConfig.HudRendererConfig) this.config()).offsetY;
+                this.startX += (this.screenSide.right() ? 1 : -1) * ((ClientConfig.HudRendererConfig) this.config()).offsetX;
+                this.startY += ((ClientConfig.HudRendererConfig) this.config()).offsetY;
+            }
+            case INVENTORY -> this.availableWidth -= ((ClientConfig.InventoryRendererConfig) this.config()).screenBorderDistance;
         }
     }
 
     public final void setActiveEffects(Collection<MobEffectInstance> activeEffects) {
-        if (activeEffects.isEmpty()) throw new IllegalArgumentException("Rendering empty effects list not supported");
+        if (activeEffects.isEmpty()) {
+            this.activeEffects = null;
+            return;
+        }
         this.activeEffects = activeEffects.stream()
+                .filter(e -> !this.config().respectHideParticles || e.showIcon())
                 .filter(this.type::test)
                 .sorted()
                 .collect(Collectors.toList());
     }
 
+    public final boolean isActive() {
+        return this.activeEffects != null && !this.activeEffects.isEmpty();
+    }
+
+    public final boolean isValid() {
+        return !this.config().allowFallback || this.getMaxRows() > 0 && this.getMaxColumns() > 0;
+    }
+
+    public Function<EffectRendererType, AbstractEffectRenderer> getFallbackRenderer() {
+        return type -> null;
+    }
+
     @Override
     public List<Rect2i> getRenderAreas() {
-        if (this.activeEffects != null) {
+        if (this.isActive()) {
             return this.getEffectPositions(this.activeEffects).stream()
                     .map(Pair::getValue)
                     .map(pos -> new Rect2i(pos[0], pos[1], this.getWidth(), this.getHeight()))
@@ -87,11 +106,11 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         int[] renderPositions = new int[2];
         switch (this.screenSide) {
             case LEFT -> {
-                renderPositions[0] = this.startX - (this.getWidth() + 1) - (this.getWidth() + this.config().widgetSpace) * coordX;
+                renderPositions[0] = this.startX - (this.getWidth() + 1) - (this.getWidth() + this.config().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
             }
             case RIGHT -> {
-                renderPositions[0] = this.startX + 1 + (this.getWidth() + this.config().widgetSpace) * coordX;
+                renderPositions[0] = this.startX + 1 + (this.getWidth() + this.config().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
             }
         }
@@ -113,26 +132,34 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     private int getAvailableWidth() {
-        return Math.min(this.availableWidth, this.config().maxColumns * (this.getWidth() + this.config().widgetSpace));
+        return Math.min(this.availableWidth, this.config().maxColumns * (this.getWidth() + this.config().widgetSpaceX));
     }
 
     private int getAvailableHeight() {
-        return Math.min(this.availableHeight, this.config().maxRows * (this.getHeight() + this.config().widgetSpace));
+        return Math.min(this.availableHeight, this.config().maxRows * (this.getHeight() + this.config().widgetSpaceY));
     }
 
-    public int getMaxColumns() {
-        return Mth.clamp(this.getAvailableWidth() / (this.getWidth() + this.config().widgetSpace), 1, this.config().maxColumns);
+    private int getMaxColumns() {
+        return this.getAvailableWidth() / (this.getWidth() + this.config().widgetSpaceX);
+    }
+
+    public int getMaxClampedColumns() {
+        return Mth.clamp(this.getMaxColumns(), 1, this.config().maxColumns);
     }
 
     private int getAdjustedHeight() {
-        if (this.config().overflowMode == ClientConfig.OverflowMode.CONDENSE && this.getRows() > this.getMaxRows()) {
+        if (this.config().overflowMode == ClientConfig.OverflowMode.CONDENSE && this.getRows() > this.getMaxClampedRows()) {
             return (this.getAvailableHeight() - this.getHeight()) / Math.max(1, this.getRows() - 1);
         }
-        return this.getHeight() + this.config().widgetSpace;
+        return this.getHeight() + this.config().widgetSpaceY;
     }
 
-    public int getMaxRows() {
-        return Mth.clamp(this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpace), 1, this.config().maxRows);
+    private int getMaxRows() {
+        return this.getAvailableHeight() / (this.getHeight() + this.config().widgetSpaceY);
+    }
+
+    public int getMaxClampedRows() {
+        return Mth.clamp(this.getMaxRows(), 1, this.config().maxRows);
     }
 
     public int getRows() {
@@ -140,7 +167,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
     }
 
     protected int splitByColumns(int amountToSplit) {
-        return (int) Math.ceil(amountToSplit / (float) this.getMaxColumns());
+        return (int) Math.ceil(amountToSplit / (float) this.getMaxClampedColumns());
     }
 
     protected ClientConfig.EffectRendererConfig config() {
@@ -156,7 +183,7 @@ public abstract class AbstractEffectRenderer implements IEffectWidget, IHasRende
         if (this.screen instanceof EffectRenderingInventoryScreen) {
             effectRenderer.renderInventoryEffect(effectinstance, (EffectRenderingInventoryScreen<?>) this.screen, matrixStack, posX, posY, this.screen.getBlitOffset());
         } else if (this.screen instanceof Gui) {
-            effectRenderer.renderHUDEffect(effectinstance, this.screen, matrixStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * this.config().widgetAlpha);
+            effectRenderer.renderHUDEffect(effectinstance, this.screen, matrixStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * (float) this.config().widgetAlpha);
         }
     }
 

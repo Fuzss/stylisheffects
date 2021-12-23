@@ -17,6 +17,7 @@ import net.minecraftforge.client.RenderProperties;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class VanillaEffectRenderer extends AbstractEffectRenderer {
     public VanillaEffectRenderer(EffectRendererType type) {
@@ -39,14 +40,19 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
+    public Function<EffectRendererType, AbstractEffectRenderer> getFallbackRenderer() {
+        return CompactEffectRenderer::new;
+    }
+
+    @Override
     public List<Pair<MobEffectInstance, int[]>> getEffectPositions(List<MobEffectInstance> activeEffects) {
         int counter = 0;
         List<Pair<MobEffectInstance, int[]>> effectToPos = Lists.newArrayList();
         for (MobEffectInstance effect : activeEffects) {
-            int posX = counter % this.getMaxColumns();
-            int posY = counter / this.getMaxColumns();
+            int posX = counter % this.getMaxClampedColumns();
+            int posY = counter / this.getMaxClampedColumns();
             counter++;
-            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxRows()) {
+            if (this.config().overflowMode != ClientConfig.OverflowMode.SKIP || posY < this.getMaxClampedRows()) {
                 effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
             }
         }
@@ -58,7 +64,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
         RenderSystem.enableBlend();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, EFFECT_BACKGROUND);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.config().widgetAlpha);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.config().widgetAlpha);
         GuiComponent.blit(matrixStack, posX, posY, 0, StylishEffects.CONFIG.client().vanillaWidget().ambientBorder && effectinstance.isAmbient() ? this.getHeight() : 0, this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectSprite(matrixStack, posX, posY, minecraft, effectinstance);
         this.drawCustomEffect(matrixStack, posX, posY, effectinstance);
@@ -70,7 +76,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
         TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effectinstance.getEffect());
         RenderSystem.setShaderTexture(0, textureatlassprite.atlas().location());
         final float blinkingAlpha = StylishEffects.CONFIG.client().vanillaWidget().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * this.config().widgetAlpha);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.config().widgetAlpha);
         GuiComponent.blit(matrixStack, posX + 6, posY + 7, 0, 18, 18, textureatlassprite);
     }
 

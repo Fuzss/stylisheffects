@@ -25,6 +25,9 @@ apply plugin: 'eclipse'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
+
 ext.mcversion = "${minecraftVersion}"
 ext.modversion = "${modVersion}"
 version = "v${project.modversion}-${project.mcversion}-${project.projectLoader}"
@@ -33,9 +36,6 @@ ext.modid = "${modId}"
 ext.modauthor = "${modAuthor}"
 ext.nextmcversion = getNextVersion(project.mcversion)
 ext.puzzlesversion = "${puzzlesVersion.substring(1, puzzlesVersion.indexOf("-"))}"
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
-println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
 minecraft {
     mappings channel: "${mappingsChannel}", version: "${mappingsVersion}"
@@ -79,17 +79,20 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${forgeVersion}"
-    annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
-
-    // compile against the JEI API but do not include it at runtime
-    compileOnly fg.deobf("mezz.jei:jei-1.17.1:8.2.0.36")
-    // at runtime, use the full JEI jar
-    runtimeOnly fg.deobf("mezz.jei:jei-1.17.1:8.2.0.36")
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     // don't enable these for puzzles, they'll be forced upon all dependencies then via maven
-    runtimeOnly fg.deobf("curse.maven:catalogue-459701:3529459")
-    runtimeOnly fg.deobf("curse.maven:bettermodsbutton-541584:3519040")
-    runtimeOnly fg.deobf("curse.maven:configmenusforge-544048:3520852")
+    runtimeOnly fg.deobf("curse.maven:catalogue-459701:3543625")
+    runtimeOnly fg.deobf("curse.maven:bettermodsbutton-541584:3548185")
+    runtimeOnly fg.deobf("curse.maven:configmenusforge-544048:3548199")
+    // compile against the JEI API but do not include it at runtime
+    compileOnly fg.deobf("mezz.jei:jei-1.18:9.0.0.40")
+    // at runtime, use the full JEI jar
+    runtimeOnly fg.deobf("mezz.jei:jei-1.18:9.0.0.40")
+    // for testing screen interaction
+    runtimeOnly fg.deobf("curse.maven:cosmeticarmorreworked-237307:3559353")
+    runtimeOnly fg.deobf("curse.maven:curiosapi-309927:3573785")
+    runtimeOnly fg.deobf("curse.maven:angelring-333396:3556040")
 
     // from local maven, those builds are not obfuscated
     implementation "fuzs.puzzleslib:PuzzlesLib:${puzzlesVersion}"
@@ -241,10 +244,7 @@ curseforge {
         project.findProperty('curseProjectVersion').replaceAll(" ", "").split(",").each { version -> addGameVersion version }
         mainArtifact jar
         addArtifact sourceJar
-        relations {
-            requiredDependency 'puzzles-lib'
-            optionalDependency 'potion-descriptions'
-        }
+        relations { requiredDependency 'puzzles-lib' }
     }
     options {
         // doesn't upload, only prints json to console

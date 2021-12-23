@@ -1,8 +1,16 @@
 package fuzs.stylisheffects.config;
 
+import com.google.common.collect.Lists;
 import fuzs.puzzleslib.config.AbstractConfig;
 import fuzs.puzzleslib.config.annotation.Config;
+import fuzs.puzzleslib.config.serialization.EntryCollectionBuilder;
+import fuzs.stylisheffects.client.handler.EffectScreenHandler;
 import net.minecraft.ChatFormatting;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.List;
+import java.util.Set;
 
 public class ClientConfig extends AbstractConfig {
     @Config
@@ -18,6 +26,7 @@ public class ClientConfig extends AbstractConfig {
     protected void afterConfigReload() {
         this.vanillaWidget().afterConfigReload();
         this.compactWidget().afterConfigReload();
+        this.inventoryRenderer().afterConfigReload();
     }
 
     public InventoryRendererConfig inventoryRenderer() {
@@ -34,10 +43,6 @@ public class ClientConfig extends AbstractConfig {
 
     public CompactWidgetConfig compactWidget() {
         return this.widgets.compactWidget;
-    }
-
-    public enum EffectRenderer {
-        NONE, COMPACT, VANILLA
     }
 
     public enum LongDurationString {
@@ -88,26 +93,30 @@ public class ClientConfig extends AbstractConfig {
 
     public static abstract class EffectRendererConfig extends AbstractConfig {
         @Config(description = "Effect renderer to be used.")
-        public EffectRenderer rendererType = EffectRenderer.COMPACT;
+        public EffectScreenHandler.EffectRenderer rendererType = EffectScreenHandler.EffectRenderer.COMPACT;
         @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1, max = 255)
-        public int maxColumns = 8;
+        public int maxColumns = 5;
         @Config(description = "Maximum amount of status effects rendered in a single column.")
         @Config.IntRange(min = 1, max = 255)
         public int maxRows = 255;
         @Config(description = "Screen side to render status effects on.")
         public ScreenSide screenSide = ScreenSide.RIGHT;
-//        @Config(description = "Scale for effect widgets.")
-//        @Config.FloatRange(min = 1.0F, max = 24.0F)
-//        public float widgetScale = 8.0F;
         @Config(description = "Alpha value for effect widgets.")
-        @Config.FloatRange(min = 0.0F, max = 1.0F)
-        public float widgetAlpha = 1.0F;
+        @Config.DoubleRange(min = 0.0, max = 1.0)
+        public double widgetAlpha = 1.0;
         @Config(description = "What to do when there are more effects to display than there is room on-screen.")
         public OverflowMode overflowMode = OverflowMode.CONDENSE;
-        @Config(description = "Space between individual effect widgets.")
+        @Config(description = "Space between individual effect widgets on x-axis.")
         @Config.IntRange(min = 0)
-        public int widgetSpace = 1;
+        public int widgetSpaceX = 1;
+        @Config(description = "Space between individual effect widgets on y-axis.")
+        @Config.IntRange(min = 0)
+        public int widgetSpaceY = 1;
+        @Config(description = "Respect vanilla's \"hideParticles\" flag which prevents a status effect from showing when set via commands.")
+        public boolean respectHideParticles = true;
+        @Config(description = "Allow effect renderer to fall back to a more compact version (when available) if not enough screen space exists. Otherwise effect widgets might run off-screen.")
+        public boolean allowFallback = true;
 
         public EffectRendererConfig(String name) {
             super(name);
@@ -115,31 +124,49 @@ public class ClientConfig extends AbstractConfig {
     }
 
     public static class InventoryRendererConfig extends EffectRendererConfig {
-        @Config(description = "Render active status effects in every container, not just in the player inventory.")
+        @Config(description = "Render active status effects in every menu screen, not just in the player inventory.")
         public boolean effectsEverywhere = true;
+        @Config(name = "menu_blacklist", description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
+        private List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container");
+        @Config(description = "Print menu type to game chat whenever a new menu screen is opened. Only intended to find menu types to be added to \"menuBlacklistRaw\".")
+        public boolean debugContainerTypes = false;
         @Config(description = "Show a tooltip when hovering over an effect widget.")
         public boolean hoveringTooltip = true;
         @Config(description = "Show remaining status effect duration on tooltip.")
         public boolean tooltipDuration = true;
+        @Config(description = "Minimum screen border distance for effect widgets.")
+        @Config.IntRange(min = 0)
+        public int screenBorderDistance = 3;
+
+        public Set<MenuType<?>> menuBlacklist;
 
         public InventoryRendererConfig() {
             super("inventory_renderer");
             this.screenSide = ScreenSide.LEFT;
-            this.widgetAlpha = 1.0F;
+            this.widgetAlpha = 1.0;
+            this.respectHideParticles = false;
+            this.allowFallback = true;
+        }
+
+        @Override
+        protected void afterConfigReload() {
+            this.menuBlacklist = EntryCollectionBuilder.of(ForgeRegistries.CONTAINERS).buildSet(this.menuBlacklistRaw);
         }
     }
     public static class HudRendererConfig extends EffectRendererConfig {
         @Config(description = "Offset on x-axis.")
         @Config.IntRange(min = 0)
-        public int offsetX = 0;
+        public int offsetX = 3;
         @Config(description = "Offset on y-axis.")
         @Config.IntRange(min = 0)
-        public int offsetY = 0;
+        public int offsetY = 3;
 
         public HudRendererConfig() {
             super("hud_renderer");
             this.screenSide = ScreenSide.RIGHT;
-            this.widgetAlpha = 0.85F;
+            this.widgetAlpha = 0.85;
+            this.respectHideParticles = true;
+            this.allowFallback = false;
         }
     }
 

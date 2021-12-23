@@ -15,10 +15,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 public class StylishEffectsClient {
     @SubscribeEvent
     public static void onConstructMod(final FMLConstructModEvent evt) {
-        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onPotionShift);
-        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onInitGuiPost);
+        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onScreenOpen);
         MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onDrawBackground);
-        MinecraftForge.EVENT_BUS.addListener(EffectScreenHandler.INSTANCE::onDrawScreenPost);
     }
 
     @SubscribeEvent
@@ -27,7 +25,8 @@ public class StylishEffectsClient {
         OverlayRegistry.registerOverlayBelow(ForgeIngameGui.HUD_TEXT_ELEMENT, "Mod Potion Icons", (gui, poseStack, partialTicks, screenWidth, screenHeight) -> {
             EffectScreenHandler.INSTANCE.onRenderGameOverlayText(poseStack, screenWidth, screenHeight);
         });
-        EffectScreenHandler.INSTANCE.createEffectRenderers();
-        StylishEffects.CONFIG.addClientCallback(EffectScreenHandler.INSTANCE::createEffectRenderers);
+        // can't do this during construct as configs won't be loaded then
+        EffectScreenHandler.INSTANCE.createHudRenderer();
+        StylishEffects.CONFIG.addClientCallback(EffectScreenHandler.INSTANCE::createHudRenderer);
     }
 }
