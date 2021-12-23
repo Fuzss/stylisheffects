@@ -3,13 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
-## [v1.2.0-1.16.5] - 2021-12-21
+## [v1.2.0-1.16.5] - 2021-12-23
 ### Added
 - Added fallback behavior for effect renderers in case not enough screen space is available
 - Added screen border distance option
 ### Changed
-- Hud renderer no longer shows when effect renderer is rendered inside of a screen (like 1.18)
+- Hud renderer no longer shows when effect renderer is rendered on a screen (like 1.18)
 - Separated screen space options for x- and y-axis
+### Fixed
+- Fixed effect widgets rendering in front of item tooltips
 
 ## [v1.1.1-1.16.5] - 2021-12-17
 ### Added

@@ -1,5 +1,6 @@
 package fuzs.stylisheffects.client.handler;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import fuzs.stylisheffects.client.gui.effects.CompactEffectRenderer;
@@ -17,6 +18,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextComponentUtils;
 import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.client.event.GuiContainerEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -24,23 +26,27 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 public class EffectScreenHandler {
+    @Nullable
     private static AbstractEffectRenderer hudRenderer;
 
     public static void createHudRenderer() {
         hudRenderer = createEffectRenderer(StylishEffects.CONFIG.client().hudRenderer().rendererType, AbstractEffectRenderer.EffectRendererType.HUD);
     }
 
+    @Nullable
     private static AbstractEffectRenderer createEffectRenderer(ClientConfig.EffectRenderer rendererType, AbstractEffectRenderer.EffectRendererType effectRendererType) {
         switch (rendererType) {
             case VANILLA:
                 return new VanillaEffectRenderer(effectRendererType);
             case COMPACT:
                 return new CompactEffectRenderer(effectRendererType);
+            default:
+                return null;
         }
-        throw new IllegalStateException("unreachable statement");
     }
 
     @SubscribeEvent
@@ -67,11 +73,12 @@ public class EffectScreenHandler {
 
     @SubscribeEvent
     public void onRenderGameOverlayText(final RenderGameOverlayEvent.Text evt) {
+        // use this event so potion icons are drawn behind debug menu as in vanilla
+        // field may get changed during config reload from different thread
+        final AbstractEffectRenderer hudRenderer = EffectScreenHandler.hudRenderer;
+        if (hudRenderer == null) return;
         final Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.screen == null || !supportsEffectsDisplay(minecraft.screen)) {
-            // use this event so potion icons are drawn behind debug menu as in vanilla
-            // field may get changed during config reload from different thread
-            final AbstractEffectRenderer hudRenderer = EffectScreenHandler.hudRenderer;
             hudRenderer.setActiveEffects(minecraft.player.getActiveEffects());
             if (hudRenderer.isActive()) {
                 final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().hudRenderer().screenSide;
@@ -82,17 +89,18 @@ public class EffectScreenHandler {
     }
 
     @SubscribeEvent
-    public void onDrawScreenPost(final GuiScreenEvent.DrawScreenEvent.Post evt) {
+    public void onDrawBackground(final GuiContainerEvent.DrawBackground evt) {
+        final ContainerScreen<?> screen = evt.getGuiContainer();
         // field may get changed during config reload from different thread
-        final AbstractEffectRenderer inventoryRenderer = createRendererOrFallback(evt.getGui());
-        if (inventoryRenderer != null) {
-            final Minecraft minecraft = evt.getGui().getMinecraft();
-            if (inventoryRenderer.isActive()) {
-                inventoryRenderer.renderEffects(evt.getMatrixStack(), minecraft);
-                inventoryRenderer.getHoveredEffectTooltip(evt.getMouseX(), evt.getMouseY()).ifPresent(tooltip -> {
-                    evt.getGui().renderComponentTooltip(evt.getMatrixStack(), tooltip, evt.getMouseX(), evt.getMouseY());
-                });
-            }
+        final AbstractEffectRenderer inventoryRenderer = createRendererOrFallback(screen);
+        if (inventoryRenderer == null) return;
+        final Minecraft minecraft = screen.getMinecraft();
+        if (inventoryRenderer.isActive()) {
+            final MatrixStack poseStack = evt.getMatrixStack();
+            inventoryRenderer.renderEffects(poseStack, minecraft);
+            inventoryRenderer.getHoveredEffectTooltip(evt.getMouseX(), evt.getMouseY()).ifPresent(tooltip -> {
+                screen.renderComponentTooltip(poseStack, tooltip, evt.getMouseX(), evt.getMouseY());
+            });
         }
     }
 
@@ -119,13 +127,14 @@ public class EffectScreenHandler {
     }
 
     public static AbstractEffectRenderer createRendererOrFallback(Screen screen) {
-        if (supportsEffectsDisplay(screen)) {
+        final ClientConfig.EffectRenderer rendererType = StylishEffects.CONFIG.client().inventoryRenderer().rendererType;
+        if (rendererType != ClientConfig.EffectRenderer.NONE && supportsEffectsDisplay(screen)) {
             final ContainerScreen<?> containerScreen = (ContainerScreen<?>) screen;
             final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().inventoryRenderer().screenSide;
             Consumer<AbstractEffectRenderer> setScreenDimensions = renderer -> {
                 renderer.setScreenDimensions(containerScreen, !screenSide.right() ? containerScreen.getGuiLeft() : containerScreen.width - (containerScreen.getGuiLeft() + containerScreen.getXSize()), containerScreen.getYSize(), !screenSide.right() ? containerScreen.getGuiLeft() : containerScreen.getGuiLeft() + containerScreen.getXSize(), containerScreen.getGuiTop(), screenSide);
             };
-            AbstractEffectRenderer renderer = createEffectRenderer(StylishEffects.CONFIG.client().inventoryRenderer().rendererType, AbstractEffectRenderer.EffectRendererType.INVENTORY);
+            AbstractEffectRenderer renderer = createEffectRenderer(rendererType, AbstractEffectRenderer.EffectRendererType.INVENTORY);
             setScreenDimensions.accept(renderer);
             while (!renderer.isValid()) {
                 renderer = renderer.getFallbackRenderer().apply(AbstractEffectRenderer.EffectRendererType.INVENTORY);
