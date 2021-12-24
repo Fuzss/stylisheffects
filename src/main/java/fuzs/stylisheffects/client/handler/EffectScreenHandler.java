@@ -1,6 +1,7 @@
 package fuzs.stylisheffects.client.handler;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import fuzs.puzzleslib.client.gui.screens.Screens;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import fuzs.stylisheffects.client.gui.effects.CompactEffectRenderer;
@@ -74,10 +75,9 @@ public class EffectScreenHandler {
         // therefore needs to happen every tick (since more screens might show unexpected behavior)
         final AbstractEffectRenderer inventoryRenderer = createRendererOrFallback(screen);
         if (inventoryRenderer == null) return;
-        final Minecraft minecraft = screen.getMinecraft();
         if (inventoryRenderer.isActive()) {
             final PoseStack poseStack = evt.getPoseStack();
-            inventoryRenderer.renderEffects(poseStack, minecraft);
+            inventoryRenderer.renderEffects(poseStack, Screens.getMinecraft(screen));
             inventoryRenderer.getHoveredEffectTooltip(evt.getMouseX(), evt.getMouseY()).ifPresent(tooltip -> {
                 screen.renderComponentTooltip(poseStack, tooltip, evt.getMouseX(), evt.getMouseY());
             });
@@ -110,7 +110,8 @@ public class EffectScreenHandler {
             final AbstractContainerScreen<?> containerScreen = (AbstractContainerScreen<?>) screen;
             final ClientConfig.ScreenSide screenSide = StylishEffects.CONFIG.client().inventoryRenderer().screenSide;
             Consumer<AbstractEffectRenderer> setScreenDimensions = renderer -> {
-                renderer.setScreenDimensions(containerScreen, !screenSide.right() ? containerScreen.getGuiLeft() : containerScreen.width - (containerScreen.getGuiLeft() + containerScreen.getXSize()), containerScreen.getYSize(), !screenSide.right() ? containerScreen.getGuiLeft() : containerScreen.getGuiLeft() + containerScreen.getXSize(), containerScreen.getGuiTop(), screenSide);
+                final int leftPos = Screens.getLeftPos(containerScreen);
+                renderer.setScreenDimensions(containerScreen, !screenSide.right() ? leftPos : containerScreen.width - (leftPos + Screens.getImageWidth(containerScreen)), Screens.getImageHeight(containerScreen), !screenSide.right() ? leftPos : leftPos + Screens.getImageWidth(containerScreen), Screens.getTopPos(containerScreen), screenSide);
             };
             AbstractEffectRenderer renderer = rendererType.create(AbstractEffectRenderer.EffectRendererType.INVENTORY);
             setScreenDimensions.accept(renderer);
@@ -118,7 +119,7 @@ public class EffectScreenHandler {
                 renderer = renderer.getFallbackRenderer().apply(AbstractEffectRenderer.EffectRendererType.INVENTORY);
                 setScreenDimensions.accept(renderer);
             }
-            renderer.setActiveEffects(screen.getMinecraft().player.getActiveEffects());
+            renderer.setActiveEffects(Screens.getMinecraft(screen).player.getActiveEffects());
             return renderer;
         }
         return null;
