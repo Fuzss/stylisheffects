@@ -23,6 +23,7 @@ import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -117,6 +118,7 @@ public class EffectScreenHandler {
             setScreenDimensions.accept(renderer);
             while (!renderer.isValid()) {
                 renderer = renderer.getFallbackRenderer().apply(AbstractEffectRenderer.EffectRendererType.INVENTORY);
+                if (renderer == null) return null;
                 setScreenDimensions.accept(renderer);
             }
             renderer.setActiveEffects(Screens.getMinecraft(screen).player.getActiveEffects());
@@ -136,7 +138,7 @@ public class EffectScreenHandler {
             this.factory = factory;
         }
 
-        @Nullable
+        @Nonnull
         public AbstractEffectRenderer create(AbstractEffectRenderer.EffectRendererType type) {
             return this.factory.apply(type);
         }

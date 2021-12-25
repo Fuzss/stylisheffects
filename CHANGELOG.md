@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v3.0.2-1.18.1] - 2021-12-25
+### Fixed
+- Fixed crash when not enough screen space is available to render any effect widget
+
 ## [v3.0.1-1.18.1] - 2021-12-24
 ### Changed
 - Updated Puzzles Lib to v3.1.2
