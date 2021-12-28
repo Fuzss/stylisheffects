@@ -95,7 +95,7 @@ public class ClientConfig extends AbstractConfig {
     }
 
     public static abstract class EffectRendererConfig extends AbstractConfig {
-        @Config(description = "Effect renderer to be used.")
+        @Config(description = {"Effect renderer to be used.", "This setting might not be respected when not enough screen space is available. To force this setting disable \"allow_fallback\"."})
         public EffectRenderer rendererType = EffectRenderer.COMPACT;
         @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1, max = 255)
@@ -131,7 +131,7 @@ public class ClientConfig extends AbstractConfig {
         public boolean effectsEverywhere = true;
         @Config(name = "menu_blacklist", description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
         private List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container");
-        @Config(description = "Print menu type to game chat whenever a new menu screen is opened. Only intended to find menu types to be added to \"menuBlacklistRaw\".")
+        @Config(description = "Print menu type to game chat whenever a new menu screen is opened. Only intended to find menu types to be added to \"menu_blacklist\".")
         public boolean debugContainerTypes = false;
         @Config(description = "Show a tooltip when hovering over an effect widget.")
         public boolean hoveringTooltip = true;

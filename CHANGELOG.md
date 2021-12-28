@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v1.2.1-1.16.5] - 2021-12-28
+### Changed
+- Clarified a few config descriptions
+### Fixed
+- Fixed crash when not enough screen space is available to render any effect widget
+
 ## [v1.2.0-1.16.5] - 2021-12-23
 ### Added
 - Added fallback behavior for effect renderers in case not enough screen space is available

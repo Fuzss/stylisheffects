@@ -138,6 +138,7 @@ public class EffectScreenHandler {
             setScreenDimensions.accept(renderer);
             while (!renderer.isValid()) {
                 renderer = renderer.getFallbackRenderer().apply(AbstractEffectRenderer.EffectRendererType.INVENTORY);
+                if (renderer == null) return null;
                 setScreenDimensions.accept(renderer);
             }
             renderer.setActiveEffects(screen.getMinecraft().player.getActiveEffects());
