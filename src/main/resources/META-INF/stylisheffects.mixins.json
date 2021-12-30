@@ -9,7 +9,9 @@
   ],
   "client": [
     "client.EffectRenderingInventoryScreenMixin",
-    "client.accessor.AbstractContainerMenuAccessor"
+    "client.accessor.AbstractContainerMenuAccessor",
+    "client.accessor.ForgeIngameGuiAccessor",
+    "client.accessor.OverlayRegistryAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
