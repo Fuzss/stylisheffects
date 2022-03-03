@@ -20,7 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class CompactEffectRenderer extends AbstractEffectRenderer {
-    private static final ResourceLocation TINY_NUMBERS_TEXTURE = new ResourceLocation(StylishEffects.MODID,"textures/font/tiny_numbers.png");
+    private static final ResourceLocation TINY_NUMBERS_TEXTURE = new ResourceLocation(StylishEffects.MOD_ID,"textures/font/tiny_numbers.png");
 
     public CompactEffectRenderer(EffectRendererType type) {
         super(type);

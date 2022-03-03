@@ -86,16 +86,16 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:bettermodsbutton-541584:3548185")
     runtimeOnly fg.deobf("curse.maven:configmenusforge-544048:3548199")
     // compile against the JEI API but do not include it at runtime
-    compileOnly fg.deobf("mezz.jei:jei-1.18:9.0.0.40")
+    compileOnly fg.deobf("mezz.jei:jei-1.18.2:9.4.1.116")
     // at runtime, use the full JEI jar
-    runtimeOnly fg.deobf("mezz.jei:jei-1.18:9.0.0.40")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.18.2:9.4.1.116")
     // for testing screen interaction
-    runtimeOnly fg.deobf("curse.maven:cosmeticarmorreworked-237307:3559353")
-    runtimeOnly fg.deobf("curse.maven:curiosapi-309927:3573785")
-    runtimeOnly fg.deobf("curse.maven:angelring-333396:3556040")
+    runtimeOnly fg.deobf("curse.maven:cosmeticarmorreworked-237307:3669496")
+    runtimeOnly fg.deobf("curse.maven:curiosapi-309927:3670447")
+//    runtimeOnly fg.deobf("curse.maven:angelring-333396:3556040")
 
     // from local maven, those builds are not obfuscated
-    implementation "fuzs.puzzleslib:PuzzlesLib:${puzzlesVersion}"
+    implementation fg.deobf("fuzs.puzzleslib:PuzzlesLib:${puzzlesVersion}")
     // try use curse maven when local maven is not available
     // file id is end of url (7 digits usually) when on file details page on curse
 //    implementation fg.deobf("curse.maven:puzzles-lib:<file-id>")
@@ -198,19 +198,20 @@ jar {
     group 'jar'
 }
 
-createJarTask("deobfJar", "deobf", [sourceSets.main.output])
+//createJarTask("deobfJar", "deobf", [sourceSets.main.output])
 createJarTask("sourceJar", "sources", sourceSets.main.allSource)
 createJarTask("javadocJar", "javadoc", javadoc)
 createSignJarTask("signJar", jar)
-createSignJarTask("signDeobfJar", deobfJar)
+//createSignJarTask("signDeobfJar", deobfJar)
 createSignJarTask("signSourceJar", sourceJar)
 createSignJarTask("signJavadocJar", javadocJar)
 
 // finalize all jar build tasks with a signing task
-def jarTasks = [jar, deobfJar, sourceJar, javadocJar]
+def jarTasks = [jar, sourceJar, javadocJar]
 jarTasks.each { task -> task.finalizedBy tasks.findByName("sign" + task.name.substring(0, 1).toUpperCase() + task.name.substring(1))}
 
 signJar.mustRunAfter 'reobfJar'
+jar.finalizedBy 'reobfJar'
 
 artifacts {
     archives jar
@@ -222,10 +223,10 @@ artifacts {
 publishing {
     publications {
         mavenJava (MavenPublication) {
-            artifact deobfJar
+//            artifact deobfJar
+            artifact jar
             artifact sourceJar
             artifact javadocJar
-            from components.java
         }
     }
 }

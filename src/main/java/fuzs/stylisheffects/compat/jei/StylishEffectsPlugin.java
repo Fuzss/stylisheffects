@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 public class StylishEffectsPlugin implements IModPlugin {
     @Override
     public ResourceLocation getPluginUid() {
-        return new ResourceLocation(StylishEffects.MODID, "gui_extra_areas");
+        return new ResourceLocation(StylishEffects.MOD_ID, "gui_extra_areas");
     }
 
     @Override
