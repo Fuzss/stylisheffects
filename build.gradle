@@ -92,6 +92,7 @@ dependencies {
     // for testing screen interaction
     runtimeOnly fg.deobf("curse.maven:cosmeticarmorreworked-237307:3669496")
     runtimeOnly fg.deobf("curse.maven:curiosapi-309927:3670447")
+    runtimeOnly fg.deobf("curse.maven:journeymap-32274:3681171")
 //    runtimeOnly fg.deobf("curse.maven:angelring-333396:3556040")
 
     // from local maven, those builds are not obfuscated
