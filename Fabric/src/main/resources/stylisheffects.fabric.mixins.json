@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "package": "fuzs.stylisheffects.mixin",
+  "refmap": "stylisheffects.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "client.AbstractContainerScreenMixin",
+    "client.EffectRenderingInventoryScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

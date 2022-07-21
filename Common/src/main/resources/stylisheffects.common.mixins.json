@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "package": "fuzs.stylisheffects.mixin",
+  "refmap": "stylisheffects.refmap.json",
+  "plugin": "fuzs.stylisheffects.mixin.ModMixinConfigPlugin",
+  "mixins": [
+    "compat.jei.InventoryEffectRendererGuiHandlerMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
