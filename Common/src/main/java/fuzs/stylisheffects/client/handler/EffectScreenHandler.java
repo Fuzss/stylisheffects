@@ -16,9 +16,9 @@ import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.world.inventory.MenuType;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -55,13 +55,13 @@ public class EffectScreenHandler {
         if (screen instanceof AbstractContainerScreen containerScreen && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().debugContainerTypes) {
             MenuType<?> type = getScreenMenuType(containerScreen);
             if (type != null) {
-                final Component component = Component.literal(Registry.MENU.getKey(type).toString());
+                Component component = Component.literal(Registry.MENU.getKey(type).toString());
                 Minecraft.getInstance().gui.getChat().addMessage(Component.translatable("debug.menu.opening", ComponentUtils.wrapInSquareBrackets(component)));
             }
         }
     }
 
-    public void onDrawBackground(PoseStack poseStack, int mouseX, int mouseY, AbstractContainerScreen<?> screen) {
+    public void onDrawBackground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
         // recreating this during init to adjust for screen size changes should be enough, but doesn't work for some reason for creative mode inventory,
         // therefore needs to happen every tick (since more screens might show unexpected behavior)
         final AbstractEffectRenderer inventoryRenderer = createRendererOrFallback(screen);
@@ -127,19 +127,26 @@ public class EffectScreenHandler {
     }
 
     public enum EffectRenderer {
-        NONE(type -> null),
-        COMPACT(CompactEffectRenderer::new),
-        VANILLA(VanillaEffectRenderer::new);
+        NONE(null),
+//        GUI_SMALL(null),
+        GUI_COMPACT(CompactEffectRenderer::new),
+//        INVENTORY_COMPACT(null),
+        INVENTORY_FULL_SIZE(VanillaEffectRenderer::new);
 
+        @Nullable
         private final Function<AbstractEffectRenderer.EffectRendererType, AbstractEffectRenderer> factory;
 
         EffectRenderer(Function<AbstractEffectRenderer.EffectRendererType, AbstractEffectRenderer> factory) {
             this.factory = factory;
         }
 
-        @Nonnull
+        @SuppressWarnings("ConstantConditions")
+        @NotNull
         public AbstractEffectRenderer create(AbstractEffectRenderer.EffectRendererType type) {
-            return this.factory.apply(type);
+            if (this.factory != null) {
+                return this.factory.apply(type);
+            }
+            return null;
         }
 
         public boolean isEnabled() {

@@ -8,7 +8,9 @@
   ],
   "client": [
     "client.AbstractContainerScreenMixin",
-    "client.EffectRenderingInventoryScreenMixin"
+    "client.EffectRenderingInventoryScreenMixin",
+    "client.GuiMixin",
+    "client.MinecraftMixin"
   ],
   "injectors": {
     "defaultRequire": 1

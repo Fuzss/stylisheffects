@@ -3,7 +3,6 @@ package fuzs.stylisheffects.client;
 import fuzs.puzzleslib.client.core.ClientCoreServices;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.handler.EffectScreenHandler;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
@@ -28,7 +27,7 @@ public class StylishEffectsForgeClient {
             EffectScreenHandler.INSTANCE.onScreenOpen(evt.getNewScreen());
         });
         MinecraftForge.EVENT_BUS.addListener((final ContainerScreenEvent.Render.Background evt) -> {
-            EffectScreenHandler.INSTANCE.onDrawBackground(evt.getPoseStack(), evt.getMouseX(), evt.getMouseY(), evt.getContainerScreen());
+            EffectScreenHandler.INSTANCE.onDrawBackground(evt.getContainerScreen(), evt.getPoseStack(), evt.getMouseX(), evt.getMouseY());
         });
         MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.RenderInventoryMobEffects evt) -> {
             // disable vanilla effect rendering in inventory screen

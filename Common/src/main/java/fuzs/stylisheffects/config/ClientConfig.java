@@ -63,9 +63,9 @@ public class ClientConfig extends AbstractConfig {
 
     public static class RenderersConfig extends AbstractConfig {
         @Config
-        InventoryRendererConfig inventoryRenderer = new InventoryRendererConfig();
+        final InventoryRendererConfig inventoryRenderer = new InventoryRendererConfig();
         @Config
-        HudRendererConfig hudRenderer = new HudRendererConfig();
+        final HudRendererConfig hudRenderer = new HudRendererConfig();
 
         public RenderersConfig() {
             super("renderers");
@@ -74,9 +74,9 @@ public class ClientConfig extends AbstractConfig {
 
     public static class WidgetsConfig extends AbstractConfig {
         @Config
-        VanillaWidgetConfig vanillaWidget = new VanillaWidgetConfig();
+        final VanillaWidgetConfig vanillaWidget = new VanillaWidgetConfig();
         @Config
-        CompactWidgetConfig compactWidget = new CompactWidgetConfig();
+        final CompactWidgetConfig compactWidget = new CompactWidgetConfig();
 
         public WidgetsConfig() {
             super("widgets");
@@ -85,7 +85,7 @@ public class ClientConfig extends AbstractConfig {
 
     public static abstract class EffectRendererConfig extends AbstractConfig {
         @Config(description = {"Effect renderer to be used.", "This setting might not be respected when not enough screen space is available. To force this setting disable \"allow_fallback\"."})
-        public EffectScreenHandler.EffectRenderer rendererType = EffectScreenHandler.EffectRenderer.COMPACT;
+        public EffectScreenHandler.EffectRenderer rendererType = EffectScreenHandler.EffectRenderer.GUI_COMPACT;
         @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1, max = 255)
         public int maxColumns = 5;
@@ -117,7 +117,7 @@ public class ClientConfig extends AbstractConfig {
         @Config(description = "Render active status effects in every menu screen, not just in the player inventory.")
         public boolean effectsEverywhere = true;
         @Config(name = "menu_blacklist", description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
-        private List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container");
+        private List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container", "tconstruct:part_builder", "tconstruct:tinker_station", "tconstruct:smeltery");
         @Config(description = "Print menu type to game chat whenever a new menu screen is opened. Only intended to find menu types to be added to \"menu_blacklist\".")
         public boolean debugContainerTypes = false;
         @Config(description = "Show a tooltip when hovering over an effect widget.")

@@ -10,5 +10,5 @@ public interface EffectWidget {
 
     int getHeight();
 
-    void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance);
+    void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance);
 }

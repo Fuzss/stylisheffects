@@ -35,7 +35,7 @@ public class RenderGuiElementEvents {
          * @param poseStack     the pose stack
          * @param screenWidth   width of the window's screen
          * @param screenHeight  height of the window's screen
-         * @return              is this element permitted to render
+         * @return              is this element permitted to render (return <code>false</code> to prevent rendering)
          */
         boolean onBeforeRenderGameOverlay(ElementType elementType, PoseStack poseStack, int screenWidth, int screenHeight);
     }

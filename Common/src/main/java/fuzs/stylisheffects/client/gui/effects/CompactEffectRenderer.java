@@ -88,15 +88,15 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    public void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
+    public void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance) {
         RenderSystem.enableBlend();
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, EFFECT_BACKGROUND);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.config().widgetAlpha);
-        GuiComponent.blit(poseStack, posX, posY, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().ambientBorder && effectinstance.isAmbient() ? this.getWidth() : 0, 64, this.getWidth(), this.getHeight(), 256, 256);
-        this.drawEffectAmplifier(poseStack, posX, posY, minecraft, effectinstance);
-        this.drawEffectSprite(poseStack, posX, posY, minecraft, effectinstance);
-        this.drawEffectText(poseStack, posX, posY, minecraft, effectinstance);
+        GuiComponent.blit(poseStack, posX, posY, 152, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().ambientBorder && effectInstance.isAmbient() ? this.getHeight() : 0, this.getWidth(), this.getHeight(), 256, 256);
+        this.drawEffectAmplifier(poseStack, posX, posY, minecraft, effectInstance);
+        this.drawEffectSprite(poseStack, posX, posY, minecraft, effectInstance);
+        this.drawEffectText(poseStack, posX, posY, minecraft, effectInstance);
     }
 
     private void drawEffectAmplifier(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {

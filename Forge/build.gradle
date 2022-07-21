@@ -114,7 +114,7 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:catalogue-459701:3873264")
     runtimeOnly fg.deobf("fuzs.bettermodsbutton:bettermodsbutton-forge:4.0.1")
 //    runtimeOnly fg.deobf("curse.maven:configmenusforge-544048:3822820")
-    runtimeOnly fg.deobf("curse.maven:configured-457570:3872190")
+//    runtimeOnly fg.deobf("curse.maven:configured-457570:3872190")
 
     // Puzzles Lib
     implementation fg.deobf("fuzs.puzzleslib:puzzleslib-forge:${puzzlesVersion}")

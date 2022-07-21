@@ -35,6 +35,10 @@ public class ScreenEvents {
         /**
          * called when a new screen is set in {@link net.minecraft.client.Minecraft#setScreen}
          * allows for replacing the new screen with a different one returned by this callback
+         *
+         * IMPORTANT: for cancelling a new screen from being set and to keep the old one, simply return <code>oldScreen</code>
+         *          this is equivalent to cancelling the event on Forge
+         *
          * DO NOT use {@link net.minecraft.client.Minecraft#setScreen} when this is called, there will be an infinite loop
          *
          * @param oldScreen     the screen that is being removed
