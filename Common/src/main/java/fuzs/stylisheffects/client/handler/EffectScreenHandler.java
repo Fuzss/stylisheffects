@@ -4,8 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.puzzleslib.client.core.ClientCoreServices;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.CompactEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.VanillaEffectRenderer;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,11 +14,9 @@ import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.world.inventory.MenuType;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class EffectScreenHandler {
     public static final EffectScreenHandler INSTANCE = new EffectScreenHandler();
@@ -32,7 +28,7 @@ public class EffectScreenHandler {
     }
 
     public void createHudRenderer() {
-        this.hudRenderer = StylishEffects.CONFIG.get(ClientConfig.class).hudRenderer().rendererType.create(AbstractEffectRenderer.EffectRendererType.GUI);
+        this.hudRenderer = StylishEffects.CONFIG.get(ClientConfig.class).hudRenderer().rendererType.create(EffectRendererEnvironment.GUI);
     }
 
     public void onRenderGameOverlayText(PoseStack poseStack, int screenWidth, int screenHeight) {
@@ -112,45 +108,17 @@ public class EffectScreenHandler {
                 final int leftPos = ClientCoreServices.FACTORIES.screens().getLeftPos(containerScreen);
                 renderer.setScreenDimensions(containerScreen, !screenSide.right() ? leftPos : containerScreen.width - (leftPos + ClientCoreServices.FACTORIES.screens().getImageWidth(containerScreen)), ClientCoreServices.FACTORIES.screens().getImageHeight(containerScreen), !screenSide.right() ? leftPos : leftPos + ClientCoreServices.FACTORIES.screens().getImageWidth(containerScreen), ClientCoreServices.FACTORIES.screens().getTopPos(containerScreen), screenSide);
             };
-            AbstractEffectRenderer renderer = rendererType.create(AbstractEffectRenderer.EffectRendererType.INVENTORY);
+            AbstractEffectRenderer renderer = rendererType.create(EffectRendererEnvironment.INVENTORY);
             setScreenDimensions.accept(renderer);
             while (!renderer.isValid()) {
-                Function<AbstractEffectRenderer.EffectRendererType, AbstractEffectRenderer> rendererFactory = renderer.getFallbackRenderer();
+                EffectRendererEnvironment.Factory rendererFactory = renderer.getFallbackRenderer();
                 if (rendererFactory == null) return null;
-                renderer = rendererFactory.apply(AbstractEffectRenderer.EffectRendererType.INVENTORY);
+                renderer = rendererFactory.apply(EffectRendererEnvironment.INVENTORY);
                 setScreenDimensions.accept(renderer);
             }
             renderer.setActiveEffects(ClientCoreServices.FACTORIES.screens().getMinecraft(screen).player.getActiveEffects());
             return renderer;
         }
         return null;
-    }
-
-    public enum EffectRenderer {
-        NONE(null),
-//        GUI_SMALL(null),
-        GUI_COMPACT(CompactEffectRenderer::new),
-//        INVENTORY_COMPACT(null),
-        INVENTORY_FULL_SIZE(VanillaEffectRenderer::new);
-
-        @Nullable
-        private final Function<AbstractEffectRenderer.EffectRendererType, AbstractEffectRenderer> factory;
-
-        EffectRenderer(Function<AbstractEffectRenderer.EffectRendererType, AbstractEffectRenderer> factory) {
-            this.factory = factory;
-        }
-
-        @SuppressWarnings("ConstantConditions")
-        @NotNull
-        public AbstractEffectRenderer create(AbstractEffectRenderer.EffectRendererType type) {
-            if (this.factory != null) {
-                return this.factory.apply(type);
-            }
-            return null;
-        }
-
-        public boolean isEnabled() {
-            return this != NONE;
-        }
     }
 }

@@ -119,7 +119,16 @@ dependencies {
     // Puzzles Lib
     implementation fg.deobf("fuzs.puzzleslib:puzzleslib-forge:${puzzlesVersion}")
 
-    implementation fg.deobf("mezz.jei:jei-1.19-forge:11.0.2.230")
+    // JEI & REI
+//    compileOnly fg.deobf("mezz.jei:jei-1.19-common-api:11.0.2.230")
+//    compileOnly fg.deobf("mezz.jei:jei-1.19-forge-api:11.0.2.230")
+    compileOnly fg.deobf("mezz.jei:jei-1.19-forge:11.0.2.230")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.19-forge:11.0.2.230")
+//    compileOnly fg.deobf("me.shedaniel:RoughlyEnoughItems-api-forge:9.1.517")
+//    compileOnly fg.deobf("me.shedaniel:RoughlyEnoughItems-default-plugin-forge:9.1.517")
+//    implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:7.0.69")
+//    implementation fg.deobf("dev.architectury:architectury-forge:5.7.28")
+//    implementation fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:9.1.517")
 }
 
 mixin {

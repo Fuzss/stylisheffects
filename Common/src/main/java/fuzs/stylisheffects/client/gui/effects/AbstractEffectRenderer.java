@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.core.ClientModServices;
+import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MOD_ID,"textures/gui/mob_effect_background.png");
 
-    private final EffectRendererType type;
+    private final EffectRendererEnvironment type;
     protected GuiComponent screen;
     private int availableWidth;
     private int availableHeight;
@@ -37,7 +38,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     private ClientConfig.ScreenSide screenSide;
     protected List<MobEffectInstance> activeEffects;
 
-    protected AbstractEffectRenderer(EffectRendererType type) {
+    protected AbstractEffectRenderer(EffectRendererEnvironment type) {
         this.type = type;
     }
 
@@ -81,7 +82,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     @Nullable
-    public Function<EffectRendererType, AbstractEffectRenderer> getFallbackRenderer() {
+    public EffectRendererEnvironment.Factory getFallbackRenderer() {
         return null;
     }
 
@@ -216,7 +217,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     public Optional<List<Component>> getHoveredEffectTooltip(int mouseX, int mouseY) {
-        if (this.type == EffectRendererType.INVENTORY && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().hoveringTooltip) {
+        if (this.type == EffectRendererEnvironment.INVENTORY && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().hoveringTooltip) {
             return this.getHoveredEffect(mouseX, mouseY)
                     .map(effect -> this.makeEffectTooltip(effect, StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration));
         }
@@ -253,9 +254,5 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             tooltip.add(Component.translatable(descriptionKey).withStyle(ChatFormatting.GRAY));
         }
         return tooltip;
-    }
-
-    public enum EffectRendererType {
-        INVENTORY, GUI
     }
 }

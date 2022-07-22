@@ -28,7 +28,7 @@
     "jei_mod_plugin": [
       "${modGroup}.compat.jei.StylishEffectsJeiPlugin"
     ],
-    "rei": [
+    "rei_client": [
       "${modGroup}.compat.rei.StylishEffectsReiPlugin"
     ]
   },

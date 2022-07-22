@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -22,7 +23,7 @@ import java.util.List;
 public class CompactEffectRenderer extends AbstractEffectRenderer {
     private static final ResourceLocation TINY_NUMBERS_TEXTURE = new ResourceLocation(StylishEffects.MOD_ID,"textures/font/tiny_numbers.png");
 
-    public CompactEffectRenderer(EffectRendererType type) {
+    public CompactEffectRenderer(EffectRendererEnvironment type) {
         super(type);
     }
 

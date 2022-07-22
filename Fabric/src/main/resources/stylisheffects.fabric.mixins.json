@@ -5,6 +5,7 @@
   "package": "fuzs.stylisheffects.mixin",
   "refmap": "stylisheffects.refmap.json",
   "mixins": [
+    "compat.rei.DefaultPotionEffectExclusionZonesMixin"
   ],
   "client": [
     "client.AbstractContainerScreenMixin",

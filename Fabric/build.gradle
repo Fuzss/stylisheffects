@@ -55,7 +55,16 @@ dependencies {
     // Puzzles Lib
     modImplementation "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"
 
-    modImplementation "mezz.jei:jei-1.19-fabric:11.0.2.230"
+    // JEI & REI
+//    modCompileOnlyApi "mezz.jei:jei-1.19-common-api:11.0.2.230"
+//    modCompileOnlyApi "mezz.jei:jei-1.19-fabric-api:11.0.2.230"
+    modCompileOnly "mezz.jei:jei-1.19-fabric:11.0.2.230"
+//    modRuntimeOnly "mezz.jei:jei-1.19-fabric:11.0.2.230"
+//    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-api-fabric:9.1.517"
+//    modCompileOnly "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:9.1.517"
+    modImplementation "me.shedaniel.cloth:cloth-config-forge:7.0.69"
+    modImplementation "dev.architectury:architectury-forge:5.7.28"
+    modImplementation "me.shedaniel:RoughlyEnoughItems-fabric:9.1.517"
 }
 
 loom {

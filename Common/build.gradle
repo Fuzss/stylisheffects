@@ -25,7 +25,10 @@ dependencies {
     // Puzzles Lib
     modCompileOnly "fuzs.puzzleslib:puzzleslib-common:${puzzlesVersion}"
 
+    // JEI & REI
     modCompileOnly "mezz.jei:jei-1.19-common:11.0.2.230"
+//    modCompileOnly "me.shedaniel:RoughlyEnoughItems-api:9.1.517"
+//    modCompileOnly "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.517"
 }
 
 loom {

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.core.ClientModServices;
+import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -22,7 +23,7 @@ import java.util.function.Function;
 
 public class VanillaEffectRenderer extends AbstractEffectRenderer {
 
-    public VanillaEffectRenderer(EffectRendererType type) {
+    public VanillaEffectRenderer(EffectRendererEnvironment type) {
         super(type);
     }
 
@@ -42,7 +43,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    public Function<EffectRendererType, AbstractEffectRenderer> getFallbackRenderer() {
+    public EffectRendererEnvironment.Factory getFallbackRenderer() {
         return CompactEffectRenderer::new;
     }
 

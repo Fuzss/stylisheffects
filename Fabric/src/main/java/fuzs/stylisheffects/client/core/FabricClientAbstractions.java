@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.client.core;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
+import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -9,7 +9,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 public class FabricClientAbstractions implements ClientAbstractions {
 
     @Override
-    public boolean isMobEffectVisibleIn(AbstractEffectRenderer.EffectRendererType effectRendererType, MobEffectInstance effectInstance) {
+    public boolean isMobEffectVisibleIn(EffectRendererEnvironment effectRendererEnvironment, MobEffectInstance effectInstance) {
         return true;
     }
 
