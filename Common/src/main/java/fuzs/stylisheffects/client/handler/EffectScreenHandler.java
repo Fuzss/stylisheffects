@@ -14,6 +14,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.TooltipFlag;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -63,8 +64,10 @@ public class EffectScreenHandler {
         final AbstractEffectRenderer inventoryRenderer = createRendererOrFallback(screen);
         if (inventoryRenderer == null) return;
         if (inventoryRenderer.isActive()) {
-            inventoryRenderer.renderEffects(poseStack, ClientCoreServices.FACTORIES.screens().getMinecraft(screen));
-            inventoryRenderer.getHoveredEffectTooltip(mouseX, mouseY).ifPresent(tooltip -> {
+            Minecraft minecraft = ClientCoreServices.FACTORIES.screens().getMinecraft(screen);
+            inventoryRenderer.renderEffects(poseStack, minecraft);
+            TooltipFlag tooltipFlag = minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL;
+            inventoryRenderer.getHoveredEffectTooltip(mouseX, mouseY, tooltipFlag).ifPresent(tooltip -> {
                 screen.renderComponentTooltip(poseStack, tooltip, mouseX, mouseY);
             });
         }

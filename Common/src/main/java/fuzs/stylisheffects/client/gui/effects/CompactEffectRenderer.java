@@ -94,7 +94,8 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, EFFECT_BACKGROUND);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.config().widgetAlpha);
-        GuiComponent.blit(poseStack, posX, posY, 152, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().ambientBorder && effectInstance.isAmbient() ? this.getHeight() : 0, this.getWidth(), this.getHeight(), 256, 256);
+        int backgroundY = this.getBackgroundY(effectInstance, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().ambientBorder, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().qualityBorder);
+        GuiComponent.blit(poseStack, posX, posY, 152, backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectAmplifier(poseStack, posX, posY, minecraft, effectInstance);
         this.drawEffectSprite(poseStack, posX, posY, minecraft, effectInstance);
         this.drawEffectText(poseStack, posX, posY, minecraft, effectInstance);
@@ -136,7 +137,7 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
 
     private void drawEffectText(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
         if (StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().ambientDuration || !effectinstance.isAmbient()) {
-            this.getEffectDuration(effectinstance, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().longDurationString).ifPresent(durationComponent -> {
+            this.getEffectDuration(effectinstance, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().compactDuration, StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().longDuration).ifPresent(durationComponent -> {
                 int potionColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.get(ClientConfig.class).compactWidget().durationColor, effectinstance);
                 final int alpha = (int) (this.config().widgetAlpha * 255.0F) << 24;
                 FormattedCharSequence ireorderingprocessor = durationComponent.getVisualOrderText();

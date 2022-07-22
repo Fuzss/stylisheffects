@@ -15,8 +15,8 @@ import java.util.List;
 public abstract class InventoryEffectRendererGuiHandlerMixin {
 
     @Inject(method = "getGuiExtraAreas", at = @At("HEAD"), cancellable = true, remap = false)
-    public void getGuiExtraAreas$inject$head(EffectRenderingInventoryScreen<?> containerScreen, CallbackInfoReturnable<List<Rect2i>> callbackInfo) {
+    public void getGuiExtraAreas$inject$head(EffectRenderingInventoryScreen<?> containerScreen, CallbackInfoReturnable<List<Rect2i>> callback) {
         // we handle this ourselves by providing a separate jei plugin
-        callbackInfo.setReturnValue(Collections.emptyList());
+        callback.setReturnValue(Collections.emptyList());
     }
 }

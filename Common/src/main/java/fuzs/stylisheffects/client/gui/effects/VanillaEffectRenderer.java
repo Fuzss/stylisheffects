@@ -19,7 +19,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
-import java.util.function.Function;
 
 public class VanillaEffectRenderer extends AbstractEffectRenderer {
 
@@ -68,7 +67,8 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, EFFECT_BACKGROUND);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.config().widgetAlpha);
-        GuiComponent.blit(poseStack, posX, posY, 0, StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().ambientBorder && effectInstance.isAmbient() ? this.getHeight() : 0, this.getWidth(), this.getHeight(), 256, 256);
+        int backgroundY = this.getBackgroundY(effectInstance, StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().ambientBorder, StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().qualityBorder);
+        GuiComponent.blit(poseStack, posX, posY, 0, backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256);
         this.drawEffectSprite(poseStack, posX, posY, minecraft, effectInstance);
         this.drawEffectText(poseStack, posX, posY, minecraft, effectInstance);
     }
@@ -92,7 +92,7 @@ public class VanillaEffectRenderer extends AbstractEffectRenderer {
             int nameColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().nameColor, effectinstance);
             minecraft.font.drawShadow(poseStack, component, posX + 10 + 18, posY + 7 + (!StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().ambientDuration && effectinstance.isAmbient() ? 4 : 0), (int) (this.config().widgetAlpha * 255.0F) << 24 | nameColor);
             if (StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().ambientDuration || !effectinstance.isAmbient()) {
-                this.getEffectDuration(effectinstance, StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().longDurationString).ifPresent(duration -> {
+                this.getEffectDuration(effectinstance, false, StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().longDuration).ifPresent(duration -> {
                     int durationColor = ColorUtil.getEffectColor(StylishEffects.CONFIG.get(ClientConfig.class).vanillaWidget().durationColor, effectinstance);
                     minecraft.font.drawShadow(poseStack, duration, posX + 10 + 18, posY + 7 + 10, (int) (this.config().widgetAlpha * 255.0F) << 24 | durationColor);
                 });

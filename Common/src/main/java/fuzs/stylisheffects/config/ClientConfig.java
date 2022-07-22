@@ -41,7 +41,7 @@ public class ClientConfig extends AbstractConfig {
         return this.widgets.compactWidget;
     }
 
-    public enum LongDurationString {
+    public enum LongDuration {
         VANILLA, INFINITY, NONE
     }
 
@@ -166,12 +166,14 @@ public class ClientConfig extends AbstractConfig {
         @Config(description = "Should the effect icon start to blink when the effect is running out.")
         public boolean blinkingAlpha = true;
         @Config(description = "Display string to be used for an effect duration that is too long to show.")
-        public LongDurationString longDurationString = LongDurationString.INFINITY;
+        public LongDuration longDuration = LongDuration.INFINITY;
         @Config(name = "duration_color", description = "Effect duration color. Setting this to \"EFFECT\" will use potion color.")
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
         protected String durationColorRaw = "GRAY";
         @Config(description = "Should ambient effect widgets have a cyan colored border.")
         public boolean ambientBorder = true;
+        @Config(description = "Should effect widgets have a blue or red border depening on if they are beneficial or not.")
+        public boolean qualityBorder = false;
         @Config(description = "Show duration for ambient effects.")
         public boolean ambientDuration = true;
 
@@ -196,7 +198,7 @@ public class ClientConfig extends AbstractConfig {
 
         public VanillaWidgetConfig() {
             super("vanilla_widget");
-            this.longDurationString = LongDurationString.VANILLA;
+            this.longDuration = LongDuration.VANILLA;
             this.ambientDuration = true;
         }
 
@@ -215,12 +217,14 @@ public class ClientConfig extends AbstractConfig {
         private String amplifierColorRaw = "WHITE";
         @Config(description = "Draw harmful effects on a separate line from beneficial ones. This is turned on in vanilla.")
         public boolean separateEffects = false;
+        @Config(description = "Display effect duration more compact, allows for always showing duration, even when it is very long (vanilla will not show durations that are longer than ~30 minutes).")
+        public boolean compactDuration = false;
 
         public ChatFormatting amplifierColor;
 
         public CompactWidgetConfig() {
             super("compact_widget");
-            this.longDurationString = LongDurationString.INFINITY;
+            this.longDuration = LongDuration.INFINITY;
             this.ambientDuration = false;
         }
 

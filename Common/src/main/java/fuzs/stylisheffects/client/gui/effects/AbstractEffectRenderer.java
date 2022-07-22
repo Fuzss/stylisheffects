@@ -19,11 +19,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
+import net.minecraft.world.item.TooltipFlag;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
@@ -116,9 +116,9 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         return renderPositions;
     }
 
-    public void renderEffects(PoseStack matrixStack, Minecraft minecraft) {
+    public void renderEffects(PoseStack poseStack, Minecraft minecraft) {
         for (Pair<MobEffectInstance, int[]> entry : this.getEffectPositions(this.activeEffects)) {
-            this.renderWidget(matrixStack, entry.getValue()[0], entry.getValue()[1], minecraft, entry.getKey());
+            this.renderWidget(poseStack, entry.getValue()[0], entry.getValue()[1], minecraft, entry.getKey());
         }
     }
 
@@ -176,20 +176,31 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         };
     }
 
-    protected boolean drawCustomEffect(PoseStack matrixStack, int posX, int posY, MobEffectInstance effectinstance) {
+    protected boolean drawCustomEffect(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
         // we make it possible to display effects on any container screen, so this is sometimes unusable
         if (this.screen instanceof EffectRenderingInventoryScreen effectInventoryScreen) {
-            return ClientModServices.ABSTRACTIONS.renderInventoryIcon(effectinstance, effectInventoryScreen, matrixStack, posX, posY, effectInventoryScreen.getBlitOffset());
+            return ClientModServices.ABSTRACTIONS.renderInventoryIcon(effectinstance, effectInventoryScreen, poseStack, posX, posY, effectInventoryScreen.getBlitOffset());
         } else if (this.screen instanceof Gui gui) {
-            return ClientModServices.ABSTRACTIONS.renderGuiIcon(effectinstance, gui, matrixStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * (float) this.config().widgetAlpha);
+            return ClientModServices.ABSTRACTIONS.renderGuiIcon(effectinstance, gui, poseStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * (float) this.config().widgetAlpha);
         }
         return false;
     }
 
-    protected Optional<MutableComponent> getEffectDuration(MobEffectInstance effectInstance, ClientConfig.LongDurationString longDurationString) {
+    protected int getBackgroundY(MobEffectInstance effectInstance, boolean showAmbient, boolean showQuality) {
+        if (showAmbient && effectInstance.isAmbient()) {
+            return 1;
+        }
+        if (showQuality) {
+            return effectInstance.getEffect().isBeneficial() ? 2 : 3;
+        }
+        return 0;
+    }
+
+    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance, boolean compactDuration, ClientConfig.LongDuration longDuration) {
+        if (compactDuration) return Optional.of(Component.literal(formatTickDuration(effectInstance.getDuration())));
         String effectDuration = MobEffectUtil.formatDuration(effectInstance, 1.0F);
         if (effectDuration.equals("**:**")) {
-            switch (longDurationString) {
+            switch (longDuration) {
                 case INFINITY:
                     // infinity char
                     return Optional.of(Component.literal("\u221e"));
@@ -205,9 +216,13 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         int seconds = ticks / 20;
         int minutes = seconds / 60;
         int hours = minutes / 60;
+        int days = hours / 24;
         seconds %= 60;
         minutes %= 60;
-        if (hours > 0) {
+        hours %= 24;
+        if (days > 0) {
+            return days + "d";
+        } else if (hours > 0) {
             return hours + "h";
         } else if (minutes > 0) {
             return minutes + "m";
@@ -216,10 +231,15 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         }
     }
 
-    public Optional<List<Component>> getHoveredEffectTooltip(int mouseX, int mouseY) {
+    public Optional<List<Component>> getHoveredEffectTooltip(int mouseX, int mouseY, TooltipFlag tooltipFlag) {
         if (this.type == EffectRendererEnvironment.INVENTORY && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().hoveringTooltip) {
             return this.getHoveredEffect(mouseX, mouseY)
-                    .map(effect -> this.makeEffectTooltip(effect, StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration));
+                    .map(effectInstance -> {
+                        List<Component> tooltipLines = this.makeEffectTooltip(effectInstance, StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration);
+                        // call the event here, so we still have access to the effect instance
+                        ClientModServices.ABSTRACTIONS.onGatherEffectTooltipLines(effectInstance, tooltipLines, tooltipFlag);
+                        return tooltipLines;
+                    });
         }
         return Optional.empty();
     }
@@ -244,7 +264,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         if (effectInstance.getAmplifier() >= 1 && effectInstance.getAmplifier() <= 9) {
             textComponent.append(" ").append(Component.translatable("enchantment.level." + (effectInstance.getAmplifier() + 1)));
         }
-        if (withDuration) {
+        if (withDuration && !effectInstance.isNoCounter()) {
             textComponent.append(" ").append(Component.literal("(").append(MobEffectUtil.formatDuration(effectInstance, 1.0F)).append(")").withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(textComponent);

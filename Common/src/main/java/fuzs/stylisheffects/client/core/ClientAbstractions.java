@@ -4,7 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.TooltipFlag;
+
+import java.util.List;
 
 public interface ClientAbstractions {
 
@@ -15,4 +19,6 @@ public interface ClientAbstractions {
     boolean renderInventoryIcon(MobEffectInstance instance, EffectRenderingInventoryScreen<?> screen, PoseStack poseStack, int x, int y, int blitOffset);
 
     boolean renderGuiIcon(MobEffectInstance instance, Gui gui, PoseStack poseStack, int x, int y, float z, float alpha);
+
+    void onGatherEffectTooltipLines(MobEffectInstance effectInstance, List<Component> tooltipLines, TooltipFlag tooltipFlag);
 }

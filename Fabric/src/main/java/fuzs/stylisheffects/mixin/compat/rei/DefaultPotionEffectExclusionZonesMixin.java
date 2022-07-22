@@ -16,8 +16,8 @@ import java.util.Collections;
 public abstract class DefaultPotionEffectExclusionZonesMixin implements ExclusionZonesProvider<EffectRenderingInventoryScreen<?>> {
 
     @Inject(method = "provide", at = @At("HEAD"), cancellable = true, remap = false)
-    public void provide$inject$head(EffectRenderingInventoryScreen<?> screen, CallbackInfoReturnable<Collection<Rectangle>> callbackInfo) {
+    public void provide$inject$head(EffectRenderingInventoryScreen<?> screen, CallbackInfoReturnable<Collection<Rectangle>> callback) {
         // we handle this ourselves by providing a separate rei plugin
-        callbackInfo.setReturnValue(Collections.emptyList());
+        callback.setReturnValue(Collections.emptyList());
     }
 }
