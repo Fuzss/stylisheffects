@@ -9,6 +9,7 @@
     "compat.jei.InventoryEffectRendererGuiHandlerMixin"
   ],
   "client": [
+    "client.accessor.AbstractContainerMenuAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

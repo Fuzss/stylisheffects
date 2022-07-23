@@ -3,6 +3,7 @@ package fuzs.stylisheffects.client.gui.effects;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.core.ClientModServices;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
@@ -29,33 +30,33 @@ import java.util.stream.Collectors;
 public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MOD_ID,"textures/gui/mob_effect_background.png");
 
-    private final EffectRendererEnvironment type;
+    private final EffectRendererEnvironment environment;
     protected GuiComponent screen;
     private int availableWidth;
     private int availableHeight;
     private int startX;
     private int startY;
-    private ClientConfig.ScreenSide screenSide;
+    private MobEffectWidgetContext.ScreenSide screenSide;
     protected List<MobEffectInstance> activeEffects;
 
-    protected AbstractEffectRenderer(EffectRendererEnvironment type) {
-        this.type = type;
+    protected AbstractEffectRenderer(EffectRendererEnvironment environment) {
+        this.environment = environment;
     }
 
-    public void setScreenDimensions(GuiComponent screen, int availableWidth, int availableHeight, int startX, int startY, ClientConfig.ScreenSide screenSide) {
+    public void setScreenDimensions(GuiComponent screen, int availableWidth, int availableHeight, int startX, int startY, MobEffectWidgetContext.ScreenSide screenSide) {
         this.screen = screen;
         this.availableWidth = availableWidth;
         this.availableHeight = availableHeight;
         this.startX = startX;
         this.startY = startY;
         this.screenSide = screenSide;
-        switch (this.type) {
+        switch (this.environment) {
             case GUI -> {
                 this.screenSide = this.screenSide.inverse();
-                this.availableWidth -= ((ClientConfig.HudRendererConfig) this.config()).offsetX;
-                this.availableHeight -= ((ClientConfig.HudRendererConfig) this.config()).offsetY;
-                this.startX += (this.screenSide.right() ? 1 : -1) * ((ClientConfig.HudRendererConfig) this.config()).offsetX;
-                this.startY += ((ClientConfig.HudRendererConfig) this.config()).offsetY;
+                this.availableWidth -= ((ClientConfig.GuiRendererConfig) this.config()).offsetX;
+                this.availableHeight -= ((ClientConfig.GuiRendererConfig) this.config()).offsetY;
+                this.startX += (this.screenSide.right() ? 1 : -1) * ((ClientConfig.GuiRendererConfig) this.config()).offsetX;
+                this.startY += ((ClientConfig.GuiRendererConfig) this.config()).offsetY;
             }
             case INVENTORY -> this.availableWidth -= ((ClientConfig.InventoryRendererConfig) this.config()).screenBorderDistance;
         }
@@ -67,8 +68,9 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             return;
         }
         this.activeEffects = activeEffects.stream()
+                .filter(e -> e.getDuration() > 0)
                 .filter(e -> !this.config().respectHideParticles || e.showIcon())
-                .filter(e -> ClientModServices.ABSTRACTIONS.isMobEffectVisibleIn(this.type, e))
+                .filter(e -> ClientModServices.ABSTRACTIONS.isMobEffectVisibleIn(this.environment, e))
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -79,6 +81,12 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
 
     public final boolean isValid() {
         return !this.config().allowFallback || this.getMaxRows() > 0 && this.getMaxColumns() > 0;
+    }
+
+    public abstract MobEffectWidgetContext.Renderer getEffectRenderer();
+
+    public MobEffectWidgetContext.ScreenSide getScreenSide() {
+        return this.screenSide;
     }
 
     @Nullable
@@ -170,9 +178,9 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     protected ClientConfig.EffectRendererConfig config() {
-        return switch (this.type) {
+        return switch (this.environment) {
             case INVENTORY -> StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer();
-            case GUI -> StylishEffects.CONFIG.get(ClientConfig.class).hudRenderer();
+            case GUI -> StylishEffects.CONFIG.get(ClientConfig.class).guiRenderer();
         };
     }
 
@@ -232,16 +240,20 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     public Optional<List<Component>> getHoveredEffectTooltip(int mouseX, int mouseY, TooltipFlag tooltipFlag) {
-        if (this.type == EffectRendererEnvironment.INVENTORY && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().hoveringTooltip) {
+        if (this.environment == EffectRendererEnvironment.INVENTORY && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().hoveringTooltip) {
             return this.getHoveredEffect(mouseX, mouseY)
                     .map(effectInstance -> {
                         List<Component> tooltipLines = this.makeEffectTooltip(effectInstance, StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration);
                         // call the event here, so we still have access to the effect instance
-                        ClientModServices.ABSTRACTIONS.onGatherEffectTooltipLines(effectInstance, tooltipLines, tooltipFlag);
+                        ClientModServices.ABSTRACTIONS.onGatherEffectTooltipLines(this.buildContext(effectInstance), tooltipLines, tooltipFlag);
                         return tooltipLines;
                     });
         }
         return Optional.empty();
+    }
+
+    public MobEffectWidgetContext buildContext(MobEffectInstance effectInstance) {
+        return MobEffectWidgetContext.of(effectInstance, this.getEffectRenderer(), this.screenSide);
     }
 
     public Optional<MobEffectInstance> getHoveredEffect(int mouseX, int mouseY) {

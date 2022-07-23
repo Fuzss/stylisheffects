@@ -1,6 +1,6 @@
 package fuzs.stylisheffects.mixin.client;
 
-import fuzs.stylisheffects.api.client.event.ScreenEvents;
+import fuzs.stylisheffects.api.client.event.ExtraScreenEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +42,7 @@ public abstract class MinecraftMixin {
         Screen oldScreen = this.oldScreen.get();
         // at this point the local screen variable has already been set to Minecraft#screen (meaning the new screen is already set)
         if (this.screen != null) {
-            Screen newScreen = ScreenEvents.OPENING.invoker().onScreenOpening(oldScreen, this.screen);
+            Screen newScreen = ExtraScreenEvents.OPENING.invoker().onScreenOpening(oldScreen, this.screen);
             if (oldScreen == newScreen) {
                 // the old screen has been returned, meaning opening the new screen has been cancelled
                 // so we return from the method to prevent any setup on the screen
@@ -56,7 +56,7 @@ public abstract class MinecraftMixin {
         }
         // reaching this point means a new screen has been set successfully, just check now if there was an old screen to begin with
         if (oldScreen != null) {
-            ScreenEvents.CLOSING.invoker().onScreenClosing(oldScreen);
+            ExtraScreenEvents.CLOSING.invoker().onScreenClosing(oldScreen);
             // this is basically the vanilla code we prevented from running earlier by setting Minecraft#screen to null
             oldScreen.removed();
             // this call is skipped earlier by us setting Minecraft#screen to null, so we insert it here as this is where the screen is actually closed now

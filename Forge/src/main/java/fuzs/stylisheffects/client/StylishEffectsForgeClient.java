@@ -2,7 +2,7 @@ package fuzs.stylisheffects.client;
 
 import fuzs.puzzleslib.client.core.ClientCoreServices;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.client.handler.EffectScreenHandler;
+import fuzs.stylisheffects.client.handler.EffectScreenHandlerImpl;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
@@ -24,10 +24,10 @@ public class StylishEffectsForgeClient {
 
     private static void registerHandlers() {
         MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.Opening evt) -> {
-            EffectScreenHandler.INSTANCE.onScreenOpen(evt.getNewScreen());
+            EffectScreenHandlerImpl.INSTANCE.onScreenOpen(evt.getNewScreen());
         });
         MinecraftForge.EVENT_BUS.addListener((final ContainerScreenEvent.Render.Background evt) -> {
-            EffectScreenHandler.INSTANCE.onDrawBackground(evt.getContainerScreen(), evt.getPoseStack(), evt.getMouseX(), evt.getMouseY());
+            EffectScreenHandlerImpl.INSTANCE.onDrawBackground(evt.getContainerScreen(), evt.getPoseStack(), evt.getMouseX(), evt.getMouseY());
         });
         MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.RenderInventoryMobEffects evt) -> {
             // disable vanilla effect rendering in inventory screen
@@ -35,9 +35,15 @@ public class StylishEffectsForgeClient {
         });
         MinecraftForge.EVENT_BUS.addListener((final RenderGuiOverlayEvent evt) -> {
             if (evt.getOverlay() == VanillaGuiOverlay.POTION_ICONS.type()) {
-                EffectScreenHandler.INSTANCE.onRenderGameOverlayText(evt.getPoseStack(), evt.getWindow().getGuiScaledWidth(), evt.getWindow().getGuiScaledHeight());
+                EffectScreenHandlerImpl.INSTANCE.onRenderMobEffectIconsOverlay(evt.getPoseStack(), evt.getWindow().getGuiScaledWidth(), evt.getWindow().getGuiScaledHeight());
                 evt.setCanceled(true);
             }
+        });
+        MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.Init.Post evt) -> {
+            EffectScreenHandlerImpl.INSTANCE.onScreenInit(evt.getScreen());
+        });
+        MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.MouseButtonPressed.Pre evt) -> {
+            EffectScreenHandlerImpl.INSTANCE.onMouseClicked(evt.getScreen(), evt.getMouseX(), evt.getMouseY(), evt.getButton());
         });
     }
 }

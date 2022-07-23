@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import fuzs.stylisheffects.api.client.event.ScreenEvents;
+import fuzs.stylisheffects.api.client.event.ExtraScreenEvents;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.network.chat.Component;
@@ -27,9 +27,9 @@ public abstract class EffectRenderingInventoryScreenMixin<T extends AbstractCont
     private boolean renderEffects$modify$effectSize(boolean fullSize) {
         int rightPos = this.leftPos + this.imageWidth + 2;
         int availableSpace = this.width - rightPos;
-        ScreenEvents.MobEffectsRenderMode mode = ScreenEvents.INVENTORY_MOB_EFFECTS.invoker().onRenderInventoryMobEffects(this, availableSpace, !fullSize);
-        this.cancelEffectRendering = mode == ScreenEvents.MobEffectsRenderMode.NONE;
-        return mode != ScreenEvents.MobEffectsRenderMode.COMPACT;
+        ExtraScreenEvents.MobEffectsRenderMode mode = ExtraScreenEvents.INVENTORY_MOB_EFFECTS.invoker().onRenderInventoryMobEffects(this, availableSpace, !fullSize);
+        this.cancelEffectRendering = mode == ExtraScreenEvents.MobEffectsRenderMode.NONE;
+        return mode != ExtraScreenEvents.MobEffectsRenderMode.COMPACT;
     }
 
     @Inject(method = "renderEffects", at = @At(value = "INVOKE", target = "Ljava/util/Collection;size()I", ordinal = 0), cancellable = true)

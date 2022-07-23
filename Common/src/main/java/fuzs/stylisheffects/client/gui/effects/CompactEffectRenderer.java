@@ -4,7 +4,9 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
+import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -35,6 +37,11 @@ public class CompactEffectRenderer extends AbstractEffectRenderer {
     @Override
     public int getHeight() {
         return 24;
+    }
+
+    @Override
+    public MobEffectWidgetContext.Renderer getEffectRenderer() {
+        return MobEffectWidgetContext.Renderer.GUI_COMPACT;
     }
 
     @Override

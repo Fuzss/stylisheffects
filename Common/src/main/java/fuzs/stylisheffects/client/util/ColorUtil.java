@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.client.gui.effects;
+package fuzs.stylisheffects.client.util;
 
 import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;

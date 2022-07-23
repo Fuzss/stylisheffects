@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import fuzs.puzzleslib.config.AbstractConfig;
 import fuzs.puzzleslib.config.annotation.Config;
 import fuzs.puzzleslib.config.serialization.EntryCollectionBuilder;
-import fuzs.stylisheffects.client.handler.EffectRenderer;
+import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
 import net.minecraft.world.inventory.MenuType;
@@ -29,8 +29,8 @@ public class ClientConfig extends AbstractConfig {
         return this.renderers.inventoryRenderer;
     }
 
-    public HudRendererConfig hudRenderer() {
-        return this.renderers.hudRenderer;
+    public GuiRendererConfig guiRenderer() {
+        return this.renderers.guiRenderer;
     }
 
     public VanillaWidgetConfig vanillaWidget() {
@@ -49,23 +49,11 @@ public class ClientConfig extends AbstractConfig {
         NONE, TOP_LEFT, TOP_RIGHT
     }
 
-    public enum ScreenSide {
-        LEFT, RIGHT;
-
-        public boolean right() {
-            return this == RIGHT;
-        }
-
-        public ScreenSide inverse() {
-            return this.right() ? LEFT : RIGHT;
-        }
-    }
-
     public static class RenderersConfig extends AbstractConfig {
         @Config
         final InventoryRendererConfig inventoryRenderer = new InventoryRendererConfig();
         @Config
-        final HudRendererConfig hudRenderer = new HudRendererConfig();
+        final GuiRendererConfig guiRenderer = new GuiRendererConfig();
 
         public RenderersConfig() {
             super("renderers");
@@ -85,7 +73,7 @@ public class ClientConfig extends AbstractConfig {
 
     public static abstract class EffectRendererConfig extends AbstractConfig {
         @Config(description = {"Effect renderer to be used.", "This setting might not be respected when not enough screen space is available. To force this setting disable \"allow_fallback\"."})
-        public EffectRenderer rendererType = EffectRenderer.GUI_COMPACT;
+        public MobEffectWidgetContext.Renderer rendererType = MobEffectWidgetContext.Renderer.GUI_COMPACT;
         @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1, max = 255)
         public int maxColumns = 5;
@@ -93,7 +81,7 @@ public class ClientConfig extends AbstractConfig {
         @Config.IntRange(min = 1, max = 255)
         public int maxRows = 255;
         @Config(description = "Screen side to render status effects on.")
-        public ScreenSide screenSide = ScreenSide.RIGHT;
+        public MobEffectWidgetContext.ScreenSide screenSide = MobEffectWidgetContext.ScreenSide.RIGHT;
         @Config(description = "Alpha value for effect widgets.")
         @Config.DoubleRange(min = 0.0, max = 1.0)
         public double widgetAlpha = 1.0;
@@ -132,7 +120,7 @@ public class ClientConfig extends AbstractConfig {
 
         public InventoryRendererConfig() {
             super("inventory_renderer");
-            this.screenSide = ScreenSide.LEFT;
+            this.screenSide = MobEffectWidgetContext.ScreenSide.LEFT;
             this.widgetAlpha = 1.0;
             this.respectHideParticles = false;
             this.allowFallback = true;
@@ -143,7 +131,7 @@ public class ClientConfig extends AbstractConfig {
             this.menuBlacklist = EntryCollectionBuilder.of(Registry.MENU_REGISTRY).buildSet(this.menuBlacklistRaw);
         }
     }
-    public static class HudRendererConfig extends EffectRendererConfig {
+    public static class GuiRendererConfig extends EffectRendererConfig {
         @Config(description = "Offset on x-axis.")
         @Config.IntRange(min = 0)
         public int offsetX = 3;
@@ -151,9 +139,9 @@ public class ClientConfig extends AbstractConfig {
         @Config.IntRange(min = 0)
         public int offsetY = 3;
 
-        public HudRendererConfig() {
+        public GuiRendererConfig() {
             super("hud_renderer");
-            this.screenSide = ScreenSide.RIGHT;
+            this.screenSide = MobEffectWidgetContext.ScreenSide.RIGHT;
             this.widgetAlpha = 0.85;
             this.respectHideParticles = true;
             this.allowFallback = false;

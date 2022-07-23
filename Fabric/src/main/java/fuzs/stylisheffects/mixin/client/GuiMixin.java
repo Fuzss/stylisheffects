@@ -2,7 +2,6 @@ package fuzs.stylisheffects.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.api.client.event.RenderGuiElementEvents;
-import fuzs.stylisheffects.client.handler.EffectScreenHandler;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiComponent;
 import org.spongepowered.asm.mixin.Mixin;

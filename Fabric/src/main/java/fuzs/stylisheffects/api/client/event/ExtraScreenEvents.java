@@ -4,7 +4,7 @@ import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.client.gui.screens.Screen;
 
-public class ScreenEvents {
+public class ExtraScreenEvents {
     public static final Event<Opening> OPENING = EventFactory.createArrayBacked(Opening.class, listeners -> (Screen oldScreen, Screen newScreen) -> {
         for (Opening event : listeners) {
             Screen screen = event.onScreenOpening(oldScreen, newScreen);
