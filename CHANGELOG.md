@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.1.1-1.19] - 2022-07-23
+### Fixed
+- Reset color after rendering, so that no other screen elements appear with the wrong color
+- Fixed effect tooltips rendering when an item is being carried by the cursor
+
 ## [v4.1.0-1.19] - 2022-07-23
 ### Added
 - Added a new api for other mods to allow for compat with various mob effect widget related things

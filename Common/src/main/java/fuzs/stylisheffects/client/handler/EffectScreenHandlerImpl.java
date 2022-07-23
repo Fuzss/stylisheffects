@@ -94,6 +94,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             TooltipFlag tooltipFlag = minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL;
             renderer.getHoveredEffectTooltip(mouseX, mouseY, tooltipFlag).ifPresent(tooltip -> {
+                if (!screen.getMenu().getCarried().isEmpty()) return;
                 // this is necessary as the foreground event runs after the container renderer has been translated to leftPos and topPos (to render slots and so on)
                 // we cannot modify mouseX and mouseY that are passed to Screen::renderComponentTooltip as that will mess with tooltip text wrapping at the screen border
                 poseStack.pushPose();

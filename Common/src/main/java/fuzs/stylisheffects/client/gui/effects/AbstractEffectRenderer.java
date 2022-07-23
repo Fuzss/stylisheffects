@@ -226,6 +226,7 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.rendererConfig().widgetAlpha);
         int backgroundY = this.getBackgroundY(effectInstance, this.widgetConfig().ambientBorder, this.widgetConfig().qualityBorder);
         GuiComponent.blit(poseStack, posX, posY, this.getBackgroundTextureX(), this.getBackgroundTextureY() + backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     protected void drawEffectSprite(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
@@ -236,6 +237,7 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
         float blinkingAlpha = this.widgetConfig().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.rendererConfig().widgetAlpha);
         GuiComponent.blit(poseStack, posX + this.getSpriteOffsetX(), posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && effectinstance.isAmbient()), 0, 18, 18, textureatlassprite);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private boolean drawCustomEffect(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
@@ -250,21 +252,20 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
 
     @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     protected void drawEffectText(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
-        if (this.widgetConfig().ambientDuration || !effectinstance.isAmbient()) {
-            this.getEffectDuration(effectinstance, this.widgetConfig().longDuration).ifPresent(durationComponent -> {
-                int potionColor = ColorUtil.getEffectColor(this.widgetConfig().durationColor, effectinstance);
-                int alpha = (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24;
-                FormattedCharSequence ireorderingprocessor = durationComponent.getVisualOrderText();
-                // render shadow on every side to avoid clashing with colorful background
-                final int offsetX = this.getDurationOffsetX();
-                final int offsetY = this.getDurationOffsetY();
-                minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - 1 - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha);
-                minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX + 1 - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha);
-                minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY - 1, alpha);
-                minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY + 1, alpha);
-                minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha | potionColor);
-            });
-        }
+        if (!this.widgetConfig().ambientDuration && effectinstance.isAmbient()) return;
+        this.getEffectDuration(effectinstance, this.widgetConfig().longDuration).ifPresent(durationComponent -> {
+            int potionColor = ColorUtil.getEffectColor(this.widgetConfig().durationColor, effectinstance);
+            int alpha = (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24;
+            FormattedCharSequence ireorderingprocessor = durationComponent.getVisualOrderText();
+            // render shadow on every side to avoid clashing with colorful background
+            final int offsetX = this.getDurationOffsetX();
+            final int offsetY = this.getDurationOffsetY();
+            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - 1 - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha);
+            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX + 1 - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha);
+            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY - 1, alpha);
+            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY + 1, alpha);
+            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha | potionColor);
+        });
     }
 
     protected int getBackgroundY(MobEffectInstance effectInstance, boolean showAmbient, boolean showQuality) {

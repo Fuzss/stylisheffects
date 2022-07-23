@@ -39,25 +39,25 @@ public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
 
     private void drawEffectAmplifier(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
         ClientConfig.EffectAmplifier amplifier = this.widgetConfig().effectAmplifier;
-        if (amplifier != ClientConfig.EffectAmplifier.NONE && effectinstance.getAmplifier() >= 1 && effectinstance.getAmplifier() <= 9) {
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderTexture(0, TINY_NUMBERS_TEXTURE);
-            int potionColor = ColorUtil.getEffectColor(this.widgetConfig().amplifierColor, effectinstance);
-            float red = (potionColor >> 16 & 255) / 255.0F;
-            float green = (potionColor >> 8 & 255) / 255.0F;
-            float blue = (potionColor >> 0 & 255) / 255.0F;
-            // subtract amplifier width of 3
-            final int offsetX = amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? this.getAmplifierOffsetX() : this.getWidth() - this.getAmplifierOffsetX() - 3;
-            final int offsetY = this.getAmplifierOffsetY();
-            // drop shadow on all sides
-            RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, (float) this.rendererConfig().widgetAlpha);
-            GuiComponent.blit(poseStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-            GuiComponent.blit(poseStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-            GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-            GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-            // actual number
-            RenderSystem.setShaderColor(red, green, blue, (float) this.rendererConfig().widgetAlpha);
-            GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        }
+        if (amplifier == ClientConfig.EffectAmplifier.NONE || effectinstance.getAmplifier() < 1 || effectinstance.getAmplifier() > 9) return;
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, TINY_NUMBERS_TEXTURE);
+        int potionColor = ColorUtil.getEffectColor(this.widgetConfig().amplifierColor, effectinstance);
+        float red = (potionColor >> 16 & 255) / 255.0F;
+        float green = (potionColor >> 8 & 255) / 255.0F;
+        float blue = (potionColor >> 0 & 255) / 255.0F;
+        // subtract amplifier width of 3
+        final int offsetX = amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? this.getAmplifierOffsetX() : this.getWidth() - this.getAmplifierOffsetX() - 3;
+        final int offsetY = this.getAmplifierOffsetY();
+        // drop shadow on all sides
+        RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, (float) this.rendererConfig().widgetAlpha);
+        GuiComponent.blit(poseStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        GuiComponent.blit(poseStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        // actual number
+        RenderSystem.setShaderColor(red, green, blue, (float) this.rendererConfig().widgetAlpha);
+        GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 }
