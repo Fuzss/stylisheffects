@@ -4,6 +4,9 @@ import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.client.gui.screens.Screen;
 
+/**
+ * an extension to {@link net.fabricmc.fabric.api.client.screen.v1.ScreenEvents} to include more functionality found on Forge
+ */
 public class ExtraScreenEvents {
     public static final Event<Opening> OPENING = EventFactory.createArrayBacked(Opening.class, listeners -> (Screen oldScreen, Screen newScreen) -> {
         for (Opening event : listeners) {

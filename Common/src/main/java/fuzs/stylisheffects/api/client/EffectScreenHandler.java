@@ -23,7 +23,7 @@ public interface EffectScreenHandler {
      * @param screen    the current screen
      * @param mouseX    mouse x screen coordinate
      * @param mouseY    mouse y screen coordinate
-     * @return          context for hovered effect
+     * @return          optional context for hovered effect
      */
     Optional<MobEffectWidgetContext> getInventoryHoveredEffect(Screen screen, double mouseX, double mouseY);
 

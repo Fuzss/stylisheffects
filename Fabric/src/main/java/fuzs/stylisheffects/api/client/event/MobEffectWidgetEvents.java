@@ -28,6 +28,7 @@ public class MobEffectWidgetEvents {
         }
     });
 
+    @FunctionalInterface
     public interface MouseClicked {
 
         /**

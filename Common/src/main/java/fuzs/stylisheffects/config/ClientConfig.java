@@ -20,8 +20,10 @@ public class ClientConfig extends AbstractConfig {
 
     @Override
     protected void afterConfigReload() {
-        this.vanillaWidget().afterConfigReload();
-        this.compactWidget().afterConfigReload();
+        this.guiSmallWidget().afterConfigReload();
+        this.guiCompactWidget().afterConfigReload();
+        this.inventoryCompactWidget().afterConfigReload();
+        this.inventoryFullSizeWidget().afterConfigReload();
         this.inventoryRenderer().afterConfigReload();
     }
 
@@ -33,12 +35,20 @@ public class ClientConfig extends AbstractConfig {
         return this.renderers.guiRenderer;
     }
 
-    public VanillaWidgetConfig vanillaWidget() {
-        return this.widgets.vanillaWidget;
+    public InventoryCompactWidgetConfig inventoryCompactWidget() {
+        return this.widgets.inventoryCompactWidget;
     }
 
-    public CompactWidgetConfig compactWidget() {
-        return this.widgets.compactWidget;
+    public InventoryFullSizeWidgetConfig inventoryFullSizeWidget() {
+        return this.widgets.inventoryFullSizeWidget;
+    }
+
+    public GuiSmallWidgetConfig guiSmallWidget() {
+        return this.widgets.guiSmallWiget;
+    }
+
+    public GuiCompactWigetConfig guiCompactWidget() {
+        return this.widgets.guiCompactWiget;
     }
 
     public enum LongDuration {
@@ -62,9 +72,13 @@ public class ClientConfig extends AbstractConfig {
 
     public static class WidgetsConfig extends AbstractConfig {
         @Config
-        final VanillaWidgetConfig vanillaWidget = new VanillaWidgetConfig();
+        final InventoryCompactWidgetConfig inventoryCompactWidget = new InventoryCompactWidgetConfig();
         @Config
-        final CompactWidgetConfig compactWidget = new CompactWidgetConfig();
+        final InventoryFullSizeWidgetConfig inventoryFullSizeWidget = new InventoryFullSizeWidgetConfig();
+        @Config
+        final GuiSmallWidgetConfig guiSmallWiget = new GuiSmallWidgetConfig();
+        @Config
+        final GuiCompactWigetConfig guiCompactWiget = new GuiCompactWigetConfig();
 
         public WidgetsConfig() {
             super("widgets");
@@ -140,7 +154,7 @@ public class ClientConfig extends AbstractConfig {
         public int offsetY = 3;
 
         public GuiRendererConfig() {
-            super("hud_renderer");
+            super("gui_renderer");
             this.screenSide = MobEffectWidgetContext.ScreenSide.RIGHT;
             this.widgetAlpha = 0.85;
             this.respectHideParticles = true;
@@ -150,6 +164,7 @@ public class ClientConfig extends AbstractConfig {
 
     public static abstract class EffectWidgetConfig extends AbstractConfig {
         public static final String EFFECT_FORMATTING = "EFFECT";
+        static final String COMPACT_DURATION_DESCRIPTION = "Display effect duration more compact, allows for always showing duration, even when it is very long (vanilla will not show durations that are longer than ~30 minutes).";
 
         @Config(description = "Should the effect icon start to blink when the effect is running out.")
         public boolean blinkingAlpha = true;
@@ -177,15 +192,15 @@ public class ClientConfig extends AbstractConfig {
         }
     }
 
-    public static class VanillaWidgetConfig extends EffectWidgetConfig {
+    public static class InventoryFullSizeWidgetConfig extends EffectWidgetConfig {
         @Config(name = "name_color", description = "Effect name color. Setting this to \"EFFECT\" will use potion color.")
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
         private String nameColorRaw = "WHITE";
 
         public ChatFormatting nameColor;
 
-        public VanillaWidgetConfig() {
-            super("vanilla_widget");
+        public InventoryFullSizeWidgetConfig() {
+            super(MobEffectWidgetContext.Renderer.INVENTORY_FULL_SIZE.toString());
             this.longDuration = LongDuration.VANILLA;
             this.ambientDuration = true;
         }
@@ -197,21 +212,17 @@ public class ClientConfig extends AbstractConfig {
         }
     }
 
-    public static class CompactWidgetConfig extends EffectWidgetConfig {
+    public static abstract class CompactWidgetConfig extends EffectWidgetConfig {
         @Config(description = "Top corner to draw effect amplifier in, or none.")
         public EffectAmplifier effectAmplifier = EffectAmplifier.TOP_RIGHT;
         @Config(name = "amplifier_color", description = "Effect amplifier color. Setting this to \"EFFECT\" will use potion color.")
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
         private String amplifierColorRaw = "WHITE";
-        @Config(description = "Draw harmful effects on a separate line from beneficial ones. This is turned on in vanilla.")
-        public boolean separateEffects = false;
-        @Config(description = "Display effect duration more compact, allows for always showing duration, even when it is very long (vanilla will not show durations that are longer than ~30 minutes).")
-        public boolean compactDuration = false;
 
         public ChatFormatting amplifierColor;
 
-        public CompactWidgetConfig() {
-            super("compact_widget");
+        public CompactWidgetConfig(String name) {
+            super(name);
             this.longDuration = LongDuration.INFINITY;
             this.ambientDuration = false;
         }
@@ -220,6 +231,40 @@ public class ClientConfig extends AbstractConfig {
         protected void afterConfigReload() {
             super.afterConfigReload();
             this.amplifierColor = ChatFormatting.getByName(this.amplifierColorRaw);
+        }
+    }
+
+    public static class InventoryCompactWidgetConfig extends CompactWidgetConfig {
+        @Config(description = COMPACT_DURATION_DESCRIPTION)
+        public boolean compactDuration = false;
+
+        public InventoryCompactWidgetConfig() {
+            super(MobEffectWidgetContext.Renderer.INVENTORY_COMPACT.toString());
+        }
+    }
+
+    public static abstract class GuiWidgetConfig extends CompactWidgetConfig {
+        @Config(description = "Draw harmful effects on a separate line from beneficial ones. This is turned on in vanilla.")
+        public boolean separateEffects = false;
+
+        public GuiWidgetConfig(String name) {
+            super(name);
+        }
+    }
+
+    public static class GuiSmallWidgetConfig extends GuiWidgetConfig {
+
+        public GuiSmallWidgetConfig() {
+            super(MobEffectWidgetContext.Renderer.GUI_SMALL.toString());
+        }
+    }
+
+    public static class GuiCompactWigetConfig extends GuiWidgetConfig {
+        @Config(description = COMPACT_DURATION_DESCRIPTION)
+        public boolean compactDuration = false;
+
+        public GuiCompactWigetConfig() {
+            super(MobEffectWidgetContext.Renderer.GUI_COMPACT.toString());
         }
     }
 }

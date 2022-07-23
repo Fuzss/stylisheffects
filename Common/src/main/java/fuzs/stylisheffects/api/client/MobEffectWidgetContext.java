@@ -2,6 +2,8 @@ package fuzs.stylisheffects.api.client;
 
 import net.minecraft.world.effect.MobEffectInstance;
 
+import java.util.Locale;
+
 /**
  * data context for mob effect widgets
  *
@@ -46,7 +48,19 @@ public record MobEffectWidgetContext(MobEffectInstance effectInstance, Renderer 
         /**
          * vanilla's full sized inventory widgets
          */
-        INVENTORY_FULL_SIZE
+        INVENTORY_FULL_SIZE;
+
+        /**
+         * @return is this widget using a compact renderer that does not show the mob effect name as proper text
+         */
+        public boolean isCompact() {
+            return this != NONE && this != INVENTORY_FULL_SIZE;
+        }
+
+        @Override
+        public String toString() {
+            return this.name().toLowerCase(Locale.ROOT) + "_widget";
+        }
     }
 
     /**

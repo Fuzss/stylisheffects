@@ -24,7 +24,7 @@ public class ModMixinConfigPlugin implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.contains(".mixin.compat.jei.")) {
             return CoreServices.ENVIRONMENT.isModLoadedSafe("jei");
-        } if (mixinClassName.contains(".mixin.compat.rei.")) {
+        } else if (mixinClassName.contains(".mixin.compat.rei.")) {
             return CoreServices.ENVIRONMENT.isModLoadedSafe("rei");
         } else {
             return true;

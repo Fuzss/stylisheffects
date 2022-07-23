@@ -6,9 +6,7 @@ import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.client.EffectScreenHandler;
 import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.core.ClientModServices;
-import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.CompactEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.VanillaEffectRenderer;
+import fuzs.stylisheffects.client.gui.effects.*;
 import fuzs.stylisheffects.config.ClientConfig;
 import fuzs.stylisheffects.mixin.client.accessor.AbstractContainerMenuAccessor;
 import net.minecraft.client.Minecraft;
@@ -48,52 +46,66 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         if (rendererType != MobEffectWidgetContext.Renderer.NONE) {
             this.guiRenderer = createRenderer(rendererType, EffectRendererEnvironment.GUI);
         }
-        // we don't rebuild the inventory screen handler here, it is rebuilt when reopening the screen, should be enough
-        // also needs access to the current screen
     }
 
     @Override
     public Optional<MobEffectWidgetContext> getInventoryHoveredEffect(Screen screen, double mouseX, double mouseY) {
-        return getEffectRenderer(screen, this.inventoryRenderer, null)
+        return getEffectRenderer(screen, this.inventoryRenderer)
                 .flatMap(renderer -> renderer.getHoveredEffect((int) mouseX, (int) mouseY)
                         .map(renderer::buildContext));
     }
 
     @Override
     public List<Rect2i> getInventoryRenderAreas(Screen screen) {
-        return getEffectRenderer(screen, this.inventoryRenderer, null)
+        return getEffectRenderer(screen, this.inventoryRenderer)
                 .map(AbstractEffectRenderer::getRenderAreas)
                 .orElse(List.of());
     }
 
+    public void onClientTick(Minecraft minecraft) {
+        // recreating this during init to adjust for screen size changes should be enough, but doesn't work for some reason for creative mode inventory,
+        // therefore needs to happen every tick (since more screens might show unexpected behavior)
+        // recipe book also has issues
+        AbstractEffectRenderer renderer = minecraft.screen != null ? createInventoryRendererOrFallback(minecraft.screen) : null;
+        if (renderer != null) {
+            renderer.setActiveEffects(minecraft.player.getActiveEffects());
+        }
+        this.inventoryRenderer = renderer;
+    }
+
     public void onRenderMobEffectIconsOverlay(PoseStack poseStack, int screenWidth, int screenHeight) {
         final Minecraft minecraft = Minecraft.getInstance();
-        getEffectRenderer(minecraft.screen, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
+        getEffectRenderer(minecraft.screen, true, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiRenderer().screenSide;
             renderer.setScreenDimensions(minecraft.gui, screenWidth, screenHeight, screenSide.right() ? screenWidth : 0, 0, screenSide);
             renderer.renderEffects(poseStack, minecraft);
         });
     }
 
-    public void onScreenInit(Screen screen) {
-        this.inventoryRenderer = createInventoryRendererOrFallback(screen);
+    public void onDrawBackground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
+        Minecraft minecraft = ClientCoreServices.FACTORIES.screens().getMinecraft(screen);
+        getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
+            renderer.renderEffects(poseStack, minecraft);
+        });
     }
 
-    public void onDrawBackground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
-        // recreating this during init to adjust for screen size changes should be enough, but doesn't work for some reason for creative mode inventory,
-        // therefore needs to happen every tick (since more screens might show unexpected behavior)
+    public void onDrawForeground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
         Minecraft minecraft = ClientCoreServices.FACTORIES.screens().getMinecraft(screen);
-        getEffectRenderer(screen, this.inventoryRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
-            renderer.renderEffects(poseStack, minecraft);
+        getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             TooltipFlag tooltipFlag = minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL;
             renderer.getHoveredEffectTooltip(mouseX, mouseY, tooltipFlag).ifPresent(tooltip -> {
+                // this is necessary as the foreground event runs after the container renderer has been translated to leftPos and topPos (to render slots and so on)
+                // we cannot modify mouseX and mouseY that are passed to Screen::renderComponentTooltip as that will mess with tooltip text wrapping at the screen border
+                poseStack.pushPose();
+                poseStack.translate(-ClientCoreServices.FACTORIES.screens().getLeftPos(screen), -ClientCoreServices.FACTORIES.screens().getTopPos(screen), 0.0);
                 screen.renderComponentTooltip(poseStack, tooltip, mouseX, mouseY);
+                poseStack.popPose();
             });
         });
     }
 
     public void onMouseClicked(Screen screen, double mouseX, double mouseY, int button) {
-        getEffectRenderer(screen, this.inventoryRenderer, null).ifPresent(renderer -> {
+        getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             renderer.getHoveredEffect((int) mouseX, (int) mouseY).ifPresent(effectInstance -> {
                 // this can be cancelled by returning false, but since we don't have any mouse clicked action by default the returned result is ignored
                 ClientModServices.ABSTRACTIONS.onEffectMouseClicked(renderer.buildContext(effectInstance), screen, mouseX, mouseY, button);
@@ -112,8 +124,12 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         }
     }
 
-    private static Optional<AbstractEffectRenderer> getEffectRenderer(@Nullable Screen screen, @Nullable AbstractEffectRenderer effectRenderer, @Nullable Collection<MobEffectInstance> activeEffects) {
-        if (supportsEffectsDisplay(screen)) {
+    private static Optional<AbstractEffectRenderer> getEffectRenderer(Screen screen, @Nullable AbstractEffectRenderer effectRenderer) {
+        return getEffectRenderer(screen, false, effectRenderer, null);
+    }
+
+    private static Optional<AbstractEffectRenderer> getEffectRenderer(@Nullable Screen screen, boolean invertSupport, @Nullable AbstractEffectRenderer effectRenderer, @Nullable Collection<MobEffectInstance> activeEffects) {
+        if (!invertSupport && supportsEffectsDisplay(screen) || invertSupport && !supportsEffectsDisplay(screen)) {
             // effect renderer field may get changed during config reload from different thread, so we are extra careful when dealing with the renderer
             if (effectRenderer != null) {
                 if (activeEffects != null) {
@@ -128,18 +144,17 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
     }
 
     public static AbstractEffectRenderer createRenderer(MobEffectWidgetContext.Renderer renderer, EffectRendererEnvironment environment) {
-        // TODO implement remaining types
         return switch (renderer) {
-            case GUI_SMALL -> new CompactEffectRenderer(environment);
-            case GUI_COMPACT -> new CompactEffectRenderer(environment);
-            case INVENTORY_COMPACT -> new CompactEffectRenderer(environment);
-            case INVENTORY_FULL_SIZE -> new VanillaEffectRenderer(environment);
+            case GUI_SMALL -> new GuiSmallEffectRenderer(environment);
+            case GUI_COMPACT -> new GuiCompactEffectRenderer(environment);
+            case INVENTORY_COMPACT -> new InventoryCompactEffectRenderer(environment);
+            case INVENTORY_FULL_SIZE -> new InventoryFullSizeEffectRenderer(environment);
             default -> throw new IllegalArgumentException(String.format("Cannot create effect renderer for type %s", renderer));
         };
     }
 
     @Nullable
-    public static AbstractEffectRenderer createInventoryRendererOrFallback(Screen screen) {
+    private static AbstractEffectRenderer createInventoryRendererOrFallback(Screen screen) {
         MobEffectWidgetContext.Renderer rendererType = StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().rendererType;
         if (rendererType != MobEffectWidgetContext.Renderer.NONE && supportsEffectsDisplay(screen)) {
             AbstractContainerScreen<?> containerScreen = (AbstractContainerScreen<?>) screen;
@@ -161,7 +176,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         return null;
     }
 
-    private static boolean supportsEffectsDisplay(@Nullable Screen screen) {
+    private static boolean supportsEffectsDisplay(Screen screen) {
         if (screen instanceof AbstractContainerScreen containerScreen) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
             MenuType<?> type = ((AbstractContainerMenuAccessor) ((AbstractContainerScreen<?>) containerScreen).getMenu()).getMenuType();
@@ -177,6 +192,6 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
             }
             return true;
         }
-        return screen == null;
+        return false;
     }
 }

@@ -9,6 +9,7 @@ import fuzs.stylisheffects.api.client.event.RenderGuiElementEvents;
 import fuzs.stylisheffects.api.client.event.ExtraScreenEvents;
 import fuzs.stylisheffects.client.handler.EffectScreenHandlerImpl;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.minecraft.client.Minecraft;
@@ -24,11 +25,13 @@ public class StylishEffectsFabricClient implements ClientModInitializer {
     }
 
     private static void registerHandlers() {
+        ClientTickEvents.END_CLIENT_TICK.register(EffectScreenHandlerImpl.INSTANCE::onClientTick);
         ExtraScreenEvents.OPENING.register((Screen oldScreen, Screen newScreen) -> {
             EffectScreenHandlerImpl.INSTANCE.onScreenOpen(newScreen);
             return newScreen;
         });
         ContainerScreenEvents.BACKGROUND.register(EffectScreenHandlerImpl.INSTANCE::onDrawBackground);
+        ContainerScreenEvents.FOREGROUND.register(EffectScreenHandlerImpl.INSTANCE::onDrawForeground);
         ExtraScreenEvents.INVENTORY_MOB_EFFECTS.register((Screen screen, int availableSpace, boolean compact) -> {
             // disable vanilla effect rendering in inventory screen
             return ExtraScreenEvents.MobEffectsRenderMode.NONE;
@@ -42,9 +45,6 @@ public class StylishEffectsFabricClient implements ClientModInitializer {
         });
         ScreenEvents.BEFORE_INIT.register((Minecraft client, Screen screen, int scaledWidth, int scaledHeight) -> {
             ScreenMouseEvents.beforeMouseClick(screen).register(EffectScreenHandlerImpl.INSTANCE::onMouseClicked);
-        });
-        ScreenEvents.AFTER_INIT.register((Minecraft client, Screen screen, int scaledWidth, int scaledHeight) -> {
-            EffectScreenHandlerImpl.INSTANCE.onScreenInit(screen);
         });
     }
 }
