@@ -32,12 +32,7 @@ public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
     protected abstract ClientConfig.CompactWidgetConfig widgetConfig();
 
     @Override
-    public void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance) {
-        super.renderWidget(poseStack, posX, posY, minecraft, effectInstance);
-        this.drawEffectAmplifier(poseStack, posX, posY, effectInstance);
-    }
-
-    private void drawEffectAmplifier(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
+    protected void drawEffectAmplifier(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
         ClientConfig.EffectAmplifier amplifier = this.widgetConfig().effectAmplifier;
         if (amplifier == ClientConfig.EffectAmplifier.NONE || effectinstance.getAmplifier() < 1 || effectinstance.getAmplifier() > 9) return;
         RenderSystem.setShader(GameRenderer::getPositionTexShader);

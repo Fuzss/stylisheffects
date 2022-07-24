@@ -5,6 +5,7 @@ import fuzs.puzzleslib.config.AbstractConfig;
 import fuzs.puzzleslib.config.annotation.Config;
 import fuzs.puzzleslib.config.serialization.EntryCollectionBuilder;
 import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
+import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
 import net.minecraft.world.inventory.MenuType;
@@ -109,6 +110,9 @@ public class ClientConfig extends AbstractConfig {
         public boolean respectHideParticles = true;
         @Config(description = "Allow effect renderer to fall back to a more compact version (when available) if not enough screen space exists. Otherwise effect widgets might run off-screen.")
         public boolean allowFallback = true;
+        @Config(description = "Custom scale for effect renderer.")
+        @Config.DoubleRange(min = 1.0, max = 12.0)
+        public double scale = AbstractEffectRenderer.DEFAULT_WIDGET_SCALE;
 
         public EffectRendererConfig(String name) {
             super(name);

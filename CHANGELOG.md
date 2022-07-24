@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.1.2-1.19] - 2022-07-25
+### Added
+- Added a scale option for all widgets
+
 ## [v4.1.1-1.19] - 2022-07-23
 ### Fixed
 - Reset color after rendering, so that no other screen elements appear with the wrong color

@@ -30,10 +30,14 @@ import net.minecraft.world.item.TooltipFlag;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class AbstractEffectRenderer implements RenderAreasProvider {
+public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
+    public static final double DEFAULT_WIDGET_SCALE = 4.0;
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MOD_ID,"textures/gui/mob_effect_background.png");
 
     private final EffectRendererEnvironment environment;
@@ -48,10 +52,6 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
     protected AbstractEffectRenderer(EffectRendererEnvironment environment) {
         this.environment = environment;
     }
-
-    public abstract int getWidth();
-
-    public abstract int getHeight();
 
     public void setScreenDimensions(GuiComponent screen, int availableWidth, int availableHeight, int startX, int startY, MobEffectWidgetContext.ScreenSide screenSide) {
         this.screen = screen;
@@ -93,6 +93,18 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
         return !this.rendererConfig().allowFallback || this.getMaxRows() > 0 && this.getMaxColumns() > 0;
     }
 
+    public final double getWidgetScale() {
+        return this.rendererConfig().scale / DEFAULT_WIDGET_SCALE;
+    }
+
+    public final int getScaledWidth() {
+        return (int) (this.getWidth() * this.getWidgetScale());
+    }
+
+    public final int getScaledHeight() {
+        return (int) (this.getHeight() * this.getWidgetScale());
+    }
+
     public abstract MobEffectWidgetContext.Renderer getEffectRenderer();
 
     protected abstract int getBackgroundTextureX();
@@ -118,7 +130,7 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
     public List<Rect2i> getRenderAreas() {
         return this.getEffectPositions(this.activeEffects).stream()
                 .map(Pair::getValue)
-                .map(pos -> new Rect2i(pos[0], pos[1], this.getWidth(), this.getHeight()))
+                .map(pos -> new Rect2i(pos[0], pos[1], this.getScaledWidth(), this.getScaledHeight()))
                 .collect(Collectors.toList());
     }
 
@@ -140,11 +152,11 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
         int[] renderPositions = new int[2];
         switch (this.screenSide) {
             case LEFT -> {
-                renderPositions[0] = this.startX - (this.getWidth() + 1) - (this.getWidth() + this.rendererConfig().widgetSpaceX) * coordX;
+                renderPositions[0] = this.startX - (this.getScaledWidth() + 1) - (this.getScaledWidth() + this.rendererConfig().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
             }
             case RIGHT -> {
-                renderPositions[0] = this.startX + 1 + (this.getWidth() + this.rendererConfig().widgetSpaceX) * coordX;
+                renderPositions[0] = this.startX + 1 + (this.getScaledWidth() + this.rendererConfig().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
             }
         }
@@ -166,15 +178,15 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
     }
 
     private int getAvailableWidth() {
-        return Math.min(this.availableWidth, this.rendererConfig().maxColumns * (this.getWidth() + this.rendererConfig().widgetSpaceX));
+        return Math.min(this.availableWidth, this.rendererConfig().maxColumns * (this.getScaledWidth() + this.rendererConfig().widgetSpaceX));
     }
 
     private int getAvailableHeight() {
-        return Math.min(this.availableHeight, this.rendererConfig().maxRows * (this.getHeight() + this.rendererConfig().widgetSpaceY));
+        return Math.min(this.availableHeight, this.rendererConfig().maxRows * (this.getScaledHeight() + this.rendererConfig().widgetSpaceY));
     }
 
     private int getMaxColumns() {
-        return this.getAvailableWidth() / (this.getWidth() + this.rendererConfig().widgetSpaceX);
+        return this.getAvailableWidth() / (this.getScaledWidth() + this.rendererConfig().widgetSpaceX);
     }
 
     public int getMaxClampedColumns() {
@@ -183,13 +195,13 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
 
     private int getAdjustedHeight() {
         if (this.getRows() > this.getMaxClampedRows()) {
-            return (this.getAvailableHeight() - this.getHeight()) / Math.max(1, this.getRows() - 1);
+            return (this.getAvailableHeight() - this.getScaledHeight()) / Math.max(1, this.getRows() - 1);
         }
-        return this.getHeight() + this.rendererConfig().widgetSpaceY;
+        return this.getScaledHeight() + this.rendererConfig().widgetSpaceY;
     }
 
     private int getMaxRows() {
-        return this.getAvailableHeight() / (this.getHeight() + this.rendererConfig().widgetSpaceY);
+        return this.getAvailableHeight() / (this.getScaledHeight() + this.rendererConfig().widgetSpaceY);
     }
 
     public int getMaxClampedRows() {
@@ -213,11 +225,21 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
 
     protected abstract ClientConfig.EffectWidgetConfig widgetConfig();
 
-    public void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance) {
+    @Override
+    public final void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance) {
         RenderSystem.enableBlend();
+        poseStack.pushPose();
+        double scale = this.getWidgetScale();
+        if (scale != 1.0) {
+            poseStack.scale((float) scale, (float) scale, 1.0F);
+            posX /= scale;
+            posY /= scale;
+        }
         this.drawWidgetBackground(poseStack, posX, posY, effectInstance);
         this.drawEffectSprite(poseStack, posX, posY, minecraft, effectInstance);
         this.drawEffectText(poseStack, posX, posY, minecraft, effectInstance);
+        this.drawEffectAmplifier(poseStack, posX, posY, effectInstance);
+        poseStack.popPose();
     }
 
     protected void drawWidgetBackground(PoseStack poseStack, int posX, int posY, MobEffectInstance effectInstance) {
@@ -266,6 +288,10 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
             minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY + 1, alpha);
             minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha | potionColor);
         });
+    }
+
+    protected void drawEffectAmplifier(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
+
     }
 
     protected int getBackgroundY(MobEffectInstance effectInstance, boolean showAmbient, boolean showQuality) {
@@ -339,7 +365,7 @@ public abstract class AbstractEffectRenderer implements RenderAreasProvider {
     }
 
     private boolean isMouseOver(int posX, int posY, int mouseX, int mouseY) {
-        return mouseX >= posX && mouseX <= posX + this.getWidth() && mouseY >= posY && mouseY <= posY + this.getHeight();
+        return mouseX >= posX && mouseX <= posX + this.getScaledWidth() && mouseY >= posY && mouseY <= posY + this.getScaledHeight();
     }
 
     protected List<Component> makeEffectTooltip(MobEffectInstance effectInstance, boolean withDuration) {
