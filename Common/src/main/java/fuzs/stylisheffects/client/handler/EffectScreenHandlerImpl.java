@@ -19,6 +19,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.TooltipFlag;
 import org.jetbrains.annotations.Nullable;
@@ -63,12 +64,20 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
     }
 
     public void onClientTick(Minecraft minecraft) {
+        this.createInventoryRenderer(minecraft.screen, minecraft.player);
+    }
+
+    public void onScreenInit(Screen screen) {
+        this.createInventoryRenderer(screen, ClientCoreServices.SCREENS.getMinecraft(screen).player);
+    }
+
+    private void createInventoryRenderer(@Nullable Screen screen, @Nullable Player player) {
         // recreating this during init to adjust for screen size changes should be enough, but doesn't work for some reason for creative mode inventory,
         // therefore needs to happen every tick (since more screens might show unexpected behavior)
         // recipe book also has issues
-        AbstractEffectRenderer renderer = minecraft.screen != null ? createInventoryRendererOrFallback(minecraft.screen) : null;
-        if (renderer != null) {
-            renderer.setActiveEffects(minecraft.player.getActiveEffects());
+        AbstractEffectRenderer renderer = screen != null ? createInventoryRendererOrFallback(screen) : null;
+        if (renderer != null && player != null) {
+            renderer.setActiveEffects(player.getActiveEffects());
         }
         this.inventoryRenderer = renderer;
     }
@@ -83,14 +92,14 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
     }
 
     public void onDrawBackground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
-        Minecraft minecraft = ClientCoreServices.FACTORIES.screens().getMinecraft(screen);
+        Minecraft minecraft = ClientCoreServices.SCREENS.getMinecraft(screen);
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             renderer.renderEffects(poseStack, minecraft);
         });
     }
 
     public void onDrawForeground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
-        Minecraft minecraft = ClientCoreServices.FACTORIES.screens().getMinecraft(screen);
+        Minecraft minecraft = ClientCoreServices.SCREENS.getMinecraft(screen);
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             TooltipFlag tooltipFlag = minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL;
             renderer.getHoveredEffectTooltip(mouseX, mouseY, tooltipFlag).ifPresent(tooltip -> {
@@ -98,7 +107,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
                 // this is necessary as the foreground event runs after the container renderer has been translated to leftPos and topPos (to render slots and so on)
                 // we cannot modify mouseX and mouseY that are passed to Screen::renderComponentTooltip as that will mess with tooltip text wrapping at the screen border
                 poseStack.pushPose();
-                poseStack.translate(-ClientCoreServices.FACTORIES.screens().getLeftPos(screen), -ClientCoreServices.FACTORIES.screens().getTopPos(screen), 0.0);
+                poseStack.translate(-ClientCoreServices.SCREENS.getLeftPos(screen), -ClientCoreServices.SCREENS.getTopPos(screen), 0.0);
                 screen.renderComponentTooltip(poseStack, tooltip, mouseX, mouseY);
                 poseStack.popPose();
             });
@@ -161,8 +170,8 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
             AbstractContainerScreen<?> containerScreen = (AbstractContainerScreen<?>) screen;
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().screenSide;
             Consumer<AbstractEffectRenderer> setScreenDimensions = renderer -> {
-                int leftPos = ClientCoreServices.FACTORIES.screens().getLeftPos(containerScreen);
-                renderer.setScreenDimensions(containerScreen, !screenSide.right() ? leftPos : containerScreen.width - (leftPos + ClientCoreServices.FACTORIES.screens().getImageWidth(containerScreen)), ClientCoreServices.FACTORIES.screens().getImageHeight(containerScreen), !screenSide.right() ? leftPos : leftPos + ClientCoreServices.FACTORIES.screens().getImageWidth(containerScreen), ClientCoreServices.FACTORIES.screens().getTopPos(containerScreen), screenSide);
+                int leftPos = ClientCoreServices.SCREENS.getLeftPos(containerScreen);
+                renderer.setScreenDimensions(containerScreen, !screenSide.right() ? leftPos : containerScreen.width - (leftPos + ClientCoreServices.SCREENS.getImageWidth(containerScreen)), ClientCoreServices.SCREENS.getImageHeight(containerScreen), !screenSide.right() ? leftPos : leftPos + ClientCoreServices.SCREENS.getImageWidth(containerScreen), ClientCoreServices.SCREENS.getTopPos(containerScreen), screenSide);
             };
             AbstractEffectRenderer renderer = createRenderer(rendererType, EffectRendererEnvironment.INVENTORY);
             setScreenDimensions.accept(renderer);

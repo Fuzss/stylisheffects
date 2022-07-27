@@ -15,20 +15,20 @@ dependencies {
     }
 
     // Common Dependencies
-    compileOnly 'org.ow2.asm:asm-tree:9.2'
-    compileOnly 'org.ow2.asm:asm-commons:9.2'
-    compileOnly 'org.ow2.asm:asm-util:9.2'
-    compileOnly 'org.spongepowered:mixin:0.8.5'
-    compileOnly 'com.electronwill.night-config:core:3.6.5'
-    compileOnly 'com.electronwill.night-config:toml:3.6.5'
+    implementation 'org.ow2.asm:asm-tree:9.2'
+    implementation 'org.ow2.asm:asm-commons:9.2'
+    implementation 'org.ow2.asm:asm-util:9.2'
+    implementation 'org.spongepowered:mixin:0.8.5'
+    implementation 'com.electronwill.night-config:core:3.6.5'
+    implementation 'com.electronwill.night-config:toml:3.6.5'
 
     // Puzzles Lib
-    modCompileOnly "fuzs.puzzleslib:puzzleslib-common:${puzzlesVersion}"
+    modImplementation "fuzs.puzzleslib:puzzleslib-common:${puzzlesVersion}"
 
     // JEI & REI
-    modCompileOnly "mezz.jei:jei-1.19-common:11.0.2.230"
-//    modCompileOnly "me.shedaniel:RoughlyEnoughItems-api:9.1.517"
-//    modCompileOnly "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.517"
+    modImplementation "mezz.jei:jei-1.19-common:11.0.2.230"
+    modImplementation "me.shedaniel:RoughlyEnoughItems-api:9.1.518"
+    modImplementation "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.518"
 }
 
 loom {

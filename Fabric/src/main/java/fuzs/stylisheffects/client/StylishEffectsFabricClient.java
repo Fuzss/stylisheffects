@@ -46,5 +46,8 @@ public class StylishEffectsFabricClient implements ClientModInitializer {
         ScreenEvents.BEFORE_INIT.register((Minecraft client, Screen screen, int scaledWidth, int scaledHeight) -> {
             ScreenMouseEvents.beforeMouseClick(screen).register(EffectScreenHandlerImpl.INSTANCE::onMouseClicked);
         });
+        ScreenEvents.AFTER_INIT.register((Minecraft client, Screen screen, int scaledWidth, int scaledHeight) -> {
+            EffectScreenHandlerImpl.INSTANCE.onScreenInit(screen);
+        });
     }
 }

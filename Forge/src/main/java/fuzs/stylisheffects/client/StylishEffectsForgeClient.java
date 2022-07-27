@@ -31,6 +31,9 @@ public class StylishEffectsForgeClient {
         MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.Opening evt) -> {
             EffectScreenHandlerImpl.INSTANCE.onScreenOpen(evt.getNewScreen());
         });
+        MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.Init.Post evt) -> {
+            EffectScreenHandlerImpl.INSTANCE.onScreenInit(evt.getScreen());
+        });
         MinecraftForge.EVENT_BUS.addListener((final ContainerScreenEvent.Render.Background evt) -> {
             EffectScreenHandlerImpl.INSTANCE.onDrawBackground(evt.getContainerScreen(), evt.getPoseStack(), evt.getMouseX(), evt.getMouseY());
         });
