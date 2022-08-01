@@ -13,6 +13,6 @@ public class StylishEffectsClient implements ClientModConstructor {
         StylishEffectsClientApi.setEffectScreenHandler(EffectScreenHandlerImpl.INSTANCE);
         // can't do this during construct as configs won't be loaded then
         StylishEffectsClientApi.getEffectScreenHandler().rebuildEffectRenderers();
-        StylishEffects.CONFIG.getHolder(ClientConfig.class).addCallback(StylishEffectsClientApi.getEffectScreenHandler()::rebuildEffectRenderers);
+        StylishEffects.CONFIG.getHolder(ClientConfig.class).accept(StylishEffectsClientApi.getEffectScreenHandler()::rebuildEffectRenderers);
     }
 }

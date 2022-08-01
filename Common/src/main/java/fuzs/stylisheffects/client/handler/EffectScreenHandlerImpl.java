@@ -124,7 +124,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
     }
 
     public void onScreenOpen(Screen screen) {
-        if (screen instanceof AbstractContainerScreen containerScreen && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().debugContainerTypes) {
+        if (screen instanceof AbstractContainerScreen<?> containerScreen && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().debugContainerTypes) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
             MenuType<?> type = ((AbstractContainerMenuAccessor) ((AbstractContainerScreen<?>) containerScreen).getMenu()).getMenuType();
             if (type != null) {
@@ -187,7 +187,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
     }
 
     private static boolean supportsEffectsDisplay(Screen screen) {
-        if (screen instanceof AbstractContainerScreen containerScreen) {
+        if (screen instanceof AbstractContainerScreen<?> containerScreen) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
             MenuType<?> type = ((AbstractContainerMenuAccessor) ((AbstractContainerScreen<?>) containerScreen).getMenu()).getMenuType();
             if (type != null && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().menuBlacklist.contains(type)) {

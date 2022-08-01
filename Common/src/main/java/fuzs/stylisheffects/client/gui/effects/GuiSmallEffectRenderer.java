@@ -47,7 +47,7 @@ public class GuiSmallEffectRenderer extends GuiEffectRenderer {
     }
 
     @Override
-    protected ClientConfig.GuiSmallWidgetConfig widgetConfig() {
+    protected ClientConfig.GuiWidgetConfig widgetConfig() {
         return StylishEffects.CONFIG.get(ClientConfig.class).guiSmallWidget();
     }
 
