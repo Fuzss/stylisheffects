@@ -36,13 +36,11 @@ public class ExtraScreenEvents {
     public interface Opening {
 
         /**
-         * called when a new screen is set in {@link net.minecraft.client.Minecraft#setScreen}
-         * allows for replacing the new screen with a different one returned by this callback
-         *
+         * called just before a new screen is set to {@link net.minecraft.client.Minecraft#screen} in {@link net.minecraft.client.Minecraft#setScreen},
+         * allows for replacing the new screen with a different one returned by this callback;
          * IMPORTANT: for cancelling a new screen from being set and to keep the old one, simply return <code>oldScreen</code>
-         *          this is equivalent to cancelling the event on Forge
-         *
-         * DO NOT use {@link net.minecraft.client.Minecraft#setScreen} when this is called, there will be an infinite loop
+         * this is equivalent to cancelling the event on Forge;
+         * DO NOT use {@link net.minecraft.client.Minecraft#setScreen} inside of your event callback, there will be an infinite loop
          *
          * @param oldScreen     the screen that is being removed
          * @param newScreen     the new screen that is being set
@@ -55,9 +53,9 @@ public class ExtraScreenEvents {
     public interface Closing {
 
         /**
-         * called when a screen is closed by setting a null object to {@link net.minecraft.client.Minecraft#setScreen}
+         * called just before a screen is closed in {@link net.minecraft.client.Minecraft#setScreen}, {@link net.minecraft.client.Minecraft#screen} still has the old screen
          *
-         * @param screen the screen that has been closed
+         * @param screen        the screen that has been closed
          */
         void onScreenClosing(Screen screen);
     }
