@@ -39,7 +39,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraftVersion}"
     mappings loom.layered() {
         officialMojangMappings()
-//        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
+        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
     }
 
     // Fabric
@@ -47,25 +47,25 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
 
     // Forge Configs
-    modImplementation "net.minecraftforge:forgeconfigapiport-fabric:4.1.2"
+    modImplementation "net.minecraftforge:forgeconfigapiport-fabric:4.2.0"
 
     // Mod Menu
-    modRuntimeOnly "com.terraformersmc:modmenu:4.0.5"
+    modRuntimeOnly "com.terraformersmc:modmenu:4.0.6"
 
     // Puzzles Lib
     modImplementation "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"
 
     // JEI & REI
-    modCompileOnly "mezz.jei:jei-1.19.1-common:11.2.0.241"
-    modCompileOnly "mezz.jei:jei-1.19.1-fabric:11.2.0.241"
-    modRuntimeOnly "mezz.jei:jei-1.19.1-fabric:11.2.0.241"
+    modCompileOnly "mezz.jei:jei-1.19.2-common:11.2.0.256"
+    modCompileOnly "mezz.jei:jei-1.19.2-fabric:11.2.0.256"
+    modRuntimeOnly "mezz.jei:jei-1.19.2-fabric:11.2.0.256"
     modImplementation("me.shedaniel.cloth:cloth-config-fabric:8.0.75") {
         exclude(group: "net.fabricmc.fabric-api")
     }
-    modImplementation "dev.architectury:architectury-fabric:6.0.35"
-    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-api-fabric:9.1.520"
-    modCompileOnly "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:9.1.520"
-//    modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-fabric:9.1.520"
+    modImplementation "dev.architectury:architectury-fabric:6.2.43"
+    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-api-fabric:9.1.530"
+    modCompileOnly "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:9.1.530"
+//    modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-fabric:9.1.530"
 }
 
 loom {

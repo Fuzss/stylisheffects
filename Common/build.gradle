@@ -11,7 +11,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraftVersion}"
     mappings loom.layered() {
         officialMojangMappings()
-//        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
+        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
     }
 
     // Mixin Dependencies
@@ -28,9 +28,9 @@ dependencies {
     modImplementation "fuzs.puzzleslib:puzzleslib-common:${puzzlesVersion}"
 
     // JEI & REI
-    modImplementation "mezz.jei:jei-1.19.1-common:11.2.0.241"
-    modApi "me.shedaniel:RoughlyEnoughItems-api:9.1.520"
-    modImplementation "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.520"
+    modImplementation "mezz.jei:jei-1.19.2-common:11.2.0.256"
+    modApi "me.shedaniel:RoughlyEnoughItems-api:9.1.530"
+    modImplementation "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.530"
 }
 
 loom {
