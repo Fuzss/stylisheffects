@@ -3,6 +3,9 @@ package fuzs.stylisheffects.api.client.event;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 /**
  * an extension to {@link net.fabricmc.fabric.api.client.screen.v1.ScreenEvents} to include more functionality found on Forge
@@ -10,12 +13,10 @@ import net.minecraft.client.gui.screens.Screen;
 public class ExtraScreenEvents {
     public static final Event<Opening> OPENING = EventFactory.createArrayBacked(Opening.class, listeners -> (Screen oldScreen, Screen newScreen) -> {
         for (Opening event : listeners) {
-            Screen screen = event.onScreenOpening(oldScreen, newScreen);
-            if (screen != newScreen) {
-                return screen;
-            }
+            Optional<Screen> result = event.onScreenOpening(oldScreen, newScreen);
+            if (result.isPresent()) return result;
         }
-        return newScreen;
+        return Optional.empty();
     });
     public static final Event<Closing> CLOSING = EventFactory.createArrayBacked(Closing.class, listeners -> (Screen screen) -> {
         for (Closing event : listeners) {
@@ -46,7 +47,7 @@ public class ExtraScreenEvents {
          * @param newScreen     the new screen that is being set
          * @return              the screen that is actually going to be set, <code>newScreen</code> by default
          */
-        Screen onScreenOpening(Screen oldScreen, Screen newScreen);
+        Optional<Screen> onScreenOpening(@Nullable Screen oldScreen, @Nullable Screen newScreen);
     }
 
     @FunctionalInterface

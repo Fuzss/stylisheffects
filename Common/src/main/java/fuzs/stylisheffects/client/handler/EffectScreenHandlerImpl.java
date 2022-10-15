@@ -123,8 +123,8 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         });
     }
 
-    public void onScreenOpen(Screen screen) {
-        if (screen instanceof AbstractContainerScreen<?> containerScreen && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().debugContainerTypes) {
+    public Optional<Screen> onScreenOpen(@Nullable Screen oldScreen, @Nullable Screen newScreen) {
+        if (newScreen instanceof AbstractContainerScreen<?> containerScreen && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().debugContainerTypes) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
             MenuType<?> type = ((AbstractContainerMenuAccessor) ((AbstractContainerScreen<?>) containerScreen).getMenu()).getMenuType();
             if (type != null) {
@@ -132,6 +132,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
                 Minecraft.getInstance().gui.getChat().addMessage(Component.translatable("debug.menu.opening", ComponentUtils.wrapInSquareBrackets(component)));
             }
         }
+        return Optional.empty();
     }
 
     private static Optional<AbstractEffectRenderer> getEffectRenderer(Screen screen, @Nullable AbstractEffectRenderer effectRenderer) {

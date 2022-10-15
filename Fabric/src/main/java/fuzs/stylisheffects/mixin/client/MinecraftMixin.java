@@ -15,41 +15,50 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
+
 @Mixin(Minecraft.class)
 public abstract class MinecraftMixin {
     @Shadow
     @Nullable
     public Screen screen;
-    // not sure if this is really necessary, but Architectury does it, so might as well
     @Unique
-    private final ThreadLocal<Screen> custom$oldScreen = new ThreadLocal<>();
+    private Screen stylisheffects$oldScreen;
+    @Unique
+    private boolean stylisheffects$keepOldScreen;
 
     @Inject(method = "setScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 0))
-    public void setScreen$inject$field(@Nullable Screen screen, CallbackInfo callback) {
+    public void stylisheffects$setScreen$0(@Nullable Screen screen, CallbackInfo callback) {
         // we need to safe the old screen so vanilla can mostly just run through, and we still have all instances we need
-        this.custom$oldScreen.set(this.screen);
+        this.stylisheffects$oldScreen = this.screen;
         // set screen to null so Screen::removed is not called (we will manually call it later if necessary)
         this.screen = null;
     }
 
     @Inject(method = "setScreen", at = @At(value = "JUMP", opcode = Opcodes.IFNONNULL, ordinal = 0))
-    public void setScreen$inject$jump(@Nullable Screen screen, CallbackInfo callback) {
+    public void stylisheffects$setScreen$1(@Nullable Screen screen, CallbackInfo callback) {
         // return screen to the original value which we had to set to null to prevent Screen::removed from being called
         // this is not necessary in vanilla as everything that happens after this being set to the new screen, but maybe other mixins assume this to still correctly contain the old screen
-        this.screen = this.custom$oldScreen.get();
+        this.screen = this.stylisheffects$oldScreen;
     }
 
     @ModifyVariable(method = "setScreen", at = @At("LOAD"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;respawn()V"), to = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V")), ordinal = 0)
-    public Screen setScreen$modify$load(@Nullable Screen screen) {
+    public Screen stylisheffects$setScreen$2(@Nullable Screen screen) {
+        this.stylisheffects$keepOldScreen = false;
         Screen oldScreen = this.screen;
         Screen newScreen = screen;
         // at this point the local screen variable has already been set to Minecraft#screen (meaning the new screen is already set)
         if (screen != null) {
-            newScreen = ExtraScreenEvents.OPENING.invoker().onScreenOpening(oldScreen, screen);
-            if (oldScreen == newScreen) {
-                // the old screen has been returned, meaning opening the new screen has been cancelled,
-                // so we return from the method to prevent any setup on the screen
-                return oldScreen;
+            Optional<Screen> result = ExtraScreenEvents.OPENING.invoker().onScreenOpening(oldScreen, screen);
+            if (result.isPresent()) {
+                newScreen = result.get();
+                // only run this when we have set the oldScreen again, other mods might be interfering with their mixins (looking at you FancyMenu lol)
+                if (oldScreen == newScreen) {
+                    // the old screen has been returned, meaning opening the new screen has been cancelled,
+                    // so we return from the method to prevent any setup on the screen
+                    this.stylisheffects$keepOldScreen = true;
+                    return oldScreen;
+                }
             }
         }
         // reaching this point means a new screen has been set successfully, just check now if there was an old screen to begin with
@@ -65,8 +74,8 @@ public abstract class MinecraftMixin {
     }
 
     @Inject(method = "setScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;respawn()V"), to = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V")), cancellable = true)
-    public void setScreen$inject$invoke(@Nullable Screen screen, CallbackInfo callback) {
+    public void stylisheffects$setScreen$3(@Nullable Screen screen, CallbackInfo callback) {
         // the old screen has been set again, probably by us, so we cancel the rest of the method which is meant to set up the new screen
-        if (this.screen == screen) callback.cancel();
+        if (this.stylisheffects$keepOldScreen) callback.cancel();
     }
 }

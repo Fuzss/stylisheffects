@@ -29,7 +29,13 @@ public class StylishEffectsForgeClient {
             if (evt.phase == TickEvent.Phase.END) EffectScreenHandlerImpl.INSTANCE.onClientTick(Minecraft.getInstance());
         });
         MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.Opening evt) -> {
-            EffectScreenHandlerImpl.INSTANCE.onScreenOpen(evt.getNewScreen());
+            EffectScreenHandlerImpl.INSTANCE.onScreenOpen(evt.getCurrentScreen(), evt.getNewScreen()).ifPresent(newScreen -> {
+                if (newScreen == evt.getCurrentScreen()) {
+                    evt.setCanceled(true);
+                } else {
+                    evt.setNewScreen(newScreen);
+                }
+            });
         });
         MinecraftForge.EVENT_BUS.addListener((final ScreenEvent.Init.Post evt) -> {
             EffectScreenHandlerImpl.INSTANCE.onScreenInit(evt.getScreen());
