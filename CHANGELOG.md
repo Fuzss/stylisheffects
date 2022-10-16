@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.3.2-1.19.2] - 2022-10-16
+### Fixed
+- Fixed integration for REI
+
 ## [v4.3.1-1.19.2] - 2022-10-15
 ### Fixed
 - Fixed visual glitch on main menu with FancyMenu mod on Fabric

@@ -26,10 +26,10 @@
       "${clientEntryPoint}"
     ],
     "jei_mod_plugin": [
-      "${modGroup}.compat.jei.StylishEffectsJeiPlugin"
+      "${modGroup}.integration.jei.StylishEffectsJeiPlugin"
     ],
     "rei_client": [
-      "${modGroup}.compat.rei.StylishEffectsReiPlugin"
+      "${modGroup}.integration.rei.StylishEffectsReiPlugin"
     ]
   },
   "mixins": [

@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.client.core;
 
-import fuzs.puzzleslib.core.CoreServices;
+import fuzs.puzzleslib.util.PuzzlesUtil;
 
-public class ClientModServices extends CoreServices {
-    public static final ClientAbstractions ABSTRACTIONS = load(ClientAbstractions.class);
+public final class ClientModServices {
+    public static final ClientAbstractions ABSTRACTIONS = PuzzlesUtil.loadServiceProvider(ClientAbstractions.class);
 }

@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.mixin.compat.rei;
+package fuzs.stylisheffects.mixin.integration.rei;
 
 import me.shedaniel.math.Rectangle;
 import me.shedaniel.rei.api.client.registry.screen.ExclusionZonesProvider;

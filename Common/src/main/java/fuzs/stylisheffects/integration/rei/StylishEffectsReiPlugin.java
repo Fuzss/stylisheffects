@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.compat.rei;
+package fuzs.stylisheffects.integration.rei;
 
 import fuzs.stylisheffects.api.client.StylishEffectsClientApi;
 import me.shedaniel.math.Rectangle;

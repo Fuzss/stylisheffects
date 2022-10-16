@@ -6,8 +6,8 @@
   "refmap": "stylisheffects.refmap.json",
   "plugin": "fuzs.stylisheffects.mixin.ModMixinConfigPlugin",
   "mixins": [
-    "compat.jei.InventoryEffectRendererGuiHandlerMixin",
-    "compat.rei.DefaultPotionEffectExclusionZonesMixin"
+    "integration.jei.InventoryEffectRendererGuiHandlerMixin",
+    "integration.rei.DefaultPotionEffectExclusionZonesMixin"
   ],
   "client": [
     "client.accessor.AbstractContainerMenuAccessor"

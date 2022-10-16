@@ -15,7 +15,7 @@ import net.minecraftforge.common.MinecraftForge;
 
 import java.util.List;
 
-public class ForgeClientAbstractions implements ClientAbstractions {
+public final class ForgeClientAbstractions implements ClientAbstractions {
 
     @Override
     public boolean isMobEffectVisibleIn(EffectRendererEnvironment effectRendererEnvironment, MobEffectInstance effectInstance) {

@@ -22,10 +22,10 @@ public class ModMixinConfigPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains(".mixin.compat.jei.")) {
+        if (mixinClassName.contains(".mixin.integration.jei.")) {
             return CoreServices.ENVIRONMENT.isModLoadedSafe("jei");
-        } else if (mixinClassName.contains(".mixin.compat.rei.")) {
-            return CoreServices.ENVIRONMENT.isModLoadedSafe("rei");
+        } else if (mixinClassName.contains(".mixin.integration.rei.")) {
+            return CoreServices.ENVIRONMENT.isModLoadedSafe("roughlyenoughitems");
         } else {
             return true;
         }

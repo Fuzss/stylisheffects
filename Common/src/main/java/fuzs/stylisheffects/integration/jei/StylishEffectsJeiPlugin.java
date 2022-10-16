@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.compat.jei;
+package fuzs.stylisheffects.integration.jei;
 
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.client.StylishEffectsClientApi;

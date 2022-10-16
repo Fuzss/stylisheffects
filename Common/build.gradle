@@ -28,9 +28,9 @@ dependencies {
     modImplementation "fuzs.puzzleslib:puzzleslib-common:${puzzlesVersion}"
 
     // JEI & REI
-    modImplementation "mezz.jei:jei-1.19.2-common:11.2.0.256"
-    modApi "me.shedaniel:RoughlyEnoughItems-api:9.1.530"
-    modImplementation "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.530"
+    modImplementation "mezz.jei:jei-1.19.2-common:11.3.0.271"
+    modApi "me.shedaniel:RoughlyEnoughItems-api:9.1.550"
+    modImplementation "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.550"
 }
 
 loom {

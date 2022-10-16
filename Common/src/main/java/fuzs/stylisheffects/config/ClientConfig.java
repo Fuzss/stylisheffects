@@ -3,7 +3,7 @@ package fuzs.stylisheffects.config;
 import com.google.common.collect.Lists;
 import fuzs.puzzleslib.config.ConfigCore;
 import fuzs.puzzleslib.config.annotation.Config;
-import fuzs.puzzleslib.config.serialization.EntryCollectionBuilder;
+import fuzs.puzzleslib.config.serialization.ConfigDataSet;
 import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import net.minecraft.ChatFormatting;
@@ -11,7 +11,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.world.inventory.MenuType;
 
 import java.util.List;
-import java.util.Set;
 
 public class ClientConfig implements ConfigCore {
     @Config
@@ -113,7 +112,7 @@ public class ClientConfig implements ConfigCore {
         @Config.IntRange(min = 0)
         public int screenBorderDistance = 3;
 
-        public Set<MenuType<?>> menuBlacklist;
+        public ConfigDataSet<MenuType<?>> menuBlacklist;
 
         public InventoryRendererConfig() {
             this.screenSide = MobEffectWidgetContext.ScreenSide.LEFT;
@@ -124,7 +123,7 @@ public class ClientConfig implements ConfigCore {
 
         @Override
         public void afterConfigReload() {
-            this.menuBlacklist = EntryCollectionBuilder.of(Registry.MENU_REGISTRY).buildSet(this.menuBlacklistRaw);
+            this.menuBlacklist = ConfigDataSet.of(Registry.MENU_REGISTRY, this.menuBlacklistRaw);
         }
     }
     public static class GuiRendererConfig extends EffectRendererConfig {

@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.mixin.compat.jei;
+package fuzs.stylisheffects.mixin.integration.jei;
 
 import mezz.jei.common.plugins.vanilla.InventoryEffectRendererGuiHandler;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;

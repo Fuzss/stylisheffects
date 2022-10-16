@@ -13,7 +13,7 @@ import net.minecraft.world.item.TooltipFlag;
 
 import java.util.List;
 
-public class FabricClientAbstractions implements ClientAbstractions {
+public final class FabricClientAbstractions implements ClientAbstractions {
 
     @Override
     public boolean isMobEffectVisibleIn(EffectRendererEnvironment effectRendererEnvironment, MobEffectInstance effectInstance) {
