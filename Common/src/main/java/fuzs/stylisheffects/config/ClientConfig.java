@@ -101,7 +101,7 @@ public class ClientConfig implements ConfigCore {
         @Config(description = "Render active status effects in every menu screen, not just in the player inventory.")
         public boolean effectsEverywhere = true;
         @Config(name = "menu_blacklist", description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
-        List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container", "tconstruct:part_builder", "tconstruct:tinker_station", "tconstruct:smeltery");
+        List<String> menuBlacklistRaw = Lists.newArrayList("curios:curios_container", "tconstruct:*", "mekanism:*");
         @Config(description = "Print menu type to game chat whenever a new menu screen is opened. Only intended to find menu types to be added to \"menu_blacklist\".")
         public boolean debugContainerTypes = false;
         @Config(description = "Show a tooltip when hovering over an effect widget.")

@@ -28,9 +28,10 @@ dependencies {
     modImplementation "fuzs.puzzleslib:puzzleslib-common:${puzzlesVersion}"
 
     // JEI & REI
-    modImplementation "mezz.jei:jei-1.19.2-common:11.3.0.271"
-    modApi "me.shedaniel:RoughlyEnoughItems-api:9.1.550"
-    modImplementation "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.550"
+    api "mezz.jei:jei-1.19.2-common-api:11.6.0.1013"    // this is what we need for our proper JEI plugin (this is included with lib already, but yeah...)
+    api "mezz.jei:jei-1.19.2-lib:11.6.0.1013"           // this is required for the additional mixin disabling JEI's default exclusion zones for mob effect widgets
+    api "me.shedaniel:RoughlyEnoughItems-api:9.1.595"
+    api "me.shedaniel:RoughlyEnoughItems-default-plugin:9.1.595"
 }
 
 loom {

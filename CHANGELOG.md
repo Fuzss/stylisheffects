@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.3.3-1.19.2] - 2023-03-28
+### Fixed
+- Fixed [JEI](https://www.curseforge.com/minecraft/mc-mods/jei) integration
+- The Stylish Effects inventory display is now disabled by default for all [Mekanism](https://www.curseforge.com/minecraft/mc-mods/mekanism) machines
+
 ## [v4.3.2-1.19.2] - 2022-10-16
 ### Fixed
 - Fixed integration for REI

@@ -56,16 +56,15 @@ dependencies {
     modImplementation "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"
 
     // JEI & REI
-    modCompileOnly "mezz.jei:jei-1.19.2-common:11.3.0.271"
-    modCompileOnly "mezz.jei:jei-1.19.2-fabric:11.3.0.271"
-    modRuntimeOnly "mezz.jei:jei-1.19.2-fabric:11.3.0.271"
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:8.2.88") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
-    modImplementation "dev.architectury:architectury-fabric:6.2.46"
-    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-api-fabric:9.1.550"
-    modCompileOnly "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:9.1.550"
-//    modRuntimeOnly "me.shedaniel:RoughlyEnoughItems-fabric:9.1.550"
+    modCompileOnlyApi "mezz.jei:jei-1.19.2-fabric:11.6.0.1013"
+    modCompileOnlyApi "me.shedaniel.cloth:cloth-config-fabric:8.2.88"
+    modCompileOnlyApi "dev.architectury:architectury-fabric:6.5.69"
+    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-api-fabric:9.1.595"
+    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:9.1.595"
+    modLocalRuntime "mezz.jei:jei-1.19.2-fabric:11.6.0.1013"
+//    modLocalRuntime "me.shedaniel.cloth:cloth-config-fabric:8.2.88"
+//    modLocalRuntime "dev.architectury:architectury-fabric:6.5.69"
+//    modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:9.1.595"
 }
 
 loom {

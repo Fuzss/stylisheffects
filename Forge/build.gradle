@@ -123,13 +123,14 @@ dependencies {
     implementation fg.deobf("fuzs.puzzleslib:puzzleslib-forge:${puzzlesVersion}")
 
     // JEI & REI
-    compileOnly fg.deobf("mezz.jei:jei-1.19.2-common:11.3.0.271")
-    compileOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.3.0.271")
-    runtimeOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.3.0.271")
-    implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:8.2.88")
-    implementation fg.deobf("dev.architectury:architectury-forge:6.2.46")
-    compileOnly fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:9.1.550")
-//    runtimeOnly fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:9.1.550")
+    compileOnlyApi fg.deobf("mezz.jei:jei-1.19.2-forge:11.6.0.1013")
+    compileOnlyApi fg.deobf("me.shedaniel.cloth:cloth-config-forge:8.2.88")
+    compileOnlyApi fg.deobf("dev.architectury:architectury-forge:6.5.69")
+    compileOnlyApi fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:9.1.595")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.19.2-forge:11.6.0.1013")
+//    runtimeOnly fg.deobf("me.shedaniel.cloth:cloth-config-forge:8.2.88")
+//    runtimeOnly fg.deobf("dev.architectury:architectury-forge:6.5.69")
+//    runtimeOnly fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:9.1.595")
 }
 
 mixin {
