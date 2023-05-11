@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
+    id 'fabric-loom' version '1.0.+'
     id 'io.github.juuxel.loom-quiltflower' version '1.7.1'
     // this depends on an older version of guava, which loom is incompatible with, so make sure to apply this plugin after loom
     // haven't found a proper way to manage plugin dependencies otherwise
@@ -32,8 +32,10 @@ repositories {
 }
 
 dependencies {
-    // Include Common Project
-    compileOnly project(":Common")
+    // Common Project
+    compileOnly(project(path: ":Common", configuration: "namedElements")) {
+        transitive = false
+    }
 
     // Minecraft
     minecraft "com.mojang:minecraft:${minecraftVersion}"
@@ -43,28 +45,26 @@ dependencies {
     }
 
     // Fabric
-    modImplementation "net.fabricmc:fabric-loader:${fabricVersion}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
+    modApi "net.fabricmc:fabric-loader:${fabricVersion}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
 
-    // Forge Configs
-    modImplementation "net.minecraftforge:forgeconfigapiport-fabric:4.2.0"
-
-    // Mod Menu
-    modRuntimeOnly "com.terraformersmc:modmenu:4.0.6"
+    // Quality of Life Mods
+    modLocalRuntime "com.terraformersmc:modmenu:5.0.2"
+    modLocalRuntime "curse.maven:configured-fabric-667378:4441611"
 
     // Puzzles Lib
-    modImplementation "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"
+    modApi "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"
 
     // JEI & REI
-    modCompileOnlyApi "mezz.jei:jei-1.19.2-fabric:11.6.0.1013"
-    modCompileOnlyApi "me.shedaniel.cloth:cloth-config-fabric:8.2.88"
-    modCompileOnlyApi "dev.architectury:architectury-fabric:6.5.69"
-    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-api-fabric:9.1.595"
-    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:9.1.595"
-    modLocalRuntime "mezz.jei:jei-1.19.2-fabric:11.6.0.1013"
-//    modLocalRuntime "me.shedaniel.cloth:cloth-config-fabric:8.2.88"
-//    modLocalRuntime "dev.architectury:architectury-fabric:6.5.69"
-//    modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:9.1.595"
+    modCompileOnlyApi "mezz.jei:jei-1.19.3-fabric:12.4.0.22"
+    modCompileOnlyApi "me.shedaniel.cloth:cloth-config-fabric:9.0.94"
+    modCompileOnlyApi "dev.architectury:architectury-fabric:7.1.81"
+    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-api-fabric:10.0.596"
+    modCompileOnlyApi "me.shedaniel:RoughlyEnoughItems-default-plugin-fabric:10.0.596"
+    modLocalRuntime "mezz.jei:jei-1.19.3-fabric:12.4.0.22"
+//    modLocalRuntime "me.shedaniel.cloth:cloth-config-fabric:9.0.94"
+//    modLocalRuntime "dev.architectury:architectury-fabric:7.1.81"
+//    modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:10.0.596"
 }
 
 loom {
@@ -89,9 +89,15 @@ loom {
 }
 
 processResources {
-    from project(":Common").sourceSets.main.resources
-    // we need to have this in common so that in a non-production environment the common jar is correctly deobfuscated
-    exclude("**/quilt.mod.json")
+    from(project(":Common").sourceSets.main.resources)
+    from(project(":Forge").file('src/generated/resources')) {
+        exclude('.cache/')
+    }
+    // Forge's data gen doesn't work with assets placed in the common project, so we place them in Forge and include them here
+    from(project(":Forge").sourceSets.main.resources) {
+        include("assets/")
+        include("data/")
+    }
 
     duplicatesStrategy DuplicatesStrategy.INCLUDE
 
@@ -106,15 +112,15 @@ processResources {
     inputs.property "modAuthor", 				"${modAuthor}"
     inputs.property "minFabricVersion", 		"${minFabricVersion}"
     inputs.property "minFabricApiVersion", 		"${minFabricApiVersion}"
-    inputs.property "minMinecraftVersion", 		"${minMinecraftVersion}"
-    inputs.property "nextMinecraftVersion", 	rootProject.getNextVersion("${minMinecraftVersion}")
+    inputs.property "minecraftVersion", 		"${minecraftVersion}"
 	inputs.property "minPuzzlesVersion", 		"${minPuzzlesVersion}"
-    inputs.property "packFormat", 				"${packFormat}"
+    inputs.property "resourcePackFormat",       "${resourcePackFormat}"
+    inputs.property "dataPackFormat", 			"${dataPackFormat}"
 	inputs.property "mainEntryPoint", 			"${project.group}.${rootProject.name}Fabric"
 	inputs.property "clientEntryPoint", 		"${project.group}.client.${rootProject.name}FabricClient"
     inputs.property "modFabricEnvironment", 	"${modFabricEnvironment}"
 
-    // replace stuff in fabric.mod.json and pack.mcmeta
+    // replace stuff in fabric.mod.json
     filesMatching ('fabric.mod.json') {
         expand (
                 'modId':                	"${modId}",
@@ -127,8 +133,7 @@ processResources {
                 'modAuthor':            	"${modAuthor}",
                 'minFabricVersion':     	"${minFabricVersion}",
                 'minFabricApiVersion':  	"${minFabricApiVersion}",
-                'minMinecraftVersion':  	"${minMinecraftVersion}",
-                "nextMinecraftVersion": 	rootProject.getNextVersion("${minMinecraftVersion}"),
+                'minecraftVersion':  	    "${minecraftVersion}",
 				"minPuzzlesVersion":    	"${minPuzzlesVersion}",
 				"mainEntryPoint": 			"${project.group}.${rootProject.name}Fabric",
 				"clientEntryPoint": 		"${project.group}.client.${rootProject.name}FabricClient",
@@ -136,10 +141,12 @@ processResources {
         )
     }
 
+    // replace stuff in pack.mcmeta
     filesMatching ('pack.mcmeta') {
         expand (
                 'modDescription':       "${modDescription}",
-                "packFormat":           "${packFormat}"
+                "resourcePackFormat":   "${resourcePackFormat}",
+                "dataPackFormat":       "${dataPackFormat}"
         )
     }
 }
@@ -188,18 +195,6 @@ publishing {
                     }
                 }
             }
-            afterEvaluate {
-                // exclude certain dependencies when publishing to maven
-                // from https://stackoverflow.com/a/50121790
-                pom.withXml {
-                    asNode().dependencies.dependency.each { dep ->
-                        // use this approach to make excluding dependencies from Curse Maven more convenient
-                        if (["com.terraformersmc:modmenu"].stream().anyMatch(mod -> "${dep.groupId.last().value().last()}:${dep.artifactId.last().value().last()}".startsWith(mod))) {
-                            assert dep.parent().remove(dep)
-                        }
-                    }
-                }
-            }
         }
     }
     repositories {
@@ -234,7 +229,7 @@ curseforge {
                 requiredDependency 'puzzles-lib'
             }
         }
-        addArtifact sourcesJar
+//        addArtifact sourcesJar
     }
     options {
 //        debug = true
@@ -256,7 +251,7 @@ modrinth {
         gameVersions.add it.trim()
     }
     loaders.add 'fabric'
-    additionalFiles.add file("${project.buildDir}/libs/${project.archivesBaseName}-${project.version}-sources.jar")
+//    additionalFiles.add file("${project.buildDir}/libs/${project.archivesBaseName}-${project.version}-sources.jar")
     dependencies {
         required.project 'fabric-api'
         required.project 'forge-config-api-port'
@@ -264,8 +259,6 @@ modrinth {
     }
 //	debugMode = true
 }
-
-import groovy.json.*
 
 task copyJarToDir(type: Copy) {
     onlyIf { project.hasProperty('buildJarOutputDir') && project.hasProperty('uniqueBuildNumber') }

@@ -52,7 +52,7 @@ public class GuiSmallEffectRenderer extends GuiEffectRenderer {
     }
 
     @Override
-    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance, ClientConfig.LongDuration longDuration) {
-        return Optional.of(Component.literal(formatTickDuration(effectInstance.getDuration())));
+    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance) {
+        return Optional.of(Component.literal(formatCompactTickDuration(effectInstance.getDuration())));
     }
 }

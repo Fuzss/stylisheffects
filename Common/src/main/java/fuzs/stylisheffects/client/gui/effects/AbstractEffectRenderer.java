@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.client.core.ClientModServices;
+import fuzs.stylisheffects.client.core.ClientAbstractions;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
@@ -25,15 +25,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.item.TooltipFlag;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
@@ -80,7 +76,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         this.activeEffects = activeEffects.stream()
                 .filter(e -> e.getDuration() > 0)
                 .filter(e -> !this.rendererConfig().respectHideParticles || e.showIcon())
-                .filter(e -> ClientModServices.ABSTRACTIONS.isMobEffectVisibleIn(this.environment, e))
+                .filter(e -> ClientAbstractions.INSTANCE.isMobEffectVisibleIn(this.environment, e))
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -255,7 +251,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         if (this.drawCustomEffect(poseStack, posX, posY, effectinstance)) return;
         MobEffectTextureManager potionspriteuploader = minecraft.getMobEffectTextures();
         TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effectinstance.getEffect());
-        RenderSystem.setShaderTexture(0, textureatlassprite.atlas().location());
+        RenderSystem.setShaderTexture(0, textureatlassprite.atlasLocation());
         float blinkingAlpha = this.widgetConfig().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.rendererConfig().widgetAlpha);
         GuiComponent.blit(poseStack, posX + this.getSpriteOffsetX(), posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && effectinstance.isAmbient()), 0, 18, 18, textureatlassprite);
@@ -264,10 +260,10 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
 
     private boolean drawCustomEffect(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
         // we make it possible to display effects on any container screen, so this is sometimes unusable
-        if (this.screen instanceof EffectRenderingInventoryScreen effectInventoryScreen) {
-            return ClientModServices.ABSTRACTIONS.renderInventoryIcon(effectinstance, effectInventoryScreen, poseStack, posX, posY, effectInventoryScreen.getBlitOffset());
+        if (this.screen instanceof EffectRenderingInventoryScreen<?> effectInventoryScreen) {
+            return ClientAbstractions.INSTANCE.renderInventoryIcon(effectinstance, effectInventoryScreen, poseStack, posX, posY, effectInventoryScreen.getBlitOffset());
         } else if (this.screen instanceof Gui gui) {
-            return ClientModServices.ABSTRACTIONS.renderGuiIcon(effectinstance, gui, poseStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * (float) this.rendererConfig().widgetAlpha);
+            return ClientAbstractions.INSTANCE.renderGuiIcon(effectinstance, gui, poseStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * (float) this.rendererConfig().widgetAlpha);
         }
         return false;
     }
@@ -275,18 +271,18 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     protected void drawEffectText(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
         if (!this.widgetConfig().ambientDuration && effectinstance.isAmbient()) return;
-        this.getEffectDuration(effectinstance, this.widgetConfig().longDuration).ifPresent(durationComponent -> {
+        this.getEffectDuration(effectinstance).ifPresent(durationComponent -> {
             int potionColor = ColorUtil.getEffectColor(this.widgetConfig().durationColor, effectinstance);
             int alpha = (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24;
-            FormattedCharSequence ireorderingprocessor = durationComponent.getVisualOrderText();
+            FormattedCharSequence text = durationComponent.getVisualOrderText();
             // render shadow on every side to avoid clashing with colorful background
             final int offsetX = this.getDurationOffsetX();
             final int offsetY = this.getDurationOffsetY();
-            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - 1 - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha);
-            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX + 1 - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha);
-            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY - 1, alpha);
-            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY + 1, alpha);
-            minecraft.font.draw(poseStack, ireorderingprocessor, posX + offsetX - minecraft.font.width(ireorderingprocessor) / 2, posY + offsetY, alpha | potionColor);
+            minecraft.font.draw(poseStack, text, posX + offsetX - 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha);
+            minecraft.font.draw(poseStack, text, posX + offsetX + 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha);
+            minecraft.font.draw(poseStack, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY - 1, alpha);
+            minecraft.font.draw(poseStack, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY + 1, alpha);
+            minecraft.font.draw(poseStack, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY, alpha | potionColor);
         });
     }
 
@@ -304,22 +300,36 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         return 0;
     }
 
-    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance, ClientConfig.LongDuration longDuration) {
-        String effectDuration = MobEffectUtil.formatDuration(effectInstance, 1.0F);
-        if (effectDuration.equals("**:**")) {
-            switch (longDuration) {
-                case INFINITY:
-                    // infinity char
-                    return Optional.of(Component.literal("\u221e"));
-                case NONE:
-                    return Optional.empty();
-                case VANILLA:
-            }
+    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance) {
+        if (effectInstance.getDuration() >= 72000) {
+            return switch (((ClientConfig.CompactWidgetConfig) this.widgetConfig()).longDuration) {
+                case INFINITY -> Optional.of(Component.literal("\u221e"));
+                case ASTERISKS -> Optional.of(Component.literal("**:**"));
+                case NONE -> Optional.empty();
+            };
         }
-        return Optional.of(Component.literal(effectDuration));
+        return Optional.of(Component.literal(formatDuration(effectInstance)));
+    }
+
+    public static String formatDuration(MobEffectInstance effect) {
+        int duration = Mth.floor(effect.getDuration());
+        return formatTickDuration(duration);
     }
 
     public static String formatTickDuration(int ticks) {
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        seconds %= 60;
+        int hours = minutes / 60;
+        minutes %= 60;
+        if (hours > 0) {
+            return String.format(Locale.ROOT, "%d:%02d:%02d", hours, minutes, seconds);
+        } else {
+            return String.format(Locale.ROOT, "%d:%02d", minutes, seconds);
+        }
+    }
+
+    public static String formatCompactTickDuration(int ticks) {
         int seconds = ticks / 20;
         int minutes = seconds / 60;
         int hours = minutes / 60;
@@ -344,7 +354,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
                     .map(effectInstance -> {
                         List<Component> tooltipLines = this.makeEffectTooltip(effectInstance, StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration);
                         // call the event here, so we still have access to the effect instance
-                        ClientModServices.ABSTRACTIONS.onGatherEffectTooltipLines(this.buildContext(effectInstance), tooltipLines, tooltipFlag);
+                        ClientAbstractions.INSTANCE.onGatherEffectTooltipLines(this.buildContext(effectInstance), tooltipLines, tooltipFlag);
                         return tooltipLines;
                     });
         }
@@ -371,8 +381,8 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     protected List<Component> makeEffectTooltip(MobEffectInstance effectInstance, boolean withDuration) {
         List<Component> tooltip = Lists.newArrayList();
         MutableComponent textComponent = this.getEffectDisplayName(effectInstance);
-        if (withDuration && !effectInstance.isNoCounter()) {
-            textComponent.append(" ").append(Component.literal("(").append(MobEffectUtil.formatDuration(effectInstance, 1.0F)).append(")").withStyle(ChatFormatting.GRAY));
+        if (withDuration) {
+            textComponent.append(" ").append(Component.literal("(").append(formatDuration(effectInstance)).append(")").withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(textComponent);
         // description may be provided by Just Enough Effect Descriptions mod

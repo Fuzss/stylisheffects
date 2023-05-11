@@ -1,13 +1,13 @@
 package fuzs.stylisheffects.config;
 
 import com.google.common.collect.Lists;
-import fuzs.puzzleslib.config.ConfigCore;
-import fuzs.puzzleslib.config.annotation.Config;
-import fuzs.puzzleslib.config.serialization.ConfigDataSet;
+import fuzs.puzzleslib.api.config.v3.Config;
+import fuzs.puzzleslib.api.config.v3.ConfigCore;
+import fuzs.puzzleslib.api.config.v3.serialization.ConfigDataSet;
 import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 
 import java.util.List;
@@ -43,7 +43,7 @@ public class ClientConfig implements ConfigCore {
     }
 
     public enum LongDuration {
-        VANILLA, INFINITY, NONE
+        INFINITY, ASTERISKS, NONE
     }
 
     public enum EffectAmplifier {
@@ -123,9 +123,10 @@ public class ClientConfig implements ConfigCore {
 
         @Override
         public void afterConfigReload() {
-            this.menuBlacklist = ConfigDataSet.of(Registry.MENU_REGISTRY, this.menuBlacklistRaw);
+            this.menuBlacklist = ConfigDataSet.from(Registries.MENU, this.menuBlacklistRaw);
         }
     }
+
     public static class GuiRendererConfig extends EffectRendererConfig {
         @Config(description = "Offset on x-axis.")
         @Config.IntRange(min = 0)
@@ -144,12 +145,9 @@ public class ClientConfig implements ConfigCore {
 
     public static abstract class EffectWidgetConfig implements ConfigCore {
         public static final String EFFECT_FORMATTING = "EFFECT";
-        static final String COMPACT_DURATION_DESCRIPTION = "Display effect duration more compact, allows for always showing duration, even when it is very long (vanilla will not show durations that are longer than ~30 minutes).";
 
         @Config(description = "Should the effect icon start to blink when the effect is running out.")
         public boolean blinkingAlpha = true;
-        @Config(description = "Display string to be used for an effect duration that is too long to show.")
-        public LongDuration longDuration = LongDuration.INFINITY;
         @Config(name = "duration_color", description = "Effect duration color. Setting this to \"EFFECT\" will use potion color.")
         @Config.AllowedValues(values = {EFFECT_FORMATTING, "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED", "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE", "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW", "WHITE"})
         protected String durationColorRaw = "GRAY";
@@ -176,7 +174,6 @@ public class ClientConfig implements ConfigCore {
         public ChatFormatting nameColor;
 
         public InventoryFullSizeWidgetConfig() {
-            this.longDuration = LongDuration.VANILLA;
             this.ambientDuration = true;
         }
 
@@ -188,6 +185,10 @@ public class ClientConfig implements ConfigCore {
     }
 
     public abstract static class CompactWidgetConfig extends EffectWidgetConfig {
+        static final String COMPACT_DURATION_DESCRIPTION = "Display effect duration more compact, allows for always showing duration, even when it is very long.";
+
+        @Config(description = "Display string to be used for an effect duration that is too long to show.")
+        public LongDuration longDuration = LongDuration.INFINITY;
         @Config(description = "Top corner to draw effect amplifier in, or none.")
         public EffectAmplifier effectAmplifier = EffectAmplifier.TOP_RIGHT;
         @Config(name = "amplifier_color", description = "Effect amplifier color. Setting this to \"EFFECT\" will use potion color.")
@@ -197,7 +198,6 @@ public class ClientConfig implements ConfigCore {
         public ChatFormatting amplifierColor;
 
         public CompactWidgetConfig() {
-            this.longDuration = LongDuration.INFINITY;
             this.ambientDuration = false;
         }
 

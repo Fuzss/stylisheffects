@@ -52,10 +52,10 @@ public class GuiCompactEffectRenderer extends GuiEffectRenderer {
     }
 
     @Override
-    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance, ClientConfig.LongDuration longDuration) {
+    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance) {
         if (this.widgetConfig().compactDuration) {
-            return Optional.of(Component.literal(formatTickDuration(effectInstance.getDuration())));
+            return Optional.of(Component.literal(formatCompactTickDuration(effectInstance.getDuration())));
         }
-        return super.getEffectDuration(effectInstance, longDuration);
+        return super.getEffectDuration(effectInstance);
     }
 }

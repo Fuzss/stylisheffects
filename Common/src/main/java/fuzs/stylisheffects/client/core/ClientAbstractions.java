@@ -1,6 +1,7 @@
 package fuzs.stylisheffects.client.core;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import fuzs.puzzleslib.api.core.v1.ServiceProviderHelper;
 import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import net.minecraft.client.gui.Gui;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 public interface ClientAbstractions {
+    ClientAbstractions INSTANCE = ServiceProviderHelper.load(ClientAbstractions.class);
 
     boolean isMobEffectVisibleIn(EffectRendererEnvironment effectRendererEnvironment, MobEffectInstance effectInstance);
 
