@@ -2,6 +2,7 @@ package fuzs.stylisheffects.client.handler;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.puzzleslib.client.core.ClientCoreServices;
+import fuzs.puzzleslib.core.CoreServices;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.client.EffectScreenHandler;
 import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
@@ -84,6 +85,8 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
 
     public void onRenderMobEffectIconsOverlay(PoseStack poseStack, int screenWidth, int screenHeight) {
         final Minecraft minecraft = Minecraft.getInstance();
+        // Forge messes up the gui overlay order and renders potion icons on top of the debug screen, so make a special case for that
+        if (CoreServices.ENVIRONMENT.getModLoader().isForge() && minecraft.options.renderDebug) return;
         getEffectRenderer(minecraft.screen, true, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiRenderer().screenSide;
             renderer.setScreenDimensions(minecraft.gui, screenWidth, screenHeight, screenSide.right() ? screenWidth : 0, 0, screenSide);

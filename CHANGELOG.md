@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.3.4-1.19.2] - 2023-05-12
+### Changed
+- Effect widgets no longer render while the debug menu is being displayed on Forge as they would render on top due to Forge's internal gui implementation
+
 ## [v4.3.3-1.19.2] - 2023-03-28
 ### Fixed
 - Fixed [JEI](https://www.curseforge.com/minecraft/mc-mods/jei) integration
