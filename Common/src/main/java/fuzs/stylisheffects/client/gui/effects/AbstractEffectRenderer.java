@@ -261,9 +261,9 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     private boolean drawCustomEffect(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
         // we make it possible to display effects on any container screen, so this is sometimes unusable
         if (this.screen instanceof EffectRenderingInventoryScreen<?> effectInventoryScreen) {
-            return ClientAbstractions.INSTANCE.renderInventoryIcon(effectinstance, effectInventoryScreen, poseStack, posX, posY, effectInventoryScreen.getBlitOffset());
+            return ClientAbstractions.INSTANCE.renderInventoryIcon(effectinstance, effectInventoryScreen, poseStack, posX, posY, 0);
         } else if (this.screen instanceof Gui gui) {
-            return ClientAbstractions.INSTANCE.renderGuiIcon(effectinstance, gui, poseStack, posX, posY, this.screen.getBlitOffset(), this.getBlinkingAlpha(effectinstance) * (float) this.rendererConfig().widgetAlpha);
+            return ClientAbstractions.INSTANCE.renderGuiIcon(effectinstance, gui, poseStack, posX, posY, 0, this.getBlinkingAlpha(effectinstance) * (float) this.rendererConfig().widgetAlpha);
         }
         return false;
     }

@@ -27,8 +27,8 @@ version = "v${modVersion}-${minecraftVersion}-Forge"
 group = modMavenGroup
 
 minecraft {
-    mappings channel: 'parchment', version: "${parchmentMappingsVersion}-${minecraftVersion}"
-//    mappings channel: 'official', version: "${minecraftVersion}"
+//    mappings channel: 'parchment', version: "${parchmentMappingsVersion}-${minecraftVersion}"
+    mappings channel: 'official', version: "${minecraftVersion}"
 
     runs {
         client {
@@ -116,22 +116,22 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     // Quality of Life Mods
-    runtimeOnly fg.deobf("fuzs.bettermodsbutton:bettermodsbutton-forge:5.0.0")
-    runtimeOnly fg.deobf("curse.maven:catalogue-459701:4171025")
-    runtimeOnly fg.deobf("curse.maven:configured-457570:4441589")
+    runtimeOnly fg.deobf("fuzs.bettermodsbutton:bettermodsbutton-forge:6.0.0")
+    runtimeOnly fg.deobf("curse.maven:catalogue-459701:4496718")
+    runtimeOnly fg.deobf("curse.maven:configured-457570:4462894")
 
     // Puzzles Lib
     api fg.deobf("fuzs.puzzleslib:puzzleslib-forge:${puzzlesVersion}")
 
     // JEI & REI
-    compileOnlyApi fg.deobf("mezz.jei:jei-1.19.3-forge:12.4.0.22")
-    compileOnlyApi fg.deobf("me.shedaniel.cloth:cloth-config-forge:9.0.94")
-    compileOnlyApi fg.deobf("dev.architectury:architectury-forge:7.1.81")
-    compileOnlyApi fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:10.0.596")
-    runtimeOnly fg.deobf("mezz.jei:jei-1.19.3-forge:12.4.0.22")
-//    runtimeOnly fg.deobf("me.shedaniel.cloth:cloth-config-forge:9.0.94")
-//    runtimeOnly fg.deobf("dev.architectury:architectury-forge:7.1.81")
-//    runtimeOnly fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:10.0.596")
+    compileOnlyApi fg.deobf("mezz.jei:jei-1.19.4-forge:13.1.0.11")
+    compileOnlyApi fg.deobf("me.shedaniel.cloth:cloth-config-forge:10.0.96")
+    compileOnlyApi fg.deobf("dev.architectury:architectury-forge:8.1.80")
+    compileOnlyApi fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:11.0.597")
+    runtimeOnly fg.deobf("mezz.jei:jei-1.19.4-forge:13.1.0.11")
+//    runtimeOnly fg.deobf("me.shedaniel.cloth:cloth-config-forge:10.0.96")
+//    runtimeOnly fg.deobf("dev.architectury:architectury-forge:8.1.80")
+//    runtimeOnly fg.deobf("me.shedaniel:RoughlyEnoughItems-forge:11.0.597")
 }
 
 mixin {

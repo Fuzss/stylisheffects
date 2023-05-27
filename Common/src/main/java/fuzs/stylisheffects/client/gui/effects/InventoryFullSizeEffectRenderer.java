@@ -68,7 +68,7 @@ public class InventoryFullSizeEffectRenderer extends AbstractEffectRenderer {
 
     @Override
     protected void drawEffectText(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
-        if (!(this.screen instanceof EffectRenderingInventoryScreen<?> effectInventoryScreen) || !ClientAbstractions.INSTANCE.renderInventoryText(effectinstance, effectInventoryScreen, poseStack, posX, posY, effectInventoryScreen.getBlitOffset())) {
+        if (!(this.screen instanceof EffectRenderingInventoryScreen<?> effectInventoryScreen) || !ClientAbstractions.INSTANCE.renderInventoryText(effectinstance, effectInventoryScreen, poseStack, posX, posY, 0)) {
             MutableComponent component = this.getEffectDisplayName(effectinstance);
             int nameColor = ColorUtil.getEffectColor(this.widgetConfig().nameColor, effectinstance);
             minecraft.font.drawShadow(poseStack, component, posX + 12 + 18, posY + 7 + (!this.widgetConfig().ambientDuration && effectinstance.isAmbient() ? 4 : 0), (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24 | nameColor);

@@ -12,17 +12,17 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraftVersion}"
     mappings loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
+//        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
     }
 
     // Puzzles Lib
     modApi "fuzs.puzzleslib:puzzleslib-common:${puzzlesVersion}"
 
     // JEI & REI
-    api "mezz.jei:jei-1.19.3-common-api:12.4.0.22"    // this is what we need for our proper JEI plugin (this is included with lib already, but yeah...)
-    api "mezz.jei:jei-1.19.3-lib:12.4.0.22"           // this is required for the additional mixin disabling JEI's default exclusion zones for mob effect widgets
-    api "me.shedaniel:RoughlyEnoughItems-api:10.0.596"
-    api "me.shedaniel:RoughlyEnoughItems-default-plugin:10.0.596"
+    api "mezz.jei:jei-1.19.4-common-api:13.1.0.11"    // this is what we need for our proper JEI plugin (this is included with lib already, but yeah...)
+    api "mezz.jei:jei-1.19.4-lib:13.1.0.11"           // this is required for the additional mixin disabling JEI's default exclusion zones for mob effect widgets
+    api "me.shedaniel:RoughlyEnoughItems-api:11.0.597"
+    api "me.shedaniel:RoughlyEnoughItems-default-plugin:11.0.597"
 }
 
 loom {

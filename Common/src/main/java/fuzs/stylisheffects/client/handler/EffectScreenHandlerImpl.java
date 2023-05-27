@@ -86,8 +86,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         this.inventoryRenderer = renderer;
     }
 
-    public EventResult onRenderMobEffectIconsOverlay(PoseStack poseStack, float tickDelta, int screenWidth, int screenHeight) {
-        final Minecraft minecraft = Minecraft.getInstance();
+    public EventResult onRenderMobEffectIconsOverlay(Minecraft minecraft, PoseStack poseStack, float tickDelta, int screenWidth, int screenHeight) {
         // Forge messes up the gui overlay order and renders potion icons on top of the debug screen, so make a special case for that
         if (ModLoaderEnvironment.INSTANCE.isForge() && minecraft.options.renderDebug) return EventResult.INTERRUPT;
         getEffectRenderer(minecraft.screen, true, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
