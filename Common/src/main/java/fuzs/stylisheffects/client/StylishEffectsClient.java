@@ -7,7 +7,7 @@ import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.data.MutableBoolean;
 import fuzs.puzzleslib.api.event.v1.data.MutableInt;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.client.StylishEffectsClientApi;
+import fuzs.stylisheffects.api.client.stylisheffects.v1.EffectScreenHandler;
 import fuzs.stylisheffects.client.handler.EffectScreenHandlerImpl;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.gui.screens.Screen;
@@ -37,9 +37,8 @@ public class StylishEffectsClient implements ClientModConstructor {
 
     @Override
     public void onClientSetup(ModLifecycleContext context) {
-        StylishEffectsClientApi.setEffectScreenHandler(EffectScreenHandlerImpl.INSTANCE);
         // can't do this during construct as configs won't be loaded then
-        StylishEffectsClientApi.getEffectScreenHandler().rebuildEffectRenderers();
-        StylishEffects.CONFIG.getHolder(ClientConfig.class).accept(StylishEffectsClientApi.getEffectScreenHandler()::rebuildEffectRenderers);
+        EffectScreenHandler.INSTANCE.rebuildEffectRenderers();
+        StylishEffects.CONFIG.getHolder(ClientConfig.class).accept(EffectScreenHandler.INSTANCE::rebuildEffectRenderers);
     }
 }

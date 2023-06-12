@@ -1,5 +1,6 @@
-package fuzs.stylisheffects.api.client;
+package fuzs.stylisheffects.api.client.stylisheffects.v1;
 
+import fuzs.stylisheffects.client.handler.EffectScreenHandlerImpl;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 
@@ -7,10 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * basic methods exposed by our EffectScreenHandler for other mods (mainly JEI/REI compat)
- * obtain an active instance from {@link StylishEffectsClientApi#getEffectScreenHandler()}
+ * Basic methods exposed by our {@link EffectScreenHandlerImpl} for other mods (mainly JEI / REI compat).
  */
 public interface EffectScreenHandler {
+    EffectScreenHandler INSTANCE = EffectScreenHandlerImpl.INSTANCE;
 
     /**
      * rebuild effect renderers (only gui effect renderer actually) after e.g. a config reload

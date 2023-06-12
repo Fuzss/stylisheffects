@@ -1,6 +1,5 @@
-package fuzs.stylisheffects.api.client.event;
+package fuzs.stylisheffects.api.client.stylisheffects.v1;
 
-import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
@@ -12,7 +11,7 @@ import java.util.List;
 
 /**
  * convenient client-side events when dealing with Stylish Effect's effect widgets
- * you may also want to look at {@link fuzs.stylisheffects.api.client.EffectScreenHandler}
+ * you may also want to look at {@link EffectScreenHandler}
  */
 public class MobEffectWidgetEvent extends Event {
     /**

@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import fuzs.puzzleslib.api.config.v3.Config;
 import fuzs.puzzleslib.api.config.v3.ConfigCore;
 import fuzs.puzzleslib.api.config.v3.serialization.ConfigDataSet;
-import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;

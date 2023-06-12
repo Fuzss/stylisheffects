@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.effect.MobEffectInstance;
 
 public interface EffectWidget {
@@ -10,5 +10,5 @@ public interface EffectWidget {
 
     int getHeight();
 
-    void renderWidget(PoseStack matrixStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance);
+    void renderWidget(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance);
 }

@@ -1,18 +1,18 @@
 package fuzs.stylisheffects.client.handler;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.puzzleslib.api.client.screen.v2.ScreenHelper;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.data.DefaultedValue;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.client.EffectScreenHandler;
-import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.client.stylisheffects.v1.EffectScreenHandler;
+import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.core.ClientAbstractions;
 import fuzs.stylisheffects.client.gui.effects.*;
 import fuzs.stylisheffects.config.ClientConfig;
 import fuzs.stylisheffects.mixin.client.accessor.AbstractContainerMenuAccessor;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -86,25 +86,25 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         this.inventoryRenderer = renderer;
     }
 
-    public EventResult onRenderMobEffectIconsOverlay(Minecraft minecraft, PoseStack poseStack, float tickDelta, int screenWidth, int screenHeight) {
+    public EventResult onRenderMobEffectIconsOverlay(Minecraft minecraft, GuiGraphics guiGraphics, float tickDelta, int screenWidth, int screenHeight) {
         // Forge messes up the gui overlay order and renders potion icons on top of the debug screen, so make a special case for that
         if (ModLoaderEnvironment.INSTANCE.isForge() && minecraft.options.renderDebug) return EventResult.INTERRUPT;
         getEffectRenderer(minecraft.screen, true, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiRenderer().screenSide;
             renderer.setScreenDimensions(minecraft.gui, screenWidth, screenHeight, screenSide.right() ? screenWidth : 0, 0, screenSide);
-            renderer.renderEffects(poseStack, minecraft);
+            renderer.renderEffects(guiGraphics, minecraft);
         });
         return EventResult.INTERRUPT;
     }
 
-    public void onDrawBackground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
+    public void onDrawBackground(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int mouseX, int mouseY) {
         Minecraft minecraft = ScreenHelper.INSTANCE.getMinecraft(screen);
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
-            renderer.renderEffects(poseStack, minecraft);
+            renderer.renderEffects(guiGraphics, minecraft);
         });
     }
 
-    public void onDrawForeground(AbstractContainerScreen<?> screen, PoseStack poseStack, int mouseX, int mouseY) {
+    public void onDrawForeground(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int mouseX, int mouseY) {
         Minecraft minecraft = ScreenHelper.INSTANCE.getMinecraft(screen);
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             TooltipFlag tooltipFlag = minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL;
@@ -112,10 +112,10 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
                 if (!screen.getMenu().getCarried().isEmpty()) return;
                 // this is necessary as the foreground event runs after the container renderer has been translated to leftPos and topPos (to render slots and so on)
                 // we cannot modify mouseX and mouseY that are passed to Screen::renderComponentTooltip as that will mess with tooltip text wrapping at the screen border
-                poseStack.pushPose();
-                poseStack.translate(-ScreenHelper.INSTANCE.getLeftPos(screen), -ScreenHelper.INSTANCE.getTopPos(screen), 0.0);
-                screen.renderComponentTooltip(poseStack, tooltip, mouseX, mouseY);
-                poseStack.popPose();
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(-ScreenHelper.INSTANCE.getLeftPos(screen), -ScreenHelper.INSTANCE.getTopPos(screen), 0.0);
+                guiGraphics.renderComponentTooltip(ScreenHelper.INSTANCE.getFont(screen), tooltip, mouseX, mouseY);
+                guiGraphics.pose().popPose();
             });
         });
     }

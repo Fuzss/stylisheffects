@@ -1,14 +1,11 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 
@@ -32,11 +29,9 @@ public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
     protected abstract ClientConfig.CompactWidgetConfig widgetConfig();
 
     @Override
-    protected void drawEffectAmplifier(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
+    protected void drawEffectAmplifier(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance effectinstance) {
         ClientConfig.EffectAmplifier amplifier = this.widgetConfig().effectAmplifier;
         if (amplifier == ClientConfig.EffectAmplifier.NONE || effectinstance.getAmplifier() < 1 || effectinstance.getAmplifier() > 9) return;
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, TINY_NUMBERS_TEXTURE);
         int potionColor = ColorUtil.getEffectColor(this.widgetConfig().amplifierColor, effectinstance);
         float red = (potionColor >> 16 & 255) / 255.0F;
         float green = (potionColor >> 8 & 255) / 255.0F;
@@ -46,13 +41,13 @@ public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
         final int offsetY = this.getAmplifierOffsetY();
         // drop shadow on all sides
         RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, (float) this.rendererConfig().widgetAlpha);
-        GuiComponent.blit(poseStack, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        GuiComponent.blit(poseStack, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
         // actual number
         RenderSystem.setShaderColor(red, green, blue, (float) this.rendererConfig().widgetAlpha);
-        GuiComponent.blit(poseStack, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 }

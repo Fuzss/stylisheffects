@@ -1,6 +1,5 @@
-package fuzs.stylisheffects.api.client.event;
+package fuzs.stylisheffects.api.client.stylisheffects.v1;
 
-import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,7 +10,7 @@ import java.util.List;
 
 /**
  * convenient client-side callbacks when dealing with Stylish Effect's effect widgets
- * you may also want to look at {@link fuzs.stylisheffects.api.client.EffectScreenHandler}
+ * you may also want to look at {@link EffectScreenHandler}
  */
 public class MobEffectWidgetEvents {
     public static final Event<MouseClicked> CLICKED = EventFactory.createArrayBacked(MouseClicked.class, listeners -> (MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button) -> {

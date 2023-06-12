@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.integration.jei;
 
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.client.StylishEffectsClientApi;
+import fuzs.stylisheffects.api.client.stylisheffects.v1.EffectScreenHandler;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
@@ -26,7 +26,7 @@ public class StylishEffectsJeiPlugin implements IModPlugin {
 
             @Override
             public List<Rect2i> getGuiExtraAreas(AbstractContainerScreen<?> screen) {
-                return StylishEffectsClientApi.getEffectScreenHandler().getInventoryRenderAreas(screen);
+                return EffectScreenHandler.INSTANCE.getInventoryRenderAreas(screen);
             }
         });
     }

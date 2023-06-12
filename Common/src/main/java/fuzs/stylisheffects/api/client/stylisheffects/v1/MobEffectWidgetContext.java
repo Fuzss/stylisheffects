@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.api.client;
+package fuzs.stylisheffects.api.client.stylisheffects.v1;
 
 import net.minecraft.world.effect.MobEffectInstance;
 

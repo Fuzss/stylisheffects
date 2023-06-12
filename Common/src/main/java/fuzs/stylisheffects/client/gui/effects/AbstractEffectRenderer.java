@@ -2,9 +2,8 @@ package fuzs.stylisheffects.client.gui.effects;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.core.ClientAbstractions;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
@@ -12,12 +11,10 @@ import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.MobEffectTextureManager;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -37,7 +34,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MOD_ID,"textures/gui/mob_effect_background.png");
 
     private final EffectRendererEnvironment environment;
-    protected GuiComponent screen;
+    protected Object screen;
     private int availableWidth;
     private int availableHeight;
     private int startX;
@@ -49,7 +46,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         this.environment = environment;
     }
 
-    public void setScreenDimensions(GuiComponent screen, int availableWidth, int availableHeight, int startX, int startY, MobEffectWidgetContext.ScreenSide screenSide) {
+    public void setScreenDimensions(Object screen, int availableWidth, int availableHeight, int startX, int startY, MobEffectWidgetContext.ScreenSide screenSide) {
         this.screen = screen;
         this.availableWidth = availableWidth;
         this.availableHeight = availableHeight;
@@ -159,9 +156,9 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         return renderPositions;
     }
 
-    public void renderEffects(PoseStack poseStack, Minecraft minecraft) {
+    public void renderEffects(GuiGraphics guiGraphics, Minecraft minecraft) {
         for (Pair<MobEffectInstance, int[]> entry : this.getEffectPositions(this.activeEffects)) {
-            this.renderWidget(poseStack, entry.getValue()[0], entry.getValue()[1], minecraft, entry.getKey());
+            this.renderWidget(guiGraphics, entry.getValue()[0], entry.getValue()[1], minecraft, entry.getKey());
         }
     }
 
@@ -222,54 +219,49 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     protected abstract ClientConfig.EffectWidgetConfig widgetConfig();
 
     @Override
-    public final void renderWidget(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance) {
+    public final void renderWidget(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance effectInstance) {
         RenderSystem.enableBlend();
-        poseStack.pushPose();
+        guiGraphics.pose().pushPose();
         double scale = this.getWidgetScale();
         if (scale != 1.0) {
-            poseStack.scale((float) scale, (float) scale, 1.0F);
+            guiGraphics.pose().scale((float) scale, (float) scale, 1.0F);
             posX /= scale;
             posY /= scale;
         }
-        this.drawWidgetBackground(poseStack, posX, posY, effectInstance);
-        this.drawEffectSprite(poseStack, posX, posY, minecraft, effectInstance);
-        this.drawEffectText(poseStack, posX, posY, minecraft, effectInstance);
-        this.drawEffectAmplifier(poseStack, posX, posY, effectInstance);
-        poseStack.popPose();
+        this.drawWidgetBackground(guiGraphics, posX, posY, effectInstance);
+        this.drawEffectSprite(guiGraphics, posX, posY, minecraft, effectInstance);
+        this.drawEffectText(guiGraphics, posX, posY, minecraft, effectInstance);
+        this.drawEffectAmplifier(guiGraphics, posX, posY, effectInstance);
+        guiGraphics.pose().popPose();
     }
 
-    protected void drawWidgetBackground(PoseStack poseStack, int posX, int posY, MobEffectInstance effectInstance) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, EFFECT_BACKGROUND);
+    protected void drawWidgetBackground(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance effectInstance) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.rendererConfig().widgetAlpha);
         int backgroundY = this.getBackgroundY(effectInstance, this.widgetConfig().ambientBorder, this.widgetConfig().qualityBorder);
-        GuiComponent.blit(poseStack, posX, posY, this.getBackgroundTextureX(), this.getBackgroundTextureY() + backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256);
+        guiGraphics.blit(EFFECT_BACKGROUND, posX, posY, this.getBackgroundTextureX(), this.getBackgroundTextureY() + backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
-    protected void drawEffectSprite(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
-        if (this.drawCustomEffect(poseStack, posX, posY, effectinstance)) return;
-        MobEffectTextureManager potionspriteuploader = minecraft.getMobEffectTextures();
-        TextureAtlasSprite textureatlassprite = potionspriteuploader.get(effectinstance.getEffect());
-        RenderSystem.setShaderTexture(0, textureatlassprite.atlasLocation());
+    protected void drawEffectSprite(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
+        if (this.drawCustomEffect(guiGraphics, posX, posY, effectinstance)) return;
         float blinkingAlpha = this.widgetConfig().blinkingAlpha ? this.getBlinkingAlpha(effectinstance) : 1.0F;
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.rendererConfig().widgetAlpha);
-        GuiComponent.blit(poseStack, posX + this.getSpriteOffsetX(), posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && effectinstance.isAmbient()), 0, 18, 18, textureatlassprite);
+        TextureAtlasSprite atlasSprite = minecraft.getMobEffectTextures().get(effectinstance.getEffect());
+        guiGraphics.blit(posX + this.getSpriteOffsetX(), posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && effectinstance.isAmbient()), 0, 18, 18, atlasSprite);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
-    private boolean drawCustomEffect(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
+    private boolean drawCustomEffect(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance effectinstance) {
         // we make it possible to display effects on any container screen, so this is sometimes unusable
         if (this.screen instanceof EffectRenderingInventoryScreen<?> effectInventoryScreen) {
-            return ClientAbstractions.INSTANCE.renderInventoryIcon(effectinstance, effectInventoryScreen, poseStack, posX, posY, 0);
+            return ClientAbstractions.INSTANCE.renderInventoryIcon(effectinstance, effectInventoryScreen, guiGraphics, posX, posY, 0);
         } else if (this.screen instanceof Gui gui) {
-            return ClientAbstractions.INSTANCE.renderGuiIcon(effectinstance, gui, poseStack, posX, posY, 0, this.getBlinkingAlpha(effectinstance) * (float) this.rendererConfig().widgetAlpha);
+            return ClientAbstractions.INSTANCE.renderGuiIcon(effectinstance, gui, guiGraphics, posX, posY, 0, this.getBlinkingAlpha(effectinstance) * (float) this.rendererConfig().widgetAlpha);
         }
         return false;
     }
 
-    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
-    protected void drawEffectText(PoseStack poseStack, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
+    protected void drawEffectText(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
         if (!this.widgetConfig().ambientDuration && effectinstance.isAmbient()) return;
         this.getEffectDuration(effectinstance).ifPresent(durationComponent -> {
             int potionColor = ColorUtil.getEffectColor(this.widgetConfig().durationColor, effectinstance);
@@ -278,15 +270,15 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             // render shadow on every side to avoid clashing with colorful background
             final int offsetX = this.getDurationOffsetX();
             final int offsetY = this.getDurationOffsetY();
-            minecraft.font.draw(poseStack, text, posX + offsetX - 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha);
-            minecraft.font.draw(poseStack, text, posX + offsetX + 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha);
-            minecraft.font.draw(poseStack, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY - 1, alpha);
-            minecraft.font.draw(poseStack, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY + 1, alpha);
-            minecraft.font.draw(poseStack, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY, alpha | potionColor);
+            guiGraphics.drawString(minecraft.font, text, posX + offsetX - 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha, false);
+            guiGraphics.drawString(minecraft.font, text, posX + offsetX + 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha, false);
+            guiGraphics.drawString(minecraft.font, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY - 1, alpha, false);
+            guiGraphics.drawString(minecraft.font, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY + 1, alpha, false);
+            guiGraphics.drawString(minecraft.font, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY, alpha | potionColor, false);
         });
     }
 
-    protected void drawEffectAmplifier(PoseStack poseStack, int posX, int posY, MobEffectInstance effectinstance) {
+    protected void drawEffectAmplifier(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance effectinstance) {
 
     }
 

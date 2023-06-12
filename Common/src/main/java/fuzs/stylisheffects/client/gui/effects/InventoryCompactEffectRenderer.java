@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.client.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.network.chat.Component;
