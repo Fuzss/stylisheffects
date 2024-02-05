@@ -1,0 +1,17 @@
+apply from: 'https://raw.githubusercontent.com/Fuzss/modresources/main/gradle/common.gradle'
+
+dependencies {
+    // Puzzles Lib
+    modApi libs.puzzleslib.common
+
+    // JEI & REI
+    api libs.jeiapi.common               // this is what we need for our proper JEI plugin (this is included with lib already, but yeah...)
+    api libs.jeilibs.common              // this is required for the additional mixin disabling JEI's default exclusion zones for mob effect widgets
+    api libs.reiapi.common
+    api libs.reidefaultplugin.common
+}
+
+// @see https://github.com/jaredlll08/MultiLoader-Template/issues/17#issuecomment-1221598082
+tasks.withType(net.fabricmc.loom.task.AbstractRemapJarTask).each {
+    it.targetNamespace = "named"
+}
