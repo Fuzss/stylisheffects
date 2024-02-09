@@ -390,12 +390,27 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             textComponent.append(CommonComponents.SPACE).append(Component.literal("(").append(formatTickDuration(mobEffectInstance.getDuration())).append(")").withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(textComponent);
-        // description may be provided by Just Enough Effect Descriptions mod
-        String descriptionKey = mobEffectInstance.getEffect().getDescriptionId() + ".description";
-        if (Language.getInstance().has(descriptionKey)) {
+        String descriptionKey = getDescriptionTranslationKey(mobEffectInstance.getEffect().getDescriptionId());
+        if (descriptionKey != null) {
             tooltip.add(Component.translatable(descriptionKey).withStyle(ChatFormatting.GRAY));
         }
         return tooltip;
+    }
+
+    @Nullable
+    private static String getDescriptionTranslationKey(String id) {
+        if (Language.getInstance().has(id + ".desc")) {
+            // our own format, similar to Enchantment Descriptions mod format
+            return id + ".desc";
+        } else if (Language.getInstance().has(id + ".description")) {
+            // Just Enough Effect Descriptions mod format
+            return id + ".description";
+        } else if (Language.getInstance().has("description." + id)) {
+            // Potion Descriptions mod format
+            return "description." + id;
+        } else  {
+            return null;
+        }
     }
 
     protected MutableComponent getEffectDisplayName(MobEffectInstance mobEffectInstance) {
