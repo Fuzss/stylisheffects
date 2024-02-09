@@ -2,7 +2,6 @@ package fuzs.stylisheffects;
 
 import fuzs.puzzleslib.api.config.v3.ConfigHolder;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
-import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
@@ -16,15 +15,5 @@ public class StylishEffects implements ModConstructor {
 
     public static ResourceLocation id(String path) {
         return new ResourceLocation(MOD_ID, path);
-    }
-
-    public static boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains(".mixin.integration.jei.")) {
-            return ModLoaderEnvironment.INSTANCE.isModLoadedSafe("jei");
-        } else if (mixinClassName.contains(".mixin.integration.rei.")) {
-            return ModLoaderEnvironment.INSTANCE.isModLoadedSafe("roughlyenoughitems");
-        } else {
-            return true;
-        }
     }
 }

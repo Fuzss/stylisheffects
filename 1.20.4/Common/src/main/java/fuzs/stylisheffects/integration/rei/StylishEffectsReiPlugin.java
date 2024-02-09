@@ -1,6 +1,6 @@
 package fuzs.stylisheffects.integration.rei;
 
-import fuzs.stylisheffects.api.client.stylisheffects.v1.EffectScreenHandler;
+import fuzs.stylisheffects.api.v1.client.EffectScreenHandler;
 import me.shedaniel.math.Rectangle;
 import me.shedaniel.rei.api.client.plugins.REIClientPlugin;
 import me.shedaniel.rei.api.client.registry.screen.ExclusionZones;

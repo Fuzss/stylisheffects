@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.core.ClientAbstractions;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
@@ -9,11 +9,8 @@ import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.effect.MobEffectInstance;
-
-import java.util.Optional;
 
 public class InventoryFullSizeEffectRenderer extends AbstractEffectRenderer {
 
@@ -82,7 +79,7 @@ public class InventoryFullSizeEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance) {
-        return Optional.of(Component.literal(formatDuration(effectInstance)));
+    protected boolean isInfiniteDuration(MobEffectInstance mobEffectInstance) {
+        return mobEffectInstance.isInfiniteDuration();
     }
 }

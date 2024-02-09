@@ -1,38 +1,17 @@
-apply from: 'https://raw.githubusercontent.com/Fuzss/modresources/main/gradle/forge.gradle'
-
-def versionCatalog = extensions.getByType(VersionCatalogsExtension).named("libs")
+apply from: "https://raw.githubusercontent.com/Fuzss/modresources/main/gradle/v2/forge.gradle"
 
 dependencies {
     // Puzzles Lib
-    api fg.deobf(libs.puzzleslib.forge.get())
+    modApi libs.puzzleslib.forge
 
-    // JEI & REI
-    compileOnlyApi fg.deobf(libs.jei.forge.get())
-    compileOnlyApi fg.deobf(libs.cloth.forge.get())
-    compileOnlyApi fg.deobf(libs.architectury.forge.get())
-    compileOnlyApi fg.deobf(libs.rei.forge.get())
-    runtimeOnly fg.deobf(libs.jei.forge.get())
-//    runtimeOnly fg.deobf(libs.cloth.forge.get())
-//    runtimeOnly fg.deobf(libs.architectury.forge.get())
-//    runtimeOnly fg.deobf(libs.rei.forge.get())
+    // Just Enough Items
+    modCompileOnly libs.jeiapi.common
+//    modLocalRuntime libs.jei.forge
 
-    // Quality of Life Mods
-    versionCatalog.findLibrary("bettermodsbutton.forge").ifPresent {
-        runtimeOnly fg.deobf(it.get())
-    }
-    versionCatalog.findLibrary("forgeconfigscreens.forge").ifPresent {
-        runtimeOnly fg.deobf(it.get())
-    }
+    // Roughly Enough Items
+    modCompileOnly libs.reiapi.forge
+    modCompileOnly libs.reidefaultplugin.forge
+    modLocalRuntime libs.cloth.forge
+    modLocalRuntime libs.architectury.forge
+    modLocalRuntime libs.rei.forge
 }
-
-task signJar(type: net.minecraftforge.gradle.common.tasks.SignJar, dependsOn: tasks.reobfJarJar) {
-    onlyIf { project.hasProperty('keyStore') }
-    keyStore = project.findProperty('keyStore')
-    alias = project.findProperty('keyStoreAlias')
-    storePass = project.findProperty('keyStorePass')
-    keyPass = project.findProperty('keyStoreKeyPass')
-    inputFile = outputFile = tasks.jarJar.archivePath
-}
-
-jar.finalizedBy 'signJar'
-signJar.mustRunAfter 'reobfJar'

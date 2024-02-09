@@ -42,10 +42,6 @@ public class ClientConfig implements ConfigCore {
         return this.widgets.guiCompact;
     }
 
-    public enum LongDuration {
-        INFINITY, ASTERISKS, NONE
-    }
-
     public enum EffectAmplifier {
         NONE, TOP_LEFT, TOP_RIGHT
     }
@@ -90,6 +86,8 @@ public class ClientConfig implements ConfigCore {
         public int widgetSpaceY = 1;
         @Config(description = "Respect vanilla's \"hideParticles\" flag which prevents a status effect from showing when set via commands.")
         public boolean respectHideParticles = true;
+        @Config(description = "Prevent status effects with infinite duration from showing.")
+        public boolean hideInfiniteEffects = false;
         @Config(description = "Allow effect renderer to fall back to a more compact version (when available) if not enough screen space exists. Otherwise effect widgets might run off-screen.")
         public boolean allowFallback = true;
         @Config(description = "Custom scale for effect renderer.")
@@ -187,8 +185,8 @@ public class ClientConfig implements ConfigCore {
     public abstract static class CompactWidgetConfig extends EffectWidgetConfig {
         static final String COMPACT_DURATION_DESCRIPTION = "Display effect duration more compact, allows for always showing duration, even when it is very long.";
 
-        @Config(description = "Display string to be used for an effect duration that is too long to show.")
-        public LongDuration longDuration = LongDuration.INFINITY;
+        @Config(description = "Hide infinite symbol shown for an effect duration that is too long to fit.")
+        public boolean hideInfiniteDuration = false;
         @Config(description = "Top corner to draw effect amplifier in, or none.")
         public EffectAmplifier effectAmplifier = EffectAmplifier.TOP_RIGHT;
         @Config(name = "amplifier_color", description = "Effect amplifier color. Setting this to \"EFFECT\" will use potion color.")

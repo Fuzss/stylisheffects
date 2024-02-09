@@ -4,11 +4,8 @@ import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
 
 public class GuiSmallEffectRenderer extends GuiEffectRenderer {
 
@@ -52,7 +49,7 @@ public class GuiSmallEffectRenderer extends GuiEffectRenderer {
     }
 
     @Override
-    protected Optional<Component> getEffectDuration(MobEffectInstance effectInstance) {
-        return Optional.of(Component.literal(formatCompactTickDuration(effectInstance.getDuration())));
+    protected String formatEffectDuration(MobEffectInstance mobEffectInstance) {
+        return formatCompactTickDuration(mobEffectInstance.getDuration());
     }
 }

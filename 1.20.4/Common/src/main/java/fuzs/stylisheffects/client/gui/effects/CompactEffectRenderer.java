@@ -8,6 +8,7 @@ import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
     private static final ResourceLocation TINY_NUMBERS_TEXTURE = new ResourceLocation(StylishEffects.MOD_ID,"textures/font/tiny_numbers.png");
@@ -27,6 +28,11 @@ public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
 
     @Override
     protected abstract ClientConfig.CompactWidgetConfig widgetConfig();
+
+    @Nullable
+    protected String getInfiniteDurationString() {
+        return this.widgetConfig().hideInfiniteDuration ? null : super.getInfiniteDurationString();
+    }
 
     @Override
     protected void drawEffectAmplifier(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance effectinstance) {

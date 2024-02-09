@@ -1,12 +1,13 @@
 package fuzs.stylisheffects.client.handler;
 
-import fuzs.puzzleslib.api.client.screen.v2.ScreenHelper;
+import fuzs.puzzleslib.api.client.event.v1.gui.ScreenEvents;
+import fuzs.puzzleslib.api.client.gui.v2.screen.ScreenHelper;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.data.DefaultedValue;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.client.stylisheffects.v1.EffectScreenHandler;
-import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.v1.client.EffectScreenHandler;
+import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.core.ClientAbstractions;
 import fuzs.stylisheffects.client.gui.effects.*;
 import fuzs.stylisheffects.config.ClientConfig;
@@ -71,7 +72,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         this.createInventoryRenderer(minecraft.screen, minecraft.player);
     }
 
-    public void onAfterInit(Minecraft minecraft, Screen screen, int screenWidth, int screenHeight, List<AbstractWidget> widgets, Consumer<AbstractWidget> addWidget, Consumer<AbstractWidget> removeWidget) {
+    public void onAfterInit(Minecraft minecraft, Screen screen, int screenWidth, int screenHeight, List<AbstractWidget> widgets, ScreenEvents.ConsumingOperator<AbstractWidget> addWidget, ScreenEvents.ConsumingOperator<AbstractWidget> removeWidget) {
         this.createInventoryRenderer(screen, minecraft.player);
     }
 
@@ -88,7 +89,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
 
     public EventResult onRenderMobEffectIconsOverlay(Minecraft minecraft, GuiGraphics guiGraphics, float tickDelta, int screenWidth, int screenHeight) {
         // Forge messes up the gui overlay order and renders potion icons on top of the debug screen, so make a special case for that
-        if (ModLoaderEnvironment.INSTANCE.isForge() && minecraft.options.renderDebug) return EventResult.INTERRUPT;
+        if (ModLoaderEnvironment.INSTANCE.getModLoader().isForgeLike() && minecraft.getDebugOverlay().showDebugScreen()) return EventResult.INTERRUPT;
         getEffectRenderer(minecraft.screen, true, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiRenderer().screenSide;
             renderer.setScreenDimensions(minecraft.gui, screenWidth, screenHeight, screenSide.right() ? screenWidth : 0, 0, screenSide);

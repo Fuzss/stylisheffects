@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.client.core;
 
 import fuzs.puzzleslib.api.core.v1.ServiceProviderHelper;
-import fuzs.stylisheffects.api.client.stylisheffects.v1.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
