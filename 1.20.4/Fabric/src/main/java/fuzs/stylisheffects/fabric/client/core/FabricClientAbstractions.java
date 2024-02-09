@@ -38,7 +38,7 @@ public final class FabricClientAbstractions implements ClientAbstractions {
 
     @Override
     public boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button) {
-        return FabricMobEffectWidgetEvents.CLICKED.invoker().onEffectMouseClicked(context, screen, mouseX, mouseY, button);
+        return FabricMobEffectWidgetEvents.CLICKED.invoker().onEffectMouseClicked(context, screen, mouseX, mouseY, button).isInterrupt();
     }
 
     @Override
