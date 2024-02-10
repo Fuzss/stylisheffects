@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v8.0.2-1.20.1] - 2024-02-10
+### Fixed
+- Bump version catalogs to allow using NeoForge again
+
 ## [v8.0.1-1.20.1] - 2024-02-09
 ### Fixed
 - Fix infinite effects not showing
