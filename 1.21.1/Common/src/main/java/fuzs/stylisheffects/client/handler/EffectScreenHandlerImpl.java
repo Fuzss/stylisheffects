@@ -1,17 +1,16 @@
 package fuzs.stylisheffects.client.handler;
 
-import fuzs.puzzleslib.api.client.event.v1.gui.ScreenEvents;
-import fuzs.puzzleslib.api.client.gui.v2.screen.ScreenHelper;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.data.DefaultedValue;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.v1.client.EffectScreenHandler;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.client.core.ClientAbstractions;
+import fuzs.stylisheffects.services.ClientAbstractions;
 import fuzs.stylisheffects.client.gui.effects.*;
 import fuzs.stylisheffects.config.ClientConfig;
 import fuzs.stylisheffects.mixin.client.accessor.AbstractContainerMenuAccessor;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -33,9 +32,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 public class EffectScreenHandlerImpl implements EffectScreenHandler {
     public static final EffectScreenHandlerImpl INSTANCE = new EffectScreenHandlerImpl();
+    public static final String KEY_DEBUG_MENU_TYPE = "debug.menu.opening";
 
     @Nullable
     private AbstractEffectRenderer guiRenderer;
@@ -43,7 +44,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
     private AbstractEffectRenderer inventoryRenderer;
 
     private EffectScreenHandlerImpl() {
-
+        // NO-OP
     }
 
     @Override
@@ -72,7 +73,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         this.createInventoryRenderer(minecraft.screen, minecraft.player);
     }
 
-    public void onAfterInit(Minecraft minecraft, Screen screen, int screenWidth, int screenHeight, List<AbstractWidget> widgets, ScreenEvents.ConsumingOperator<AbstractWidget> addWidget, ScreenEvents.ConsumingOperator<AbstractWidget> removeWidget) {
+    public void onAfterInit(Minecraft minecraft, Screen screen, int screenWidth, int screenHeight, List<AbstractWidget> widgets, UnaryOperator<AbstractWidget> addWidget, Consumer<AbstractWidget> removeWidget) {
         this.createInventoryRenderer(screen, minecraft.player);
     }
 
@@ -87,35 +88,33 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         this.inventoryRenderer = renderer;
     }
 
-    public EventResult onRenderMobEffectIconsOverlay(Minecraft minecraft, GuiGraphics guiGraphics, float tickDelta, int screenWidth, int screenHeight) {
+    public EventResult onBeforeRenderGuiLayer(Minecraft minecraft, GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
         // Forge messes up the gui overlay order and renders potion icons on top of the debug screen, so make a special case for that
         if (ModLoaderEnvironment.INSTANCE.getModLoader().isForgeLike() && minecraft.getDebugOverlay().showDebugScreen()) return EventResult.INTERRUPT;
         getEffectRenderer(minecraft.screen, true, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiRenderer().screenSide;
-            renderer.setScreenDimensions(minecraft.gui, screenWidth, screenHeight, screenSide.right() ? screenWidth : 0, 0, screenSide);
+            renderer.setScreenDimensions(minecraft.gui, guiGraphics.guiWidth(), guiGraphics.guiHeight(), screenSide.right() ? guiGraphics.guiWidth() : 0, 0, screenSide);
             renderer.renderEffects(guiGraphics, minecraft);
         });
         return EventResult.INTERRUPT;
     }
 
     public void onDrawBackground(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        Minecraft minecraft = ScreenHelper.INSTANCE.getMinecraft(screen);
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
-            renderer.renderEffects(guiGraphics, minecraft);
+            renderer.renderEffects(guiGraphics, screen.minecraft);
         });
     }
 
     public void onDrawForeground(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        Minecraft minecraft = ScreenHelper.INSTANCE.getMinecraft(screen);
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
-            TooltipFlag tooltipFlag = minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL;
+            TooltipFlag tooltipFlag = screen.minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED : TooltipFlag.Default.NORMAL;
             renderer.getHoveredEffectTooltip(mouseX, mouseY, tooltipFlag).ifPresent(tooltip -> {
                 if (!screen.getMenu().getCarried().isEmpty()) return;
                 // this is necessary as the foreground event runs after the container renderer has been translated to leftPos and topPos (to render slots and so on)
                 // we cannot modify mouseX and mouseY that are passed to Screen::renderComponentTooltip as that will mess with tooltip text wrapping at the screen border
                 guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(-ScreenHelper.INSTANCE.getLeftPos(screen), -ScreenHelper.INSTANCE.getTopPos(screen), 0.0);
-                guiGraphics.renderComponentTooltip(ScreenHelper.INSTANCE.getFont(screen), tooltip, mouseX, mouseY);
+                guiGraphics.pose().translate(-screen.leftPos, -screen.topPos, 0.0);
+                guiGraphics.renderComponentTooltip(screen.font, tooltip, mouseX, mouseY);
                 guiGraphics.pose().popPose();
             });
         });
@@ -137,7 +136,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
             MenuType<?> type = ((AbstractContainerMenuAccessor) ((AbstractContainerScreen<?>) containerScreen).getMenu()).getMenuType();
             if (type != null) {
                 Component component = Component.literal(BuiltInRegistries.MENU.getKey(type).toString());
-                Minecraft.getInstance().gui.getChat().addMessage(Component.translatable("debug.menu.opening", ComponentUtils.wrapInSquareBrackets(component)));
+                Minecraft.getInstance().gui.getChat().addMessage(Component.translatable(KEY_DEBUG_MENU_TYPE, ComponentUtils.wrapInSquareBrackets(component)));
             }
         }
         return EventResult.PASS;
@@ -179,8 +178,12 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
             AbstractContainerScreen<?> containerScreen = (AbstractContainerScreen<?>) screen;
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().screenSide;
             Consumer<AbstractEffectRenderer> setScreenDimensions = renderer -> {
-                int leftPos = ScreenHelper.INSTANCE.getLeftPos(containerScreen);
-                renderer.setScreenDimensions(containerScreen, !screenSide.right() ? leftPos : containerScreen.width - (leftPos + ScreenHelper.INSTANCE.getImageWidth(containerScreen)), ScreenHelper.INSTANCE.getImageHeight(containerScreen), !screenSide.right() ? leftPos : leftPos + ScreenHelper.INSTANCE.getImageWidth(containerScreen), ScreenHelper.INSTANCE.getTopPos(containerScreen), screenSide);
+                int leftPos = containerScreen.leftPos;
+                int availableWidth =
+                        !screenSide.right() ? leftPos : containerScreen.width - (leftPos + containerScreen.imageWidth);
+                int startX = !screenSide.right() ? leftPos : leftPos + containerScreen.imageWidth;
+                renderer.setScreenDimensions(containerScreen,
+                        availableWidth, containerScreen.imageHeight, startX, containerScreen.topPos, screenSide);
             };
             AbstractEffectRenderer renderer = createRenderer(rendererType, EffectRendererEnvironment.INVENTORY);
             setScreenDimensions.accept(renderer);

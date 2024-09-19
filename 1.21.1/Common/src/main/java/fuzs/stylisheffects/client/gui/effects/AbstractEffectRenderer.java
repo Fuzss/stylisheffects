@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.client.core.ClientAbstractions;
+import fuzs.stylisheffects.services.ClientAbstractions;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
     public static final double DEFAULT_WIDGET_SCALE = 4.0;
-    protected static final ResourceLocation EFFECT_BACKGROUND = new ResourceLocation(StylishEffects.MOD_ID,"textures/gui/mob_effect_background.png");
+    protected static final ResourceLocation EFFECT_BACKGROUND = StylishEffects.id("textures/gui/mob_effect_background.png");
 
     private final EffectRendererEnvironment environment;
     protected Object screen;
@@ -296,7 +296,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             return 1;
         }
         if (showQuality) {
-            return mobEffectInstance.getEffect().isBeneficial() ? 2 : 3;
+            return mobEffectInstance.getEffect().value().isBeneficial() ? 2 : 3;
         }
         return 0;
     }
@@ -390,7 +390,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             textComponent.append(CommonComponents.SPACE).append(Component.literal("(").append(formatTickDuration(mobEffectInstance.getDuration())).append(")").withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(textComponent);
-        String descriptionKey = getDescriptionTranslationKey(mobEffectInstance.getEffect().getDescriptionId());
+        String descriptionKey = getDescriptionTranslationKey(mobEffectInstance.getEffect().value().getDescriptionId());
         if (descriptionKey != null) {
             tooltip.add(Component.translatable(descriptionKey).withStyle(ChatFormatting.GRAY));
         }
@@ -414,7 +414,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     protected MutableComponent getEffectDisplayName(MobEffectInstance mobEffectInstance) {
-        MutableComponent textComponent = Component.empty().append(mobEffectInstance.getEffect().getDisplayName());
+        MutableComponent textComponent = Component.empty().append(mobEffectInstance.getEffect().value().getDisplayName());
         String translationKey = "enchantment.level." + (mobEffectInstance.getAmplifier() + 1);
         if (mobEffectInstance.getAmplifier() >= 1 && mobEffectInstance.getAmplifier() <= 9 || Language.getInstance().has(translationKey)) {
             textComponent.append(" ").append(Component.translatable(translationKey));

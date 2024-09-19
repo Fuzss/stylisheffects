@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.client.core;
+package fuzs.stylisheffects.services;
 
 import fuzs.puzzleslib.api.core.v1.ServiceProviderHelper;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;

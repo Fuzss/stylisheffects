@@ -2,7 +2,7 @@ package fuzs.stylisheffects.client.gui.effects;
 
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.client.core.ClientAbstractions;
+import fuzs.stylisheffects.services.ClientAbstractions;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;

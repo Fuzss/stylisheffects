@@ -11,7 +11,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
-    private static final ResourceLocation TINY_NUMBERS_TEXTURE = new ResourceLocation(StylishEffects.MOD_ID,"textures/font/tiny_numbers.png");
+    private static final ResourceLocation TINY_NUMBERS_TEXTURE = StylishEffects.id("textures/font/tiny_numbers.png");
 
     public CompactEffectRenderer(EffectRendererEnvironment environment) {
         super(environment);

@@ -3,6 +3,7 @@ package fuzs.stylisheffects.client.gui.effects;
 import com.google.common.collect.Lists;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
+import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.apache.commons.lang3.tuple.Pair;
@@ -51,7 +52,7 @@ public abstract class GuiEffectRenderer extends CompactEffectRenderer {
         List<Pair<MobEffectInstance, int[]>> effectToPos = Lists.newArrayList();
         for (MobEffectInstance effect : activeEffects) {
             int counter;
-            boolean beneficial = !this.widgetConfig().separateEffects || effect.getEffect().isBeneficial();
+            boolean beneficial = !this.widgetConfig().separateEffects || effect.getEffect().value().isBeneficial();
             if (beneficial) {
                 counter = beneficialCounter++;
             } else {
@@ -66,7 +67,7 @@ public abstract class GuiEffectRenderer extends CompactEffectRenderer {
         }
         // sorting is need for rendering in condensed mode (when too many effects are active and the widget overlap) so that widget overlap in the right order
         if (this.widgetConfig().separateEffects) {
-            effectToPos.sort(Comparator.<Pair<MobEffectInstance, int[]>, Boolean>comparing(o -> o.getLeft().getEffect().isBeneficial()).reversed());
+            effectToPos.sort(Comparator.<Pair<MobEffectInstance, int[]>, Boolean>comparing(o -> o.getLeft().getEffect().value().isBeneficial()).reversed());
         }
         if (beneficialCounter + harmfulCounter != activeEffects.size()) throw new RuntimeException("Effects amount mismatch");
         return effectToPos;
@@ -75,6 +76,7 @@ public abstract class GuiEffectRenderer extends CompactEffectRenderer {
     private int countBeneficialEffects(List<MobEffectInstance> activeEffects) {
         return (int) activeEffects.stream()
                 .map(MobEffectInstance::getEffect)
+                .map(Holder::value)
                 .filter(MobEffect::isBeneficial)
                 .count();
     }

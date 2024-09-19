@@ -1,15 +1,20 @@
 package fuzs.stylisheffects.client.util;
 
-import com.google.common.collect.Lists;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.PotionContents;
+
+import java.util.Collections;
 
 public class ColorUtil {
 
-    public static int getEffectColor(ChatFormatting color, MobEffectInstance effectinstance) {
-        if (color != null) return color.getColor();
-        return brightenColor(PotionUtils.getColor(Lists.newArrayList(effectinstance)));
+    public static int getEffectColor(ChatFormatting chatFormatting, MobEffectInstance mobEffectInstance) {
+        if (chatFormatting != null) {
+            return chatFormatting.getColor();
+        } else {
+            int color = PotionContents.getColor(Collections.singleton(mobEffectInstance));
+            return brightenColor(color);
+        }
     }
 
     private static int brightenColor(int potionColor) {
