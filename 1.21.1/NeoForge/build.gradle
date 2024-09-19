@@ -1,0 +1,17 @@
+apply from: "https://raw.githubusercontent.com/Fuzss/modresources/main/gradle/v2/neoforge.gradle"
+
+dependencies {
+    // Puzzles Lib
+    modApi libs.puzzleslib.neoforge
+
+    // Just Enough Items
+    modCompileOnly libs.jeiapi.common
+//    modLocalRuntime libs.jei.neoforge
+
+    // Roughly Enough Items
+    modCompileOnly libs.reiapi.neoforge
+    modCompileOnly libs.reidefaultplugin.neoforge
+    modLocalRuntime libs.cloth.neoforge
+    modLocalRuntime libs.architectury.neoforge
+    modLocalRuntime libs.rei.neoforge
+}
