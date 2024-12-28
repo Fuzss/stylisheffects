@@ -7,7 +7,6 @@
     "integration.rei.DefaultPotionEffectExclusionZonesMixin"
   ],
   "client": [
-    "client.accessor.AbstractContainerMenuAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

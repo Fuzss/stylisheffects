@@ -4,22 +4,25 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.services.ClientAbstractions;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
+import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -245,69 +248,70 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     protected void drawWidgetBackground(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffectInstance) {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, (float) this.rendererConfig().widgetAlpha);
         int backgroundY = this.getBackgroundY(mobEffectInstance, this.widgetConfig().ambientBorder, this.widgetConfig().qualityBorder);
-        guiGraphics.blit(EFFECT_BACKGROUND, posX, posY, this.getBackgroundTextureX(), this.getBackgroundTextureY() + backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        int colorValue = ARGB.white((float) this.rendererConfig().widgetAlpha);
+        guiGraphics.blit(RenderType::guiTextured, EFFECT_BACKGROUND, posX, posY, this.getBackgroundTextureX(), this.getBackgroundTextureY() + backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256, colorValue);
     }
 
     protected void drawEffectSprite(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance mobEffectInstance) {
         if (this.drawCustomEffect(guiGraphics, posX, posY, mobEffectInstance)) return;
         float blinkingAlpha = this.widgetConfig().blinkingAlpha ? this.getBlinkingAlpha(mobEffectInstance) : 1.0F;
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, blinkingAlpha * (float) this.rendererConfig().widgetAlpha);
+        int colorValue = ARGB.white(blinkingAlpha * (float) this.rendererConfig().widgetAlpha);
         TextureAtlasSprite atlasSprite = minecraft.getMobEffectTextures().get(mobEffectInstance.getEffect());
-        guiGraphics.blit(posX + this.getSpriteOffsetX(), posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && mobEffectInstance.isAmbient()), 0, 18, 18, atlasSprite);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        guiGraphics.blitSprite(RenderType::guiTextured, atlasSprite, posX + this.getSpriteOffsetX(), posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && mobEffectInstance.isAmbient()), 18, 18, colorValue);
     }
 
     private boolean drawCustomEffect(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffectInstance) {
         // we make it possible to display effects on any container screen, so this is sometimes unusable
-        if (this.screen instanceof EffectRenderingInventoryScreen<?> effectInventoryScreen) {
-            return ClientAbstractions.INSTANCE.renderInventoryIcon(mobEffectInstance, effectInventoryScreen, guiGraphics, posX, posY, 0);
+        if (this.screen instanceof AbstractContainerScreen<?> screen && screen.showsActiveEffects()) {
+            return ClientAbstractions.INSTANCE.renderInventoryIcon(mobEffectInstance, screen, guiGraphics, posX, posY, 0);
         } else if (this.screen instanceof Gui gui) {
             return ClientAbstractions.INSTANCE.renderGuiIcon(mobEffectInstance, gui, guiGraphics, posX, posY, 0, this.getBlinkingAlpha(mobEffectInstance) * (float) this.rendererConfig().widgetAlpha);
+        } else {
+            return false;
         }
-        return false;
     }
 
     protected void drawEffectText(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance mobEffectInstance) {
         if (!this.widgetConfig().ambientDuration && mobEffectInstance.isAmbient()) return;
         this.getEffectDuration(mobEffectInstance).ifPresent(durationComponent -> {
             int potionColor = ColorUtil.getEffectColor(this.widgetConfig().durationColor, mobEffectInstance);
-            int alpha = (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24;
+            int colorValue = ARGB.color(ARGB.as8BitChannel((float) this.rendererConfig().widgetAlpha), potionColor);
+            int backgroundColorValue = ARGB.color(ARGB.as8BitChannel((float) this.rendererConfig().widgetAlpha), 0);
             FormattedCharSequence text = durationComponent.getVisualOrderText();
             // render shadow on every side to avoid clashing with colorful background
             final int offsetX = this.getDurationOffsetX();
             final int offsetY = this.getDurationOffsetY();
-            guiGraphics.drawString(minecraft.font, text, posX + offsetX - 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha, false);
-            guiGraphics.drawString(minecraft.font, text, posX + offsetX + 1 - minecraft.font.width(text) / 2, posY + offsetY, alpha, false);
-            guiGraphics.drawString(minecraft.font, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY - 1, alpha, false);
-            guiGraphics.drawString(minecraft.font, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY + 1, alpha, false);
-            guiGraphics.drawString(minecraft.font, text, posX + offsetX - minecraft.font.width(text) / 2, posY + offsetY, alpha | potionColor, false);
+            guiGraphics.drawSpecial((MultiBufferSource bufferSource) -> {
+                minecraft.font.drawInBatch8xOutline(text, posX + offsetX - minecraft.font.width(text) / 2.0F, posY + offsetY, colorValue, backgroundColorValue, guiGraphics.pose().last()
+                        .pose(), bufferSource,
+                        0XF000F0);
+            });
         });
     }
 
     protected void drawEffectAmplifier(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffectInstance) {
-
+        // NO-OP
     }
 
     protected int getBackgroundY(MobEffectInstance mobEffectInstance, boolean showAmbient, boolean showQuality) {
         if (showAmbient && mobEffectInstance.isAmbient()) {
             return 1;
-        }
-        if (showQuality) {
+        } else if (showQuality) {
             return mobEffectInstance.getEffect().value().isBeneficial() ? 2 : 3;
+        } else {
+            return 0;
         }
-        return 0;
     }
 
     protected final Optional<Component> getEffectDuration(MobEffectInstance mobEffectInstance) {
         if (this.isInfiniteDuration(mobEffectInstance)) {
             return Optional.ofNullable(this.getInfiniteDurationString()).map(Component::literal);
+        } else {
+            return Optional.of(Component.literal(this.formatEffectDuration(mobEffectInstance)));
         }
-        return Optional.of(Component.literal(this.formatEffectDuration(mobEffectInstance)));
     }
-    
+
     @Nullable
     protected String getInfiniteDurationString() {
         return "\u221e";
@@ -362,8 +366,9 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
                         ClientAbstractions.INSTANCE.onGatherEffectTooltipLines(this.buildContext(mobEffectInstance), tooltipLines, tooltipFlag);
                         return tooltipLines;
                     });
+        } else {
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     public MobEffectWidgetContext buildContext(MobEffectInstance mobEffectInstance) {
@@ -419,6 +424,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         if (mobEffectInstance.getAmplifier() >= 1 && mobEffectInstance.getAmplifier() <= 9 || Language.getInstance().has(translationKey)) {
             textComponent.append(" ").append(Component.translatable(translationKey));
         }
+
         return textComponent;
     }
 }

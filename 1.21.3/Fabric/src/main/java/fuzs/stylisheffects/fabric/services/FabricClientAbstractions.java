@@ -1,13 +1,13 @@
 package fuzs.stylisheffects.fabric.services;
 
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
+import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.fabric.api.v1.client.FabricMobEffectWidgetEvents;
 import fuzs.stylisheffects.services.ClientAbstractions;
-import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.TooltipFlag;
@@ -22,12 +22,12 @@ public final class FabricClientAbstractions implements ClientAbstractions {
     }
 
     @Override
-    public boolean renderInventoryText(MobEffectInstance effectInstance, EffectRenderingInventoryScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
+    public boolean renderInventoryText(MobEffectInstance effectInstance, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
         return false;
     }
 
     @Override
-    public boolean renderInventoryIcon(MobEffectInstance effectInstance, EffectRenderingInventoryScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
+    public boolean renderInventoryIcon(MobEffectInstance effectInstance, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
         return false;
     }
 
@@ -38,7 +38,9 @@ public final class FabricClientAbstractions implements ClientAbstractions {
 
     @Override
     public boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button) {
-        return FabricMobEffectWidgetEvents.CLICKED.invoker().onEffectMouseClicked(context, screen, mouseX, mouseY, button).isInterrupt();
+        return FabricMobEffectWidgetEvents.CLICKED.invoker()
+                .onEffectMouseClicked(context, screen, mouseX, mouseY, button)
+                .isInterrupt();
     }
 
     @Override

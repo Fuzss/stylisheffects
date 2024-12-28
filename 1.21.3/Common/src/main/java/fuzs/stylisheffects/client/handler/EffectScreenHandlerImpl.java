@@ -2,22 +2,21 @@ package fuzs.stylisheffects.client.handler;
 
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
-import fuzs.puzzleslib.api.event.v1.data.DefaultedValue;
+import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.v1.client.EffectScreenHandler;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.services.ClientAbstractions;
 import fuzs.stylisheffects.client.gui.effects.*;
 import fuzs.stylisheffects.config.ClientConfig;
-import fuzs.stylisheffects.mixin.client.accessor.AbstractContainerMenuAccessor;
+import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
-import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
+import net.minecraft.client.gui.screens.inventory.AbstractRecipeBookScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -88,13 +87,13 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         this.inventoryRenderer = renderer;
     }
 
-    public EventResult onBeforeRenderGuiLayer(Minecraft minecraft, GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
+    public EventResult onBeforeRenderGuiLayer(Gui gui, GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
         // Forge messes up the gui overlay order and renders potion icons on top of the debug screen, so make a special case for that
-        if (ModLoaderEnvironment.INSTANCE.getModLoader().isForgeLike() && minecraft.getDebugOverlay().showDebugScreen()) return EventResult.INTERRUPT;
-        getEffectRenderer(minecraft.screen, true, this.guiRenderer, minecraft.player.getActiveEffects()).ifPresent(renderer -> {
+        if (ModLoaderEnvironment.INSTANCE.getModLoader().isForgeLike() && gui.minecraft.getDebugOverlay().showDebugScreen()) return EventResult.INTERRUPT;
+        getEffectRenderer(gui.minecraft.screen, true, this.guiRenderer, gui.minecraft.player.getActiveEffects()).ifPresent(renderer -> {
             MobEffectWidgetContext.ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiRenderer().screenSide;
-            renderer.setScreenDimensions(minecraft.gui, guiGraphics.guiWidth(), guiGraphics.guiHeight(), screenSide.right() ? guiGraphics.guiWidth() : 0, 0, screenSide);
-            renderer.renderEffects(guiGraphics, minecraft);
+            renderer.setScreenDimensions(gui, guiGraphics.guiWidth(), guiGraphics.guiHeight(), screenSide.right() ? guiGraphics.guiWidth() : 0, 0, screenSide);
+            renderer.renderEffects(guiGraphics, gui.minecraft);
         });
         return EventResult.INTERRUPT;
     }
@@ -130,16 +129,16 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         return EventResult.PASS;
     }
 
-    public EventResult onScreenOpen(@Nullable Screen oldScreen, DefaultedValue<Screen> newScreen) {
-        if (newScreen.get() instanceof AbstractContainerScreen<?> containerScreen && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().debugContainerTypes) {
+    public EventResultHolder<@Nullable Screen> onScreenOpening(@Nullable Screen oldScreen, @Nullable Screen newScreen) {
+        if (newScreen instanceof AbstractContainerScreen<?> abstractContainerScreen && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().debugContainerTypes) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
-            MenuType<?> type = ((AbstractContainerMenuAccessor) ((AbstractContainerScreen<?>) containerScreen).getMenu()).getMenuType();
-            if (type != null) {
-                Component component = Component.literal(BuiltInRegistries.MENU.getKey(type).toString());
+            MenuType<?> menuType = abstractContainerScreen.getMenu().menuType;
+            if (menuType != null) {
+                Component component = Component.literal(BuiltInRegistries.MENU.getKey(menuType).toString());
                 Minecraft.getInstance().gui.getChat().addMessage(Component.translatable(KEY_DEBUG_MENU_TYPE, ComponentUtils.wrapInSquareBrackets(component)));
             }
         }
-        return EventResult.PASS;
+        return EventResultHolder.pass();
     }
 
     private static Optional<AbstractEffectRenderer> getEffectRenderer(Screen screen, @Nullable AbstractEffectRenderer effectRenderer) {
@@ -201,19 +200,21 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
     private static boolean supportsEffectsDisplay(@Nullable Screen screen) {
         if (screen instanceof AbstractContainerScreen<?> containerScreen) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
-            MenuType<?> type = ((AbstractContainerMenuAccessor) ((AbstractContainerScreen<?>) containerScreen).getMenu()).getMenuType();
-            if (type != null && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().menuBlacklist.contains(type)) {
+            MenuType<?> menuType = containerScreen.getMenu().menuType;
+            if (menuType != null && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().menuBlacklist.contains(menuType)) {
                 return false;
             }
         }
-        if (screen instanceof EffectRenderingInventoryScreen || StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().effectsEverywhere && screen instanceof AbstractContainerScreen) {
-            if (screen instanceof RecipeUpdateListener listener) {
-                if (listener.getRecipeBookComponent().isVisible()) {
+        if (screen instanceof AbstractContainerScreen && (screen.showsActiveEffects() || StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().effectsEverywhere)) {
+            if (screen instanceof AbstractRecipeBookScreen<?> abstractRecipeBookScreen) {
+                if (abstractRecipeBookScreen.recipeBookComponent.isVisible()) {
                     return StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().screenSide.right();
                 }
             }
+
             return true;
         }
+
         return false;
     }
 }

@@ -5,7 +5,7 @@ dependencies {
     modApi libs.puzzleslib.neoforge
 
     // Just Enough Items
-    modCompileOnly libs.jeiapi.common
+//    modCompileOnly libs.jeiapi.common
 //    modLocalRuntime libs.jei.neoforge
 
     // Roughly Enough Items

@@ -1,12 +1,13 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,25 +36,21 @@ public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    protected void drawEffectAmplifier(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance effectinstance) {
-        ClientConfig.EffectAmplifier amplifier = this.widgetConfig().effectAmplifier;
-        if (amplifier == ClientConfig.EffectAmplifier.NONE || effectinstance.getAmplifier() < 1 || effectinstance.getAmplifier() > 9) return;
-        int potionColor = ColorUtil.getEffectColor(this.widgetConfig().amplifierColor, effectinstance);
-        float red = (potionColor >> 16 & 255) / 255.0F;
-        float green = (potionColor >> 8 & 255) / 255.0F;
-        float blue = (potionColor >> 0 & 255) / 255.0F;
+    protected void drawEffectAmplifier(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffectInstance) {
+        ClientConfig.EffectAmplifier effectAmplifier = this.widgetConfig().effectAmplifier;
+        if (effectAmplifier == ClientConfig.EffectAmplifier.NONE || mobEffectInstance.getAmplifier() < 1 || mobEffectInstance.getAmplifier() > 9) return;
+        int potionColor = ColorUtil.getEffectColor(this.widgetConfig().amplifierColor, mobEffectInstance);
         // subtract amplifier width of 3
-        final int offsetX = amplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? this.getAmplifierOffsetX() : this.getWidth() - this.getAmplifierOffsetX() - 3;
+        final int offsetX = effectAmplifier == ClientConfig.EffectAmplifier.TOP_LEFT ? this.getAmplifierOffsetX() : this.getWidth() - this.getAmplifierOffsetX() - 3;
         final int offsetY = this.getAmplifierOffsetY();
         // drop shadow on all sides
-        RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, (float) this.rendererConfig().widgetAlpha);
-        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX - 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX + 1, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY - 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY + 1, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
+        int colorValue = ARGB.color(ARGB.as8BitChannel((float) this.rendererConfig().widgetAlpha), 0);
+        guiGraphics.blit(RenderType::guiTextured, TINY_NUMBERS_TEXTURE, posX + offsetX - 1, posY + offsetY, 5 * (mobEffectInstance.getAmplifier() + 1), 0, 3, 5, 256, 256, colorValue);
+        guiGraphics.blit(RenderType::guiTextured, TINY_NUMBERS_TEXTURE, posX + offsetX + 1, posY + offsetY, 5 * (mobEffectInstance.getAmplifier() + 1), 0, 3, 5, 256, 256, colorValue);
+        guiGraphics.blit(RenderType::guiTextured, TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY - 1, 5 * (mobEffectInstance.getAmplifier() + 1), 0, 3, 5, 256, 256, colorValue);
+        guiGraphics.blit(RenderType::guiTextured, TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY + 1, 5 * (mobEffectInstance.getAmplifier() + 1), 0, 3, 5, 256, 256, colorValue);
         // actual number
-        RenderSystem.setShaderColor(red, green, blue, (float) this.rendererConfig().widgetAlpha);
-        guiGraphics.blit(TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY, 5 * (effectinstance.getAmplifier() + 1), 0, 3, 5, 256, 256);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        colorValue = ARGB.color(ARGB.as8BitChannel((float) this.rendererConfig().widgetAlpha), potionColor);
+        guiGraphics.blit(RenderType::guiTextured, TINY_NUMBERS_TEXTURE, posX + offsetX, posY + offsetY, 5 * (mobEffectInstance.getAmplifier() + 1), 0, 3, 5, 256, 256, colorValue);
     }
 }

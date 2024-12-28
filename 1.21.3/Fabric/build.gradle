@@ -8,13 +8,13 @@ dependencies {
     modApi libs.puzzleslib.fabric
 
     // Just Enough Items
-    modCompileOnly libs.jeiapi.common
-    modLocalRuntime libs.jei.fabric
+//    modCompileOnly libs.jeiapi.common
+//    modLocalRuntime libs.jei.fabric
 
     // Roughly Enough Items
     modCompileOnly libs.reiapi.fabric
     modCompileOnly libs.reidefaultplugin.fabric
-//    modLocalRuntime libs.cloth.fabric
-//    modLocalRuntime libs.architectury.fabric
-//    modLocalRuntime libs.rei.fabric
+    modLocalRuntime libs.cloth.fabric
+    modLocalRuntime libs.architectury.fabric
+    modLocalRuntime libs.rei.fabric
 }
