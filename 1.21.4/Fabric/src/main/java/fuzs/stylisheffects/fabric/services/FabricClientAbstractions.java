@@ -1,7 +1,8 @@
 package fuzs.stylisheffects.fabric.services;
 
+import fuzs.puzzleslib.fabric.api.event.v1.core.FabricEventInvokerRegistry;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
+import fuzs.stylisheffects.api.v1.client.MobEffectWidgetEvents;
 import fuzs.stylisheffects.fabric.api.v1.client.FabricMobEffectWidgetEvents;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.gui.Gui;
@@ -15,11 +16,6 @@ import net.minecraft.world.item.TooltipFlag;
 import java.util.List;
 
 public final class FabricClientAbstractions implements ClientAbstractions {
-
-    @Override
-    public boolean isMobEffectVisibleIn(EffectRendererEnvironment effectRendererEnvironment, MobEffectInstance effectInstance) {
-        return true;
-    }
 
     @Override
     public boolean renderInventoryText(MobEffectInstance effectInstance, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
@@ -46,5 +42,13 @@ public final class FabricClientAbstractions implements ClientAbstractions {
     @Override
     public void onGatherEffectTooltipLines(MobEffectWidgetContext context, List<Component> tooltipLines, TooltipFlag tooltipFlag) {
         FabricMobEffectWidgetEvents.TOOLTIP.invoker().onGatherEffectTooltipLines(context, tooltipLines, tooltipFlag);
+    }
+
+    @Override
+    public void registerEventHandlers() {
+        FabricEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.MouseClicked.class,
+                FabricMobEffectWidgetEvents.CLICKED);
+        FabricEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.EffectTooltip.class,
+                FabricMobEffectWidgetEvents.TOOLTIP);
     }
 }

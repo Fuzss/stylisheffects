@@ -1,11 +1,7 @@
 package fuzs.stylisheffects.neoforge.api.v1.client;
 
-import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
-import fuzs.puzzleslib.api.event.v1.core.EventResult;
-import fuzs.puzzleslib.neoforge.api.event.v1.core.NeoForgeEventInvokerRegistry;
 import fuzs.stylisheffects.api.v1.client.EffectScreenHandler;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetEvents;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
@@ -33,20 +29,6 @@ public class NeoForgeMobEffectWidgetEvent extends Event {
      */
     public MobEffectWidgetContext getContext() {
         return this.context;
-    }
-
-    static {
-        if (ModLoaderEnvironment.INSTANCE.isClient()) {
-            NeoForgeEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.MouseClicked.class, MouseClicked.class, (MobEffectWidgetEvents.MouseClicked callback, MouseClicked evt) -> {
-                EventResult result = callback.onEffectMouseClicked(evt.context, evt.screen, evt.mouseX, evt.mouseY,
-                        evt.button
-                );
-                if (result.isInterrupt()) evt.setCanceled(true);
-            });
-            NeoForgeEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.EffectTooltip.class, EffectTooltip.class, (MobEffectWidgetEvents.EffectTooltip callback, EffectTooltip evt) -> {
-                callback.onGatherEffectTooltipLines(evt.context, evt.tooltipLines, evt.tooltipFlag);
-            });
-        }
     }
 
     /**

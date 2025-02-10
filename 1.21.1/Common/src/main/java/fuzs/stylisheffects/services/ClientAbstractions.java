@@ -27,4 +27,6 @@ public interface ClientAbstractions {
     boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button);
 
     void onGatherEffectTooltipLines(MobEffectWidgetContext context, List<Component> tooltipLines, TooltipFlag tooltipFlag);
+
+    void registerEventHandlers();
 }

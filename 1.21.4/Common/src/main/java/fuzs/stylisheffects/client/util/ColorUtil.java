@@ -12,7 +12,8 @@ public class ColorUtil {
         if (chatFormatting != null) {
             return chatFormatting.getColor();
         } else {
-            int color = PotionContents.getColor(Collections.singleton(mobEffectInstance));
+            int color = PotionContents.getColorOptional(Collections.singleton(mobEffectInstance))
+                    .orElse(PotionContents.BASE_POTION_COLOR);
             return brightenColor(color);
         }
     }
@@ -32,7 +33,8 @@ public class ColorUtil {
     }
 
     /**
-     * from <a href="https://stackoverflow.com/questions/141855/programmatically-lighten-a-color">programmatically-lighten-a-color</a>
+     * Copied from <a
+     * href="https://stackoverflow.com/questions/141855/programmatically-lighten-a-color">programmatically-lighten-a-color</a>.
      */
     private static void redistributeColors(int[] color) {
         int max = Math.max(color[0], Math.max(color[1], color[2]));

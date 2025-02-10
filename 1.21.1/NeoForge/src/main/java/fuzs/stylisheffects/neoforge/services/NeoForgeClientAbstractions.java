@@ -1,6 +1,9 @@
 package fuzs.stylisheffects.neoforge.services;
 
+import fuzs.puzzleslib.api.event.v1.core.EventResult;
+import fuzs.puzzleslib.neoforge.api.event.v1.core.NeoForgeEventInvokerRegistry;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
+import fuzs.stylisheffects.api.v1.client.MobEffectWidgetEvents;
 import fuzs.stylisheffects.neoforge.api.v1.client.NeoForgeMobEffectWidgetEvent;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
@@ -49,5 +52,24 @@ public final class NeoForgeClientAbstractions implements ClientAbstractions {
     @Override
     public void onGatherEffectTooltipLines(MobEffectWidgetContext context, List<Component> tooltipLines, TooltipFlag tooltipFlag) {
         NeoForge.EVENT_BUS.post(new NeoForgeMobEffectWidgetEvent.EffectTooltip(context, tooltipLines, tooltipFlag));
+    }
+
+    @Override
+    public void registerEventHandlers() {
+        NeoForgeEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.MouseClicked.class,
+                NeoForgeMobEffectWidgetEvent.MouseClicked.class,
+                (MobEffectWidgetEvents.MouseClicked callback, NeoForgeMobEffectWidgetEvent.MouseClicked evt) -> {
+                    EventResult result = callback.onEffectMouseClicked(evt.getContext(),
+                            evt.getScreen(),
+                            evt.getMouseX(),
+                            evt.getMouseY(),
+                            evt.getButton());
+                    if (result.isInterrupt()) evt.setCanceled(true);
+                });
+        NeoForgeEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.EffectTooltip.class,
+                NeoForgeMobEffectWidgetEvent.EffectTooltip.class,
+                (MobEffectWidgetEvents.EffectTooltip callback, NeoForgeMobEffectWidgetEvent.EffectTooltip evt) -> {
+                    callback.onGatherEffectTooltipLines(evt.getContext(), evt.getTooltipLines(), evt.getTooltipFlag());
+                });
     }
 }

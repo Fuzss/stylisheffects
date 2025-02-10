@@ -35,7 +35,8 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
     public static final double DEFAULT_WIDGET_SCALE = 4.0;
-    protected static final ResourceLocation EFFECT_BACKGROUND = StylishEffects.id("textures/gui/mob_effect_background.png");
+    protected static final ResourceLocation EFFECT_BACKGROUND = StylishEffects.id(
+            "textures/gui/mob_effect_background.png");
 
     private final EffectRendererEnvironment environment;
     protected Object screen;
@@ -62,10 +63,12 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
                 this.screenSide = this.screenSide.inverse();
                 this.availableWidth -= ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetX;
                 this.availableHeight -= ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetY;
-                this.startX += (this.screenSide.right() ? 1 : -1) * ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetX;
+                this.startX += (this.screenSide.right() ? 1 : -1) *
+                        ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetX;
                 this.startY += ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetY;
             }
-            case INVENTORY -> this.availableWidth -= ((ClientConfig.InventoryRendererConfig) this.rendererConfig()).screenBorderDistance;
+            case INVENTORY ->
+                    this.availableWidth -= ((ClientConfig.InventoryRendererConfig) this.rendererConfig()).screenBorderDistance;
         }
     }
 
@@ -80,13 +83,19 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
                 .collect(Collectors.toList());
     }
 
-    private boolean isEffectAllowedToShow(MobEffectInstance mobEffectInstance) {
-        if (mobEffectInstance.isInfiniteDuration() && this.rendererConfig().hideInfiniteEffects) {
+    private boolean isEffectAllowedToShow(MobEffectInstance mobEffect) {
+        if (mobEffect.isInfiniteDuration() && this.rendererConfig().hideInfiniteEffects) {
             return false;
-        } else if (!mobEffectInstance.showIcon() && this.rendererConfig().respectHideParticles) {
+        } else if (!mobEffect.showIcon() && this.rendererConfig().respectHideParticles) {
             return false;
         } else {
-            return ClientAbstractions.INSTANCE.isMobEffectVisibleIn(this.environment, mobEffectInstance);
+            return switch (this.environment) {
+                case GUI ->
+                        fuzs.puzzleslib.api.client.core.v1.ClientAbstractions.INSTANCE.isEffectVisibleInGui(mobEffect);
+                case INVENTORY ->
+                        fuzs.puzzleslib.api.client.core.v1.ClientAbstractions.INSTANCE.isEffectVisibleInInventory(
+                                mobEffect);
+            };
         }
     }
 
@@ -133,7 +142,8 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
 
     @Override
     public List<Rect2i> getRenderAreas() {
-        return this.getEffectPositions(this.activeEffects).stream()
+        return this.getEffectPositions(this.activeEffects)
+                .stream()
                 .map(Pair::getValue)
                 .map(pos -> new Rect2i(pos[0], pos[1], this.getScaledWidth(), this.getScaledHeight()))
                 .collect(Collectors.toList());
@@ -157,11 +167,13 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         int[] renderPositions = new int[2];
         switch (this.screenSide) {
             case LEFT -> {
-                renderPositions[0] = this.startX - (this.getScaledWidth() + 1) - (this.getScaledWidth() + this.rendererConfig().widgetSpaceX) * coordX;
+                renderPositions[0] = this.startX - (this.getScaledWidth() + 1) -
+                        (this.getScaledWidth() + this.rendererConfig().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
             }
             case RIGHT -> {
-                renderPositions[0] = this.startX + 1 + (this.getScaledWidth() + this.rendererConfig().widgetSpaceX) * coordX;
+                renderPositions[0] =
+                        this.startX + 1 + (this.getScaledWidth() + this.rendererConfig().widgetSpaceX) * coordX;
                 renderPositions[1] = this.startY + this.getTopOffset() + this.getAdjustedHeight() * coordY;
             }
         }
@@ -175,19 +187,24 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     protected float getBlinkingAlpha(MobEffectInstance mobEffectInstance) {
-        if (!mobEffectInstance.isAmbient() && !mobEffectInstance.isInfiniteDuration() && mobEffectInstance.getDuration() <= 200) {
+        if (!mobEffectInstance.isAmbient() && !mobEffectInstance.isInfiniteDuration() &&
+                mobEffectInstance.getDuration() <= 200) {
             int duration = 10 - mobEffectInstance.getDuration() / 20;
-            return Mth.clamp((float) mobEffectInstance.getDuration() / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F) + Mth.cos((float) mobEffectInstance.getDuration() * (float)Math.PI / 5.0F) * Mth.clamp((float) duration / 10.0F * 0.25F, 0.0F, 0.25F);
+            return Mth.clamp((float) mobEffectInstance.getDuration() / 10.0F / 5.0F * 0.5F, 0.0F, 0.5F) +
+                    Mth.cos((float) mobEffectInstance.getDuration() * (float) Math.PI / 5.0F) *
+                            Mth.clamp((float) duration / 10.0F * 0.25F, 0.0F, 0.25F);
         }
         return 1.0F;
     }
 
     private int getAvailableWidth() {
-        return Math.min(this.availableWidth, this.rendererConfig().maxColumns * (this.getScaledWidth() + this.rendererConfig().widgetSpaceX));
+        return Math.min(this.availableWidth,
+                this.rendererConfig().maxColumns * (this.getScaledWidth() + this.rendererConfig().widgetSpaceX));
     }
 
     private int getAvailableHeight() {
-        return Math.min(this.availableHeight, this.rendererConfig().maxRows * (this.getScaledHeight() + this.rendererConfig().widgetSpaceY));
+        return Math.min(this.availableHeight,
+                this.rendererConfig().maxRows * (this.getScaledHeight() + this.rendererConfig().widgetSpaceY));
     }
 
     private int getMaxColumns() {
@@ -248,9 +265,21 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     protected void drawWidgetBackground(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffectInstance) {
-        int backgroundY = this.getBackgroundY(mobEffectInstance, this.widgetConfig().ambientBorder, this.widgetConfig().qualityBorder);
+        int backgroundY = this.getBackgroundY(mobEffectInstance,
+                this.widgetConfig().ambientBorder,
+                this.widgetConfig().qualityBorder);
         int colorValue = ARGB.white((float) this.rendererConfig().widgetAlpha);
-        guiGraphics.blit(RenderType::guiTextured, EFFECT_BACKGROUND, posX, posY, this.getBackgroundTextureX(), this.getBackgroundTextureY() + backgroundY * this.getHeight(), this.getWidth(), this.getHeight(), 256, 256, colorValue);
+        guiGraphics.blit(RenderType::guiTextured,
+                EFFECT_BACKGROUND,
+                posX,
+                posY,
+                this.getBackgroundTextureX(),
+                this.getBackgroundTextureY() + backgroundY * this.getHeight(),
+                this.getWidth(),
+                this.getHeight(),
+                256,
+                256,
+                colorValue);
     }
 
     protected void drawEffectSprite(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance mobEffectInstance) {
@@ -258,15 +287,32 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         float blinkingAlpha = this.widgetConfig().blinkingAlpha ? this.getBlinkingAlpha(mobEffectInstance) : 1.0F;
         int colorValue = ARGB.white(blinkingAlpha * (float) this.rendererConfig().widgetAlpha);
         TextureAtlasSprite atlasSprite = minecraft.getMobEffectTextures().get(mobEffectInstance.getEffect());
-        guiGraphics.blitSprite(RenderType::guiTextured, atlasSprite, posX + this.getSpriteOffsetX(), posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && mobEffectInstance.isAmbient()), 18, 18, colorValue);
+        guiGraphics.blitSprite(RenderType::guiTextured,
+                atlasSprite,
+                posX + this.getSpriteOffsetX(),
+                posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && mobEffectInstance.isAmbient()),
+                18,
+                18,
+                colorValue);
     }
 
     private boolean drawCustomEffect(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffectInstance) {
         // we make it possible to display effects on any container screen, so this is sometimes unusable
         if (this.screen instanceof AbstractContainerScreen<?> screen && screen.showsActiveEffects()) {
-            return ClientAbstractions.INSTANCE.renderInventoryIcon(mobEffectInstance, screen, guiGraphics, posX, posY, 0);
+            return ClientAbstractions.INSTANCE.renderInventoryIcon(mobEffectInstance,
+                    screen,
+                    guiGraphics,
+                    posX,
+                    posY,
+                    0);
         } else if (this.screen instanceof Gui gui) {
-            return ClientAbstractions.INSTANCE.renderGuiIcon(mobEffectInstance, gui, guiGraphics, posX, posY, 0, this.getBlinkingAlpha(mobEffectInstance) * (float) this.rendererConfig().widgetAlpha);
+            return ClientAbstractions.INSTANCE.renderGuiIcon(mobEffectInstance,
+                    gui,
+                    guiGraphics,
+                    posX,
+                    posY,
+                    0,
+                    this.getBlinkingAlpha(mobEffectInstance) * (float) this.rendererConfig().widgetAlpha);
         } else {
             return false;
         }
@@ -283,8 +329,13 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             final int offsetX = this.getDurationOffsetX();
             final int offsetY = this.getDurationOffsetY();
             guiGraphics.drawSpecial((MultiBufferSource bufferSource) -> {
-                minecraft.font.drawInBatch8xOutline(text, posX + offsetX - minecraft.font.width(text) / 2.0F, posY + offsetY, colorValue, backgroundColorValue, guiGraphics.pose().last()
-                        .pose(), bufferSource,
+                minecraft.font.drawInBatch8xOutline(text,
+                        posX + offsetX - minecraft.font.width(text) / 2.0F,
+                        posY + offsetY,
+                        colorValue,
+                        backgroundColorValue,
+                        guiGraphics.pose().last().pose(),
+                        bufferSource,
                         0XF000F0);
             });
         });
@@ -358,14 +409,17 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     public Optional<List<Component>> getHoveredEffectTooltip(int mouseX, int mouseY, TooltipFlag tooltipFlag) {
-        if (this.environment == EffectRendererEnvironment.INVENTORY && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().hoveringTooltip) {
-            return this.getHoveredEffect(mouseX, mouseY)
-                    .map(mobEffectInstance -> {
-                        List<Component> tooltipLines = this.makeEffectTooltip(mobEffectInstance, StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration);
-                        // call the event here, so we still have access to the effect instance
-                        ClientAbstractions.INSTANCE.onGatherEffectTooltipLines(this.buildContext(mobEffectInstance), tooltipLines, tooltipFlag);
-                        return tooltipLines;
-                    });
+        if (this.environment == EffectRendererEnvironment.INVENTORY &&
+                StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().hoveringTooltip) {
+            return this.getHoveredEffect(mouseX, mouseY).map(mobEffectInstance -> {
+                List<Component> tooltipLines = this.makeEffectTooltip(mobEffectInstance,
+                        StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration);
+                // call the event here, so we still have access to the effect instance
+                ClientAbstractions.INSTANCE.onGatherEffectTooltipLines(this.buildContext(mobEffectInstance),
+                        tooltipLines,
+                        tooltipFlag);
+                return tooltipLines;
+            });
         } else {
             return Optional.empty();
         }
@@ -385,14 +439,19 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     }
 
     private boolean isMouseOver(int posX, int posY, int mouseX, int mouseY) {
-        return mouseX >= posX && mouseX <= posX + this.getScaledWidth() && mouseY >= posY && mouseY <= posY + this.getScaledHeight();
+        return mouseX >= posX && mouseX <= posX + this.getScaledWidth() && mouseY >= posY &&
+                mouseY <= posY + this.getScaledHeight();
     }
 
     protected List<Component> makeEffectTooltip(MobEffectInstance mobEffectInstance, boolean withDuration) {
         List<Component> tooltip = Lists.newArrayList();
         MutableComponent textComponent = this.getEffectDisplayName(mobEffectInstance);
         if (withDuration && !mobEffectInstance.isInfiniteDuration()) {
-            textComponent.append(CommonComponents.SPACE).append(Component.literal("(").append(formatTickDuration(mobEffectInstance.getDuration())).append(")").withStyle(ChatFormatting.GRAY));
+            textComponent.append(CommonComponents.SPACE)
+                    .append(Component.literal("(")
+                            .append(formatTickDuration(mobEffectInstance.getDuration()))
+                            .append(")")
+                            .withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(textComponent);
         String descriptionKey = getDescriptionTranslationKey(mobEffectInstance.getEffect().value().getDescriptionId());
@@ -413,15 +472,17 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         } else if (Language.getInstance().has("description." + id)) {
             // Potion Descriptions mod format
             return "description." + id;
-        } else  {
+        } else {
             return null;
         }
     }
 
     protected MutableComponent getEffectDisplayName(MobEffectInstance mobEffectInstance) {
-        MutableComponent textComponent = Component.empty().append(mobEffectInstance.getEffect().value().getDisplayName());
+        MutableComponent textComponent = Component.empty()
+                .append(mobEffectInstance.getEffect().value().getDisplayName());
         String translationKey = "enchantment.level." + (mobEffectInstance.getAmplifier() + 1);
-        if (mobEffectInstance.getAmplifier() >= 1 && mobEffectInstance.getAmplifier() <= 9 || Language.getInstance().has(translationKey)) {
+        if (mobEffectInstance.getAmplifier() >= 1 && mobEffectInstance.getAmplifier() <= 9 ||
+                Language.getInstance().has(translationKey)) {
             textComponent.append(" ").append(Component.translatable(translationKey));
         }
 

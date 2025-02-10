@@ -1,7 +1,9 @@
 package fuzs.stylisheffects.api.v1.client;
 
+import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.event.v1.core.EventInvoker;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
+import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
@@ -21,6 +23,12 @@ public final class MobEffectWidgetEvents {
 
     private MobEffectWidgetEvents() {
         // NO-OP
+    }
+
+    static {
+        if (ModLoaderEnvironment.INSTANCE.isClient()) {
+            ClientAbstractions.INSTANCE.registerEventHandlers();
+        }
     }
 
     @FunctionalInterface
