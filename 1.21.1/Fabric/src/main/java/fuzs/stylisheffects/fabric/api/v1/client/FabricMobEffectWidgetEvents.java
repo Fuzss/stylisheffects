@@ -13,6 +13,6 @@ import net.fabricmc.fabric.api.event.Event;
 public class FabricMobEffectWidgetEvents {
     public static final Event<MobEffectWidgetEvents.MouseClicked> CLICKED = FabricEventFactory.createResult(
             MobEffectWidgetEvents.MouseClicked.class);
-    public static final Event<MobEffectWidgetEvents.EffectTooltip> TOOLTIP = FabricEventFactory.createResult(
+    public static final Event<MobEffectWidgetEvents.EffectTooltip> TOOLTIP = FabricEventFactory.create(
             MobEffectWidgetEvents.EffectTooltip.class);
 }
