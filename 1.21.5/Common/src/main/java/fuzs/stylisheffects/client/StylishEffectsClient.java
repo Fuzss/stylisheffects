@@ -29,8 +29,10 @@ public class StylishEffectsClient implements ClientModConstructor {
             // disable vanilla effect rendering in inventory screen
             return EventResult.INTERRUPT;
         });
-        RenderGuiLayerEvents.before(RenderGuiLayerEvents.EFFECTS).register(EffectScreenHandlerImpl.INSTANCE::onBeforeRenderGuiLayer);
-        ScreenMouseEvents.beforeMouseClick(AbstractContainerScreen.class).register(EffectScreenHandlerImpl.INSTANCE::onMouseClicked);
+        RenderGuiLayerEvents.before(RenderGuiLayerEvents.STATUS_EFFECTS)
+                .register(EffectScreenHandlerImpl.INSTANCE::onBeforeRenderGuiLayer);
+        ScreenMouseEvents.beforeMouseClick(AbstractContainerScreen.class)
+                .register(EffectScreenHandlerImpl.INSTANCE::onMouseClicked);
         ScreenEvents.afterInit(Screen.class).register(EffectScreenHandlerImpl.INSTANCE::onAfterInit);
     }
 
@@ -38,6 +40,7 @@ public class StylishEffectsClient implements ClientModConstructor {
     public void onClientSetup() {
         // can't do this during construct as configs won't be loaded then
         EffectScreenHandler.INSTANCE.rebuildEffectRenderers();
-        StylishEffects.CONFIG.getHolder(ClientConfig.class).addCallback(EffectScreenHandler.INSTANCE::rebuildEffectRenderers);
+        StylishEffects.CONFIG.getHolder(ClientConfig.class)
+                .addCallback(EffectScreenHandler.INSTANCE::rebuildEffectRenderers);
     }
 }

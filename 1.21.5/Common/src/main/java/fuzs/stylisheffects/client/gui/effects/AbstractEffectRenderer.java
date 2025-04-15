@@ -1,7 +1,7 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
+import fuzs.puzzleslib.api.client.gui.v2.ScreenHelper;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
@@ -90,11 +90,8 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             return false;
         } else {
             return switch (this.environment) {
-                case GUI ->
-                        fuzs.puzzleslib.api.client.core.v1.ClientAbstractions.INSTANCE.isEffectVisibleInGui(mobEffect);
-                case INVENTORY ->
-                        fuzs.puzzleslib.api.client.core.v1.ClientAbstractions.INSTANCE.isEffectVisibleInInventory(
-                                mobEffect);
+                case GUI -> ScreenHelper.isEffectVisibleInGui(mobEffect);
+                case INVENTORY -> ScreenHelper.isEffectVisibleInInventory(mobEffect);
             };
         }
     }
@@ -249,7 +246,6 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
 
     @Override
     public final void renderWidget(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance mobEffectInstance) {
-        RenderSystem.enableBlend();
         guiGraphics.pose().pushPose();
         double scale = this.getWidgetScale();
         if (scale != 1.0) {
