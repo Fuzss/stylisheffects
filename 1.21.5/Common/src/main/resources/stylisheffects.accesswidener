@@ -1,0 +1,3 @@
+accessWidener   v2  named
+accessible  field   net/minecraft/world/inventory/AbstractContainerMenu menuType    Lnet/minecraft/world/inventory/MenuType;
+accessible  field   net/minecraft/client/gui/screens/inventory/AbstractRecipeBookScreen recipeBookComponent Lnet/minecraft/client/gui/screens/recipebook/RecipeBookComponent;
