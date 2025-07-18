@@ -26,7 +26,7 @@ public class StylishEffectsClient implements ClientModConstructor {
         ScreenOpeningCallback.EVENT.register(EffectScreenHandlerImpl.INSTANCE::onScreenOpening);
         ContainerScreenEvents.BACKGROUND.register(EffectScreenHandlerImpl.INSTANCE::onDrawBackground);
         ContainerScreenEvents.FOREGROUND.register(EffectScreenHandlerImpl.INSTANCE::onDrawForeground);
-        InventoryMobEffectsCallback.EVENT.register((Screen screen, int availableSpace, MutableBoolean smallWidgets, MutableInt horizontalOffset) -> {
+        PrepareInventoryMobEffectsCallback.EVENT.register((Screen screen, int availableSpace, MutableBoolean smallWidgets, MutableInt horizontalOffset) -> {
             // disable vanilla effect rendering in inventory screen
             return EventResult.INTERRUPT;
         });

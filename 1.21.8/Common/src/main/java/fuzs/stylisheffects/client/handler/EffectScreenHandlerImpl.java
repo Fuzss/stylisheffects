@@ -117,7 +117,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
                 // we cannot modify mouseX and mouseY that are passed to Screen::renderComponentTooltip as that will mess with tooltip text wrapping at the screen border
                 guiGraphics.pose().pushMatrix();
                 guiGraphics.pose().translate(-screen.leftPos, -screen.topPos);
-                guiGraphics.setComponentTooltipForNextFrame(screen.font, tooltip, mouseX, mouseY);
+                guiGraphics.setComponentTooltipForNextFrame(screen.getFont(), tooltip, mouseX, mouseY);
                 guiGraphics.pose().popMatrix();
             });
         });

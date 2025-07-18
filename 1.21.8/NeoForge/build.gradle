@@ -15,9 +15,3 @@ dependencies {
 //    modLocalRuntime libs.architectury.neoforge
 //    modLocalRuntime libs.rei.neoforge
 }
-
-tasks.withType(net.fabricmc.loom.task.AbstractRunTask).configureEach {
-    doFirst {
-        patchLaunchCfg()
-    }
-}
