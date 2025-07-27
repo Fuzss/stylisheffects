@@ -8,8 +8,8 @@ dependencies {
 //    compileOnly libs.jeiapi.common
 
     // Roughly Enough Items
-//    compileOnly libs.reiapi.common
-//    compileOnly libs.reidefaultplugin.common
+    compileOnly libs.reiapi.common
+    compileOnly libs.reidefaultplugin.common
 }
 
 tasks.withType(net.fabricmc.loom.task.AbstractRemapJarTask).configureEach {

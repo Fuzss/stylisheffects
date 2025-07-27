@@ -12,9 +12,9 @@ dependencies {
 //    modLocalRuntime libs.jei.fabric
 
     // Roughly Enough Items
-//    modCompileOnly libs.reiapi.fabric
-//    modCompileOnly libs.reidefaultplugin.fabric
-//    modLocalRuntime libs.cloth.fabric
-//    modLocalRuntime libs.architectury.fabric
-//    modLocalRuntime libs.rei.fabric
+    modCompileOnly libs.reiapi.fabric
+    modCompileOnly libs.reidefaultplugin.fabric
+    modLocalRuntime libs.cloth.fabric
+    modLocalRuntime libs.architectury.fabric
+    modLocalRuntime libs.rei.fabric
 }
