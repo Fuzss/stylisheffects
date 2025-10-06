@@ -12,6 +12,3 @@ dependencies {
     compileOnly libs.reidefaultplugin.common
 }
 
-tasks.withType(net.fabricmc.loom.task.AbstractRemapJarTask).configureEach {
-    targetNamespace = "named"
-}
