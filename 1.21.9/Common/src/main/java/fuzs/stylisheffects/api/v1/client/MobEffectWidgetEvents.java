@@ -5,6 +5,7 @@ import fuzs.puzzleslib.api.event.v1.core.EventInvoker;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
 
@@ -37,16 +38,16 @@ public final class MobEffectWidgetEvents {
         /**
          * Called when the user clicks on an effect widget.
          *
-         * @param context the effect instance that has been clicked
-         * @param screen  the screen effects are currently rendered on
-         * @param mouseX  mouse x screen coordinate
-         * @param mouseY  mouse y screen coordinate
-         * @param button  the mouse button that has been clicked with can be identified by the constants in
-         *                {@link com.mojang.blaze3d.platform.InputConstants}
-         * @return {@link EventResult#INTERRUPT} to mark the click has been handled to prevent further processing,
-         *         {@link EventResult#PASS} for the click to be processed normally.
+         * @param context          the effect instance that has been clicked
+         * @param screen           the currently displayed screen
+         * @param mouseButtonEvent the mouse button event; for bundled values see
+         *                         {@link com.mojang.blaze3d.platform.InputConstants}
+         * @return <ul>
+         *         <li>{@link EventResult#INTERRUPT INTERRUPT} to mark the click has been handled to prevent further processing</li>
+         *         <li>{@link EventResult#PASS PASS} for the click to be processed normally</li>
+         *         </ul>
          */
-        EventResult onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button);
+        EventResult onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, MouseButtonEvent mouseButtonEvent, boolean doubleClick);
     }
 
     @FunctionalInterface

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.TooltipFlag;
@@ -33,9 +34,9 @@ public final class FabricClientAbstractions implements ClientAbstractions {
     }
 
     @Override
-    public boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button) {
+    public boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         return FabricMobEffectWidgetEvents.CLICKED.invoker()
-                .onEffectMouseClicked(context, screen, mouseX, mouseY, button)
+                .onEffectMouseClicked(context, screen, mouseButtonEvent, doubleClick)
                 .isInterrupt();
     }
 

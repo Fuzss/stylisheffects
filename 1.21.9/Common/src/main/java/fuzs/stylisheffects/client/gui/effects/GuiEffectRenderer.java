@@ -1,6 +1,5 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import com.google.common.collect.Lists;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.core.Holder;
@@ -8,6 +7,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -21,7 +21,8 @@ public abstract class GuiEffectRenderer extends CompactEffectRenderer {
     public int getRows() {
         if (this.widgetConfig().separateEffects) {
             final int beneficialEffects = this.countBeneficialEffects(this.activeEffects);
-            return this.splitByColumns(beneficialEffects) + this.splitByColumns(this.activeEffects.size() - beneficialEffects);
+            return this.splitByColumns(beneficialEffects) + this.splitByColumns(
+                    this.activeEffects.size() - beneficialEffects);
         }
         return super.getRows();
     }
@@ -49,7 +50,7 @@ public abstract class GuiEffectRenderer extends CompactEffectRenderer {
     public List<Pair<MobEffectInstance, int[]>> getEffectPositions(List<MobEffectInstance> activeEffects) {
         int beneficialRows = this.splitByColumns(this.countBeneficialEffects(activeEffects));
         int beneficialCounter = 0, harmfulCounter = 0;
-        List<Pair<MobEffectInstance, int[]>> effectToPos = Lists.newArrayList();
+        List<Pair<MobEffectInstance, int[]>> effectToPos = new ArrayList<>();
         for (MobEffectInstance effect : activeEffects) {
             int counter;
             boolean beneficial = !this.widgetConfig().separateEffects || effect.getEffect().value().isBeneficial();
@@ -58,18 +59,28 @@ public abstract class GuiEffectRenderer extends CompactEffectRenderer {
             } else {
                 counter = harmfulCounter++;
             }
+
             int posX = counter % this.getMaxClampedColumns();
             int posY = counter / this.getMaxClampedColumns();
             if (!beneficial) {
                 posY += beneficialRows;
             }
+
             effectToPos.add(Pair.of(effect, this.coordsToEffectPosition(posX, posY)));
         }
-        // sorting is need for rendering in condensed mode (when too many effects are active and the widget overlap) so that widget overlap in the right order
+
+        // sorting is need for rendering in condensed mode (when too many effects are active and the widgets overlap), so that the overlap is in the right order
         if (this.widgetConfig().separateEffects) {
-            effectToPos.sort(Comparator.<Pair<MobEffectInstance, int[]>, Boolean>comparing(o -> o.getLeft().getEffect().value().isBeneficial()).reversed());
+            effectToPos.sort(Comparator.<Pair<MobEffectInstance, int[]>, Boolean>comparing(o -> o.getLeft()
+                    .getEffect()
+                    .value()
+                    .isBeneficial()).reversed());
         }
-        if (beneficialCounter + harmfulCounter != activeEffects.size()) throw new RuntimeException("Effects amount mismatch");
+
+        if (beneficialCounter + harmfulCounter != activeEffects.size()) {
+            throw new RuntimeException("Effects amount mismatch");
+        }
+
         return effectToPos;
     }
 

@@ -151,6 +151,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
             int posY = counter / this.getMaxClampedColumns();
             effectToPos.add(Pair.of(activeEffects.get(counter), this.coordsToEffectPosition(posX, posY)));
         }
+
         return effectToPos;
     }
 

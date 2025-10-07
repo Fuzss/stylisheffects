@@ -3,6 +3,7 @@ package fuzs.stylisheffects.neoforge.api.v1.client;
 import fuzs.stylisheffects.api.v1.client.EffectScreenHandler;
 import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.TooltipFlag;
 import net.neoforged.bus.api.Event;
@@ -38,17 +39,15 @@ public class NeoForgeMobEffectWidgetEvent extends Event {
      */
     public static class MouseClicked extends NeoForgeMobEffectWidgetEvent implements ICancellableEvent {
         private final Screen screen;
-        private final double mouseX;
-        private final double mouseY;
-        private final int button;
+        private final MouseButtonEvent mouseEvent;
+        private final boolean doubleClick;
 
         @ApiStatus.Internal
-        public MouseClicked(MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button) {
+        public MouseClicked(MobEffectWidgetContext context, Screen screen, MouseButtonEvent mouseEvent, boolean doubleClick) {
             super(context);
             this.screen = screen;
-            this.mouseX = mouseX;
-            this.mouseY = mouseY;
-            this.button = button;
+            this.mouseEvent = mouseEvent;
+            this.doubleClick = doubleClick;
         }
 
         /**
@@ -59,17 +58,24 @@ public class NeoForgeMobEffectWidgetEvent extends Event {
         }
 
         /**
+         * @return the mouse button event
+         */
+        public MouseButtonEvent getMouseButtonEvent() {
+            return this.mouseEvent;
+        }
+
+        /**
          * @return mouse x screen coordinate
          */
         public double getMouseX() {
-            return this.mouseX;
+            return this.mouseEvent.x();
         }
 
         /**
          * @return mouse y screen coordinate
          */
         public double getMouseY() {
-            return this.mouseY;
+            return this.mouseEvent.y();
         }
 
         /**
@@ -77,7 +83,14 @@ public class NeoForgeMobEffectWidgetEvent extends Event {
          *         {@link org.lwjgl.glfw.GLFW GLFW}
          */
         public int getButton() {
-            return this.button;
+            return this.mouseEvent.button();
+        }
+
+        /**
+         * @return whether the user double-clicked
+         */
+        public boolean isDoubleClick() {
+            return this.doubleClick;
         }
     }
 

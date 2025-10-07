@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.TooltipFlag;
@@ -39,12 +40,11 @@ public final class NeoForgeClientAbstractions implements ClientAbstractions {
     }
 
     @Override
-    public boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, double mouseX, double mouseY, int button) {
+    public boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
         return NeoForge.EVENT_BUS.post(new NeoForgeMobEffectWidgetEvent.MouseClicked(context,
                 screen,
-                mouseX,
-                mouseY,
-                button)).isCanceled();
+                mouseButtonEvent,
+                doubleClick)).isCanceled();
     }
 
     @Override
@@ -56,18 +56,19 @@ public final class NeoForgeClientAbstractions implements ClientAbstractions {
     public void registerEventHandlers() {
         NeoForgeEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.MouseClicked.class,
                 NeoForgeMobEffectWidgetEvent.MouseClicked.class,
-                (MobEffectWidgetEvents.MouseClicked callback, NeoForgeMobEffectWidgetEvent.MouseClicked evt) -> {
-                    EventResult result = callback.onEffectMouseClicked(evt.getContext(),
-                            evt.getScreen(),
-                            evt.getMouseX(),
-                            evt.getMouseY(),
-                            evt.getButton());
-                    if (result.isInterrupt()) evt.setCanceled(true);
+                (MobEffectWidgetEvents.MouseClicked callback, NeoForgeMobEffectWidgetEvent.MouseClicked event) -> {
+                    EventResult result = callback.onEffectMouseClicked(event.getContext(),
+                            event.getScreen(),
+                            event.getMouseButtonEvent(),
+                            event.isDoubleClick());
+                    if (result.isInterrupt()) event.setCanceled(true);
                 });
         NeoForgeEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.EffectTooltip.class,
                 NeoForgeMobEffectWidgetEvent.EffectTooltip.class,
-                (MobEffectWidgetEvents.EffectTooltip callback, NeoForgeMobEffectWidgetEvent.EffectTooltip evt) -> {
-                    callback.onGatherEffectTooltipLines(evt.getContext(), evt.getTooltipLines(), evt.getTooltipFlag());
+                (MobEffectWidgetEvents.EffectTooltip callback, NeoForgeMobEffectWidgetEvent.EffectTooltip event) -> {
+                    callback.onGatherEffectTooltipLines(event.getContext(),
+                            event.getTooltipLines(),
+                            event.getTooltipFlag());
                 });
     }
 }

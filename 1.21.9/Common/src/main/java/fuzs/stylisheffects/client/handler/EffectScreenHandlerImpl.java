@@ -1,5 +1,6 @@
 package fuzs.stylisheffects.client.handler;
 
+import fuzs.puzzleslib.api.client.gui.v2.ScreenHelper;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.stylisheffects.StylishEffects;
@@ -15,6 +16,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractRecipeBookScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -33,7 +35,7 @@ import java.util.function.UnaryOperator;
 
 public class EffectScreenHandlerImpl implements EffectScreenHandler {
     public static final EffectScreenHandlerImpl INSTANCE = new EffectScreenHandlerImpl();
-    public static final String KEY_DEBUG_MENU_TYPE = "debug.menu.opening";
+    public static final String KEY_DEBUG_MENU_TYPE = StylishEffects.id("menu_opening").toLanguageKey("screen", "debug");
 
     @Nullable
     private AbstractEffectRenderer guiRenderer;
@@ -82,6 +84,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
         if (renderer != null && player != null) {
             renderer.setActiveEffects(player.getActiveEffects());
         }
+
         this.inventoryRenderer = renderer;
     }
 
@@ -101,38 +104,29 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
                 });
     }
 
-    public void onDrawBackground(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    public void onAfterBackground(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             renderer.renderEffects(guiGraphics, screen.minecraft);
-        });
-    }
-
-    public void onDrawForeground(AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
             TooltipFlag tooltipFlag = screen.minecraft.options.advancedItemTooltips ? TooltipFlag.Default.ADVANCED :
                     TooltipFlag.Default.NORMAL;
             renderer.getHoveredEffectTooltip(mouseX, mouseY, tooltipFlag).ifPresent((List<Component> tooltip) -> {
-                if (!screen.getMenu().getCarried().isEmpty()) return;
-                // this is necessary as the foreground event runs after the container renderer has been translated to leftPos and topPos (to render slots and so on)
-                // we cannot modify mouseX and mouseY that are passed to Screen::renderComponentTooltip as that will mess with tooltip text wrapping at the screen border
-                guiGraphics.pose().pushMatrix();
-                guiGraphics.pose().translate(-screen.leftPos, -screen.topPos);
-                guiGraphics.setComponentTooltipForNextFrame(screen.getFont(), tooltip, mouseX, mouseY);
-                guiGraphics.pose().popMatrix();
+                if (screen.getMenu().getCarried().isEmpty()) {
+                    guiGraphics.setComponentTooltipForNextFrame(screen.getFont(), tooltip, mouseX, mouseY);
+                }
             });
         });
     }
 
-    public EventResult onMouseClicked(Screen screen, double mouseX, double mouseY, int button) {
+    public EventResult onBeforeMouseClick(Screen screen, MouseButtonEvent mouseButtonEvent) {
         getEffectRenderer(screen, this.inventoryRenderer).ifPresent(renderer -> {
-            renderer.getHoveredEffect((int) mouseX, (int) mouseY).ifPresent(effectInstance -> {
-                // this can be cancelled by returning false, but since we don't have any mouse clicked action by default the returned result is ignored
-                ClientAbstractions.INSTANCE.onEffectMouseClicked(renderer.buildContext(effectInstance),
-                        screen,
-                        mouseX,
-                        mouseY,
-                        button);
-            });
+            renderer.getHoveredEffect((int) mouseButtonEvent.x(), (int) mouseButtonEvent.y())
+                    .ifPresent(effectInstance -> {
+                        // this can be cancelled by returning false, but since we don't have any mouse clicked action by default the returned result is ignored
+                        ClientAbstractions.INSTANCE.onEffectMouseClicked(renderer.buildContext(effectInstance),
+                                screen,
+                                mouseButtonEvent,
+                                ScreenHelper.isDoubleClick(mouseButtonEvent));
+                    });
         });
         return EventResult.PASS;
     }
@@ -210,8 +204,10 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
                 renderer = rendererFactory.apply(EffectRendererEnvironment.INVENTORY);
                 setScreenDimensions.accept(renderer);
             }
+
             return renderer;
         }
+
         return null;
     }
 
@@ -224,6 +220,7 @@ public class EffectScreenHandlerImpl implements EffectScreenHandler {
                 return false;
             }
         }
+        
         if (screen instanceof AbstractContainerScreen && (screen.showsActiveEffects() || StylishEffects.CONFIG.get(
                 ClientConfig.class).inventoryRenderer().effectsEverywhere)) {
             if (screen instanceof AbstractRecipeBookScreen<?> abstractRecipeBookScreen) {

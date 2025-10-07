@@ -3,7 +3,10 @@ package fuzs.stylisheffects.client;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.api.client.core.v1.context.GuiLayersContext;
 import fuzs.puzzleslib.api.client.event.v1.ClientTickEvents;
-import fuzs.puzzleslib.api.client.event.v1.gui.*;
+import fuzs.puzzleslib.api.client.event.v1.gui.PrepareInventoryMobEffectsCallback;
+import fuzs.puzzleslib.api.client.event.v1.gui.ScreenEvents;
+import fuzs.puzzleslib.api.client.event.v1.gui.ScreenMouseEvents;
+import fuzs.puzzleslib.api.client.event.v1.gui.ScreenOpeningCallback;
 import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.data.MutableBoolean;
 import fuzs.puzzleslib.api.event.v1.data.MutableInt;
@@ -24,14 +27,14 @@ public class StylishEffectsClient implements ClientModConstructor {
     private static void registerEventHandlers() {
         ClientTickEvents.END.register(EffectScreenHandlerImpl.INSTANCE::onClientTick);
         ScreenOpeningCallback.EVENT.register(EffectScreenHandlerImpl.INSTANCE::onScreenOpening);
-        ContainerScreenEvents.BACKGROUND.register(EffectScreenHandlerImpl.INSTANCE::onDrawBackground);
-        ContainerScreenEvents.FOREGROUND.register(EffectScreenHandlerImpl.INSTANCE::onDrawForeground);
+        ScreenEvents.afterBackground(AbstractContainerScreen.class)
+                .register(EffectScreenHandlerImpl.INSTANCE::onAfterBackground);
         PrepareInventoryMobEffectsCallback.EVENT.register((Screen screen, int availableSpace, MutableBoolean smallWidgets, MutableInt horizontalOffset) -> {
             // disable vanilla effect rendering in inventory screen
             return EventResult.INTERRUPT;
         });
         ScreenMouseEvents.beforeMouseClick(AbstractContainerScreen.class)
-                .register(EffectScreenHandlerImpl.INSTANCE::onMouseClicked);
+                .register(EffectScreenHandlerImpl.INSTANCE::onBeforeMouseClick);
         ScreenEvents.afterInit(Screen.class).register(EffectScreenHandlerImpl.INSTANCE::onAfterInit);
     }
 
