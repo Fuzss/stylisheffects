@@ -65,14 +65,15 @@ public class InventoryFullSizeEffectRenderer extends AbstractEffectRenderer {
 
     @Override
     protected void drawEffectText(GuiGraphics guiGraphics, int posX, int posY, Minecraft minecraft, MobEffectInstance effectinstance) {
+        // disable font shadows, they force text to render on top above everything else, which breaks the widget layering
         if (!(this.screen instanceof EffectRenderingInventoryScreen<?> effectInventoryScreen) || !ClientAbstractions.INSTANCE.renderInventoryText(effectinstance, effectInventoryScreen, guiGraphics, posX, posY, 0)) {
             MutableComponent component = this.getEffectDisplayName(effectinstance);
             int nameColor = ColorUtil.getEffectColor(this.widgetConfig().nameColor, effectinstance);
-            guiGraphics.drawString(minecraft.font, component, posX + 12 + 18, posY + 7 + (!this.widgetConfig().ambientDuration && effectinstance.isAmbient() ? 4 : 0), (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24 | nameColor);
+            guiGraphics.drawString(minecraft.font, component, posX + 12 + 18, posY + 7 + (!this.widgetConfig().ambientDuration && effectinstance.isAmbient() ? 4 : 0), (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24 | nameColor, false);
             if (this.widgetConfig().ambientDuration || !effectinstance.isAmbient()) {
                 this.getEffectDuration(effectinstance).ifPresent(duration -> {
                     int durationColor = ColorUtil.getEffectColor(this.widgetConfig().durationColor, effectinstance);
-                    guiGraphics.drawString(minecraft.font, duration, posX + 12 + 18, posY + 7 + 11, (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24 | durationColor);
+                    guiGraphics.drawString(minecraft.font, duration, posX + 12 + 18, posY + 7 + 11, (int) (this.rendererConfig().widgetAlpha * 255.0F) << 24 | durationColor, false);
                 });
             }
         }
