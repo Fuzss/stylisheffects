@@ -1,0 +1,77 @@
+{
+    "mod": {
+        "id": "stylisheffects",
+        "group": "fuzs.stylisheffects",
+        "name": "Stylish Effects",
+        "version": "21.11.0",
+        "authors": [
+            "Fuzs"
+        ],
+        "description": "Status effect display overhaul: Display them in any menu! And way more compact.",
+        "license": "MPL-2.0"
+    },
+    "dependencies": [
+        {
+            "name": "jei",
+            "type": "optional",
+            "platforms": [
+                "fabric",
+                "neoforge"
+            ]
+        },
+        {
+            "name": "rei",
+            "type": "optional",
+            "platforms": [
+                "fabric",
+                "neoforge"
+            ]
+        },
+        {
+            "name": "fabricapi",
+            "type": "required",
+            "platforms": [
+                "fabric"
+            ]
+        },
+        {
+            "name": "forgeconfigapiport",
+            "type": "required",
+            "platforms": [
+                "fabric"
+            ]
+        },
+        {
+            "name": "puzzleslib",
+            "type": "required",
+            "platforms": [
+                "fabric",
+                "neoforge"
+            ]
+        }
+    ],
+    "links": [
+        {
+            "name": "github",
+            "slug": "stylisheffects"
+        },
+        {
+            "name": "curseforge",
+            "slug": "stylish-effects",
+            "id": "543661"
+        },
+        {
+            "name": "modrinth",
+            "slug": "stylish-effects",
+            "id": "onDuQF5e"
+        }
+    ],
+    "environments": {
+        "client": "required",
+        "server": "unsupported"
+    },
+    "platforms": [
+        "fabric",
+        "neoforge"
+    ]
+}

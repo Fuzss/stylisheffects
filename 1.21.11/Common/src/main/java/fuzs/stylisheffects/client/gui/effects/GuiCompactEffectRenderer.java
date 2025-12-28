@@ -5,7 +5,7 @@ import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.world.effect.MobEffectInstance;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class GuiCompactEffectRenderer extends GuiEffectRenderer {
 
@@ -39,7 +39,7 @@ public class GuiCompactEffectRenderer extends GuiEffectRenderer {
     }
 
     @Override
-    public @Nullable EffectRendererEnvironment.Factory getFallbackRenderer() {
+    public EffectRendererEnvironment.@Nullable Factory getFallbackRenderer() {
         return GuiSmallEffectRenderer::new;
     }
 
@@ -50,6 +50,7 @@ public class GuiCompactEffectRenderer extends GuiEffectRenderer {
 
     @Override
     protected String formatEffectDuration(MobEffectInstance mobEffectInstance) {
-        return this.widgetConfig().compactDuration ? formatCompactTickDuration(mobEffectInstance.getDuration()) : super.formatEffectDuration(mobEffectInstance);
+        return this.widgetConfig().compactDuration ? formatCompactTickDuration(mobEffectInstance.getDuration()) :
+                super.formatEffectDuration(mobEffectInstance);
     }
 }

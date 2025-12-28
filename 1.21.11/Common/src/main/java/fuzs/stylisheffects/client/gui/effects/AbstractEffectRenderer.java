@@ -20,21 +20,20 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.TooltipFlag;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractEffectRenderer implements EffectWidget, RenderAreasProvider {
     public static final float DEFAULT_WIDGET_SCALE = 4.0F;
-    protected static final ResourceLocation EFFECT_BACKGROUND = StylishEffects.id(
-            "textures/gui/mob_effect_background.png");
+    protected static final Identifier EFFECT_BACKGROUND = StylishEffects.id("textures/gui/mob_effect_background.png");
 
     private final EffectRendererEnvironment environment;
     protected Object screen;
@@ -132,8 +131,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         return this.getHeight() - 10;
     }
 
-    @Nullable
-    public abstract EffectRendererEnvironment.Factory getFallbackRenderer();
+    public abstract EffectRendererEnvironment.@Nullable Factory getFallbackRenderer();
 
     @Override
     public List<Rect2i> getRenderAreas() {
@@ -281,9 +279,9 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         if (this.drawCustomEffect(guiGraphics, posX, posY, mobEffectInstance)) return;
         float blinkingAlpha = this.widgetConfig().blinkingAlpha ? this.getBlinkingAlpha(mobEffectInstance) : 1.0F;
         int colorValue = ARGB.white(blinkingAlpha * (float) this.rendererConfig().widgetAlpha);
-        ResourceLocation resourceLocation = Gui.getMobEffectSprite(mobEffectInstance.getEffect());
+        Identifier identifier = Gui.getMobEffectSprite(mobEffectInstance.getEffect());
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
-                resourceLocation,
+                identifier,
                 posX + this.getSpriteOffsetX(),
                 posY + this.getSpriteOffsetY(!this.widgetConfig().ambientDuration && mobEffectInstance.isAmbient()),
                 18,

@@ -6,13 +6,13 @@ import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.effect.MobEffectInstance;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public abstract class CompactEffectRenderer extends AbstractEffectRenderer {
-    private static final ResourceLocation TINY_NUMBERS_TEXTURE = StylishEffects.id("textures/font/tiny_numbers.png");
+    private static final Identifier TINY_NUMBERS_TEXTURE = StylishEffects.id("textures/font/tiny_numbers.png");
 
     public CompactEffectRenderer(EffectRendererEnvironment environment) {
         super(environment);
