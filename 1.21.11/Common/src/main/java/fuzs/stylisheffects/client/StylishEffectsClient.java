@@ -1,0 +1,55 @@
+package fuzs.stylisheffects.client;
+
+import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
+import fuzs.puzzleslib.api.client.core.v1.context.GuiLayersContext;
+import fuzs.puzzleslib.api.client.event.v1.ClientTickEvents;
+import fuzs.puzzleslib.api.client.event.v1.gui.PrepareInventoryMobEffectsCallback;
+import fuzs.puzzleslib.api.client.event.v1.gui.ScreenEvents;
+import fuzs.puzzleslib.api.client.event.v1.gui.ScreenMouseEvents;
+import fuzs.puzzleslib.api.client.event.v1.gui.ScreenOpeningCallback;
+import fuzs.puzzleslib.api.event.v1.core.EventResult;
+import fuzs.puzzleslib.api.event.v1.data.MutableBoolean;
+import fuzs.puzzleslib.api.event.v1.data.MutableInt;
+import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.api.v1.client.EffectScreenHandler;
+import fuzs.stylisheffects.client.handler.EffectScreenHandlerImpl;
+import fuzs.stylisheffects.config.ClientConfig;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+
+public class StylishEffectsClient implements ClientModConstructor {
+
+    @Override
+    public void onConstructMod() {
+        registerEventHandlers();
+    }
+
+    private static void registerEventHandlers() {
+        ClientTickEvents.END.register(EffectScreenHandlerImpl.INSTANCE::onClientTick);
+        ScreenOpeningCallback.EVENT.register(EffectScreenHandlerImpl.INSTANCE::onScreenOpening);
+        ScreenEvents.afterBackground(AbstractContainerScreen.class)
+                .register(EffectScreenHandlerImpl.INSTANCE::onAfterBackground);
+        PrepareInventoryMobEffectsCallback.EVENT.register((Screen screen, int availableSpace, MutableBoolean smallWidgets, MutableInt horizontalOffset) -> {
+            // disable vanilla effect rendering in inventory screen
+            return EventResult.INTERRUPT;
+        });
+        ScreenMouseEvents.beforeMouseClick(AbstractContainerScreen.class)
+                .register(EffectScreenHandlerImpl.INSTANCE::onBeforeMouseClick);
+        ScreenEvents.afterInit(Screen.class).register(EffectScreenHandlerImpl.INSTANCE::onAfterInit);
+    }
+
+    @Override
+    public void onClientSetup() {
+        // can't do this during construct as configs won't be loaded then
+        EffectScreenHandler.INSTANCE.rebuildEffectRenderers();
+        StylishEffects.CONFIG.getHolder(ClientConfig.class)
+                .addCallback(EffectScreenHandler.INSTANCE::rebuildEffectRenderers);
+    }
+
+    @Override
+    public void onRegisterGuiLayers(GuiLayersContext context) {
+        context.replaceGuiLayer(GuiLayersContext.STATUS_EFFECTS, (GuiLayersContext.Layer layer) -> {
+            return EffectScreenHandlerImpl.INSTANCE::renderStatusEffects;
+        });
+    }
+}
