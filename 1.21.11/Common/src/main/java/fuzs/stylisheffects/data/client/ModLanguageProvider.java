@@ -2,7 +2,7 @@ package fuzs.stylisheffects.data.client;
 
 import fuzs.puzzleslib.api.client.data.v2.AbstractLanguageProvider;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
-import fuzs.stylisheffects.client.handler.EffectScreenHandlerImpl;
+import fuzs.stylisheffects.client.handler.EffectScreenHandler;
 
 public class ModLanguageProvider extends AbstractLanguageProvider {
 
@@ -12,6 +12,6 @@ public class ModLanguageProvider extends AbstractLanguageProvider {
 
     @Override
     public void addTranslations(TranslationBuilder builder) {
-        builder.add(EffectScreenHandlerImpl.KEY_DEBUG_MENU_TYPE, "Menu Type: %s");
+        builder.add(EffectScreenHandler.KEY_DEBUG_MENU_TYPE, "Menu Type: %s");
     }
 }

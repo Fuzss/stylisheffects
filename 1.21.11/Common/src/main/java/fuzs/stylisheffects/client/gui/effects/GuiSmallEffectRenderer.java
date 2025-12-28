@@ -1,9 +1,9 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
+import fuzs.stylisheffects.config.WidgetType;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.jspecify.annotations.Nullable;
 
@@ -29,8 +29,8 @@ public class GuiSmallEffectRenderer extends GuiEffectRenderer {
     }
 
     @Override
-    public MobEffectWidgetContext.Renderer getEffectRenderer() {
-        return MobEffectWidgetContext.Renderer.GUI_COMPACT;
+    public WidgetType getType() {
+        return WidgetType.GUI_COMPACT;
     }
 
     @Override

@@ -1,18 +1,12 @@
 package fuzs.stylisheffects.fabric.services;
 
-import fuzs.puzzleslib.fabric.api.event.v1.core.FabricEventInvokerRegistry;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetEvents;
-import fuzs.stylisheffects.fabric.api.v1.client.FabricMobEffectWidgetEvents;
+import fuzs.puzzleslib.fabric.api.client.event.v1.FabricGuiEvents;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.item.TooltipFlag;
 
 import java.util.List;
 
@@ -34,22 +28,8 @@ public final class FabricClientAbstractions implements ClientAbstractions {
     }
 
     @Override
-    public boolean onEffectMouseClicked(MobEffectWidgetContext context, Screen screen, MouseButtonEvent mouseButtonEvent, boolean doubleClick) {
-        return FabricMobEffectWidgetEvents.CLICKED.invoker()
-                .onEffectMouseClicked(context, screen, mouseButtonEvent, doubleClick)
-                .isInterrupt();
-    }
-
-    @Override
-    public void onGatherEffectTooltipLines(MobEffectWidgetContext context, List<Component> tooltipLines, TooltipFlag tooltipFlag) {
-        FabricMobEffectWidgetEvents.TOOLTIP.invoker().onGatherEffectTooltipLines(context, tooltipLines, tooltipFlag);
-    }
-
-    @Override
-    public void registerEventHandlers() {
-        FabricEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.MouseClicked.class,
-                FabricMobEffectWidgetEvents.CLICKED);
-        FabricEventInvokerRegistry.INSTANCE.register(MobEffectWidgetEvents.EffectTooltip.class,
-                FabricMobEffectWidgetEvents.TOOLTIP);
+    public void onGatherEffectScreenTooltip(AbstractContainerScreen<?> screen, MobEffectInstance mobEffect, List<Component> tooltipLines) {
+        FabricGuiEvents.GATHER_EFFECT_SCREEN_TOOLTIP.invoker()
+                .onGatherEffectScreenTooltip(screen, mobEffect, tooltipLines);
     }
 }

@@ -4,10 +4,11 @@ import com.google.common.collect.Lists;
 import fuzs.puzzleslib.api.client.gui.v2.GuiGraphicsHelper;
 import fuzs.puzzleslib.api.client.gui.v2.ScreenHelper;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
+import fuzs.stylisheffects.config.ScreenSide;
+import fuzs.stylisheffects.config.WidgetType;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -24,7 +25,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.item.TooltipFlag;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jspecify.annotations.Nullable;
 
@@ -41,14 +41,14 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
     private int availableHeight;
     private int startX;
     private int startY;
-    private MobEffectWidgetContext.ScreenSide screenSide;
+    private ScreenSide screenSide;
     protected List<MobEffectInstance> activeEffects;
 
     protected AbstractEffectRenderer(EffectRendererEnvironment environment) {
         this.environment = environment;
     }
 
-    public void setScreenDimensions(Object screen, int availableWidth, int availableHeight, int startX, int startY, MobEffectWidgetContext.ScreenSide screenSide) {
+    public void setScreenDimensions(Object screen, int availableWidth, int availableHeight, int startX, int startY, ScreenSide screenSide) {
         this.screen = screen;
         this.availableWidth = availableWidth;
         this.availableHeight = availableHeight;
@@ -57,10 +57,10 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         this.screenSide = screenSide;
         switch (this.environment) {
             case GUI -> {
-                this.screenSide = this.screenSide.inverse();
+                this.screenSide = this.screenSide.cycle();
                 this.availableWidth -= ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetX;
                 this.availableHeight -= ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetY;
-                this.startX += (this.screenSide.right() ? 1 : -1)
+                this.startX += (this.screenSide.isRight() ? 1 : -1)
                         * ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetX;
                 this.startY += ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetY;
             }
@@ -113,7 +113,7 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         return (int) (this.getHeight() * this.getWidgetScale());
     }
 
-    public abstract MobEffectWidgetContext.Renderer getEffectRenderer();
+    public abstract WidgetType getType();
 
     protected abstract int getBackgroundTextureX();
 
@@ -397,25 +397,19 @@ public abstract class AbstractEffectRenderer implements EffectWidget, RenderArea
         }
     }
 
-    public Optional<List<Component>> getHoveredEffectTooltip(int mouseX, int mouseY, TooltipFlag tooltipFlag) {
+    public Optional<List<Component>> getHoveredEffectTooltip(AbstractContainerScreen<?> screen, int mouseX, int mouseY) {
         if (this.environment == EffectRendererEnvironment.INVENTORY && StylishEffects.CONFIG.get(ClientConfig.class)
                 .inventoryRenderer().hoveringTooltip) {
-            return this.getHoveredEffect(mouseX, mouseY).map(mobEffectInstance -> {
-                List<Component> tooltipLines = this.makeEffectTooltip(mobEffectInstance,
+            return this.getHoveredEffect(mouseX, mouseY).map((MobEffectInstance mobEffect) -> {
+                List<Component> tooltipLines = this.makeEffectTooltip(mobEffect,
                         StylishEffects.CONFIG.get(ClientConfig.class).inventoryRenderer().tooltipDuration);
                 // call the event here, so we still have access to the effect instance
-                ClientAbstractions.INSTANCE.onGatherEffectTooltipLines(this.buildContext(mobEffectInstance),
-                        tooltipLines,
-                        tooltipFlag);
+                ClientAbstractions.INSTANCE.onGatherEffectScreenTooltip(screen, mobEffect, tooltipLines);
                 return tooltipLines;
             });
         } else {
             return Optional.empty();
         }
-    }
-
-    public MobEffectWidgetContext buildContext(MobEffectInstance mobEffectInstance) {
-        return MobEffectWidgetContext.of(mobEffectInstance, this.getEffectRenderer(), this.screenSide);
     }
 
     public Optional<MobEffectInstance> getHoveredEffect(int mouseX, int mouseY) {

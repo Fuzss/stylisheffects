@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import fuzs.puzzleslib.api.config.v3.Config;
 import fuzs.puzzleslib.api.config.v3.ConfigCore;
 import fuzs.puzzleslib.api.config.v3.serialization.ConfigDataSet;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.gui.effects.AbstractEffectRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
@@ -66,7 +65,7 @@ public class ClientConfig implements ConfigCore {
 
     public static abstract class EffectRendererConfig implements ConfigCore {
         @Config(description = {"Effect renderer to be used.", "This setting might not be respected when not enough screen space is available. To force this setting disable \"allow_fallback\"."})
-        public MobEffectWidgetContext.Renderer rendererType = MobEffectWidgetContext.Renderer.GUI_COMPACT;
+        public WidgetType widgetTypeType = WidgetType.GUI_COMPACT;
         @Config(description = "Maximum amount of status effects rendered in a single row.")
         @Config.IntRange(min = 1)
         public int maxColumns = 5;
@@ -74,7 +73,7 @@ public class ClientConfig implements ConfigCore {
         @Config.IntRange(min = 1)
         public int maxRows = 255;
         @Config(description = "Screen side to render status effects on.")
-        public MobEffectWidgetContext.ScreenSide screenSide = MobEffectWidgetContext.ScreenSide.RIGHT;
+        public ScreenSide screenSide = ScreenSide.RIGHT;
         @Config(description = "Alpha value for effect widgets.")
         @Config.DoubleRange(min = 0.0, max = 1.0)
         public double widgetAlpha = 1.0;
@@ -113,7 +112,7 @@ public class ClientConfig implements ConfigCore {
         public ConfigDataSet<MenuType<?>> menuBlacklist;
 
         public InventoryRendererConfig() {
-            this.screenSide = MobEffectWidgetContext.ScreenSide.LEFT;
+            this.screenSide = ScreenSide.LEFT;
             this.widgetAlpha = 1.0;
             this.respectHideParticles = false;
             this.allowFallback = true;
@@ -134,7 +133,7 @@ public class ClientConfig implements ConfigCore {
         public int offsetY = 3;
 
         public GuiRendererConfig() {
-            this.screenSide = MobEffectWidgetContext.ScreenSide.RIGHT;
+            this.screenSide = ScreenSide.RIGHT;
             this.widgetAlpha = 0.85;
             this.respectHideParticles = true;
             this.allowFallback = false;

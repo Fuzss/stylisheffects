@@ -1,10 +1,10 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import fuzs.stylisheffects.config.ClientConfig;
+import fuzs.stylisheffects.config.WidgetType;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -49,8 +49,8 @@ public class InventoryFullSizeEffectRenderer extends AbstractEffectRenderer {
     }
 
     @Override
-    public MobEffectWidgetContext.Renderer getEffectRenderer() {
-        return MobEffectWidgetContext.Renderer.INVENTORY_FULL_SIZE;
+    public WidgetType getType() {
+        return WidgetType.INVENTORY_FULL_SIZE;
     }
 
     @Override

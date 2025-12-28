@@ -1,9 +1,9 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.api.v1.client.MobEffectWidgetContext;
 import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.config.ClientConfig;
+import fuzs.stylisheffects.config.WidgetType;
 import net.minecraft.world.effect.MobEffectInstance;
 
 public class InventoryCompactEffectRenderer extends CompactEffectRenderer {
@@ -53,8 +53,8 @@ public class InventoryCompactEffectRenderer extends CompactEffectRenderer {
     }
 
     @Override
-    public MobEffectWidgetContext.Renderer getEffectRenderer() {
-        return MobEffectWidgetContext.Renderer.INVENTORY_COMPACT;
+    public WidgetType getType() {
+        return WidgetType.INVENTORY_COMPACT;
     }
 
     @Override
