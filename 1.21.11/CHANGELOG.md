@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v21.11.1-1.21.11] - 2025-12-28
 
+### Changed
+
+- Greatly streamlined the config; removing many previously duplicated settings
+
 ### Removed
 
 - Remove outdated api modules and events

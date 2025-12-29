@@ -1,21 +1,37 @@
 package fuzs.stylisheffects.client.util;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.alchemy.PotionContents;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 
 public class ColorUtil {
 
-    public static int getEffectColor(ChatFormatting chatFormatting, MobEffectInstance mobEffectInstance) {
+    public static Style getMobEffectStyle(MobEffectInstance mobEffect, @Nullable ChatFormatting chatFormatting) {
         if (chatFormatting != null) {
-            return chatFormatting.getColor();
+            return Style.EMPTY.withColor(chatFormatting);
         } else {
-            int color = PotionContents.getColorOptional(Collections.singleton(mobEffectInstance))
-                    .orElse(PotionContents.BASE_POTION_COLOR);
-            return brightenColor(color);
+            int color = brightenColor(getPotionColor(mobEffect));
+            return Style.EMPTY.withColor(color);
         }
+    }
+
+    public static Style getMobEffectStyle(MobEffectInstance mobEffect, @Nullable DyeColor dyeColor) {
+        if (dyeColor != null) {
+            return Style.EMPTY.withColor(dyeColor.getTextColor());
+        } else {
+            int color = brightenColor(getPotionColor(mobEffect));
+            return Style.EMPTY.withColor(color);
+        }
+    }
+
+    private static int getPotionColor(MobEffectInstance mobEffect) {
+        return PotionContents.getColorOptional(Collections.singleton(mobEffect))
+                .orElse(PotionContents.BASE_POTION_COLOR);
     }
 
     private static int brightenColor(int potionColor) {
@@ -28,13 +44,14 @@ public class ColorUtil {
             final int[] color = {red + increase, green + increase, blue + increase};
             redistributeColors(color);
             return color[0] << 16 | color[1] << 8 | color[0];
+        } else {
+            return potionColor;
         }
-        return potionColor;
     }
 
     /**
-     * Copied from <a
-     * href="https://stackoverflow.com/questions/141855/programmatically-lighten-a-color">programmatically-lighten-a-color</a>.
+     * @see <a href="https://stackoverflow.com/questions/141855/programmatically-lighten-a-color">Programmatically
+     *         Lighten a Color</a>
      */
     private static void redistributeColors(int[] color) {
         int max = Math.max(color[0], Math.max(color[1], color[2]));
