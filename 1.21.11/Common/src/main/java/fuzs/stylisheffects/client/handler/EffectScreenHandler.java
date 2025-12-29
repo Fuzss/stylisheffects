@@ -1,10 +1,9 @@
 package fuzs.stylisheffects.client.handler;
 
+import com.mojang.datafixers.util.Either;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.gui.effects.AbstractMobEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.GuiMobEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.InventoryMobEffectRenderer;
 import fuzs.stylisheffects.config.ClientConfig;
 import fuzs.stylisheffects.config.ScreenSide;
 import fuzs.stylisheffects.config.WidgetType;
@@ -44,9 +43,11 @@ public class EffectScreenHandler {
     }
 
     public void rebuildEffectRenderers() {
-        WidgetType widgetType = StylishEffects.CONFIG.get(ClientConfig.class).guiRendering.widgetType;
+        WidgetType widgetType = StylishEffects.CONFIG.get(ClientConfig.class).guiWidgets.widgetType;
         if (widgetType != WidgetType.NONE) {
-            this.guiRenderer = createRenderer(widgetType, EffectRendererEnvironment.GUI);
+            this.guiRenderer = widgetType.factory.apply(Either.left(Minecraft.getInstance().gui));
+        } else {
+            this.guiRenderer = null;
         }
     }
 
@@ -81,13 +82,11 @@ public class EffectScreenHandler {
                 true,
                 this.guiRenderer,
                 minecraft.player.getActiveEffects()).ifPresent((AbstractMobEffectRenderer renderer) -> {
-            ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiRendering.screenSide;
-            renderer.setScreenDimensions(minecraft.gui,
-                    guiGraphics.guiWidth(),
+            ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).guiWidgets.effectPositions.screenSide;
+            renderer.setScreenDimensions(guiGraphics.guiWidth(),
                     guiGraphics.guiHeight(),
                     screenSide.isRight() ? guiGraphics.guiWidth() : 0,
-                    0,
-                    screenSide);
+                    0);
             renderer.renderEffects(guiGraphics);
         });
     }
@@ -105,7 +104,7 @@ public class EffectScreenHandler {
 
     public EventResultHolder<@Nullable Screen> onScreenOpening(@Nullable Screen oldScreen, @Nullable Screen newScreen) {
         if (newScreen instanceof AbstractContainerScreen<?> abstractContainerScreen && StylishEffects.CONFIG.get(
-                ClientConfig.class).inventoryRendering.effectMenus.debugContainerTypes) {
+                ClientConfig.class).inventoryWidgets.effectMenus.debugContainerTypes) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
             MenuType<?> menuType = abstractContainerScreen.getMenu().menuType;
             if (menuType != null) {
@@ -124,7 +123,8 @@ public class EffectScreenHandler {
     }
 
     private static Optional<AbstractMobEffectRenderer> getEffectRenderer(@Nullable Screen screen, boolean invertSupport, @Nullable AbstractMobEffectRenderer effectRenderer, @Nullable Collection<MobEffectInstance> activeEffects) {
-        if (!invertSupport && supportsEffectsDisplay(screen) || invertSupport && !supportsEffectsDisplay(screen)) {
+        AbstractContainerScreen<?> abstractContainerScreen = getScreenWithEffectsInInventory(screen);
+        if (!invertSupport && abstractContainerScreen != null || invertSupport && abstractContainerScreen == null) {
             // effect renderer field may get changed during config reload from different thread, so we are extra careful when dealing with the renderer
             if (effectRenderer != null) {
                 if (activeEffects != null) {
@@ -140,40 +140,31 @@ public class EffectScreenHandler {
         return Optional.empty();
     }
 
-    public static AbstractMobEffectRenderer createRenderer(WidgetType widgetType, EffectRendererEnvironment environment) {
-        return switch (widgetType) {
-            case GUI_SQUARE -> new GuiMobEffectRenderer.Small(environment);
-            case GUI_RECTANGLE -> new GuiMobEffectRenderer.Large(environment);
-            case INVENTORY_SQUARE -> new InventoryMobEffectRenderer.Small(environment);
-            case INVENTORY_RECTANGLE -> new InventoryMobEffectRenderer.Large(environment);
-            case NONE -> throw new IllegalArgumentException("Cannot create effect renderer");
-        };
-    }
-
     @Nullable
     private static AbstractMobEffectRenderer createInventoryRendererOrFallback(Screen screen) {
-        WidgetType widgetType = StylishEffects.CONFIG.get(ClientConfig.class).inventoryRendering.widgetType;
-        if (widgetType != WidgetType.NONE && supportsEffectsDisplay(screen)) {
-            AbstractContainerScreen<?> containerScreen = (AbstractContainerScreen<?>) screen;
-            ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).inventoryRendering.screenSide;
+        WidgetType widgetType = StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets.widgetType;
+        AbstractContainerScreen<?> abstractContainerScreen = getScreenWithEffectsInInventory(screen);
+        if (widgetType != WidgetType.NONE && abstractContainerScreen != null) {
             Consumer<AbstractMobEffectRenderer> setScreenDimensions = (AbstractMobEffectRenderer renderer) -> {
-                int leftPos = containerScreen.leftPos;
-                int availableWidth = !screenSide.isRight() ? leftPos :
-                        containerScreen.width - (leftPos + containerScreen.imageWidth);
-                int startX = !screenSide.isRight() ? leftPos : leftPos + containerScreen.imageWidth;
-                renderer.setScreenDimensions(containerScreen,
-                        availableWidth,
-                        containerScreen.imageHeight,
+                ScreenSide screenSide = StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets.effectPositions.screenSide;
+                int leftPos = abstractContainerScreen.leftPos;
+                int availableWidth = screenSide.isLeft() ? leftPos :
+                        abstractContainerScreen.width - (leftPos + abstractContainerScreen.imageWidth);
+                int startX = screenSide.isLeft() ? leftPos : leftPos + abstractContainerScreen.imageWidth;
+                renderer.setScreenDimensions(availableWidth,
+                        abstractContainerScreen.imageHeight,
                         startX,
-                        containerScreen.topPos,
-                        screenSide);
+                        abstractContainerScreen.topPos);
             };
-            AbstractMobEffectRenderer renderer = createRenderer(widgetType, EffectRendererEnvironment.INVENTORY);
+            AbstractMobEffectRenderer renderer = widgetType.factory.apply(Either.right(abstractContainerScreen));
             setScreenDimensions.accept(renderer);
             while (!renderer.isValid()) {
-                EffectRendererEnvironment.Factory rendererFactory = renderer.getFallbackRenderer();
-                if (rendererFactory == null) return null;
-                renderer = rendererFactory.apply(EffectRendererEnvironment.INVENTORY);
+                WidgetType.Factory rendererFactory = renderer.getFallbackRenderer();
+                if (rendererFactory == null) {
+                    return null;
+                }
+
+                renderer = rendererFactory.apply(Either.right(abstractContainerScreen));
                 setScreenDimensions.accept(renderer);
             }
 
@@ -183,28 +174,28 @@ public class EffectScreenHandler {
         return null;
     }
 
-    private static boolean supportsEffectsDisplay(@Nullable Screen screen) {
-        if (screen instanceof AbstractContainerScreen<?> containerScreen) {
+    private static @Nullable AbstractContainerScreen<?> getScreenWithEffectsInInventory(@Nullable Screen screen) {
+        if (screen instanceof AbstractContainerScreen<?> abstractContainerScreen) {
             // don't use vanilla getter as it throws an UnsupportedOperationException for the player inventory
-            MenuType<?> menuType = containerScreen.getMenu().menuType;
+            MenuType<?> menuType = abstractContainerScreen.getMenu().menuType;
             if (menuType != null
-                    && StylishEffects.CONFIG.get(ClientConfig.class).inventoryRendering.effectMenus.menuBlacklist.contains(
+                    && StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets.effectMenus.menuBlacklist.contains(
                     menuType)) {
-                return false;
-            }
-        }
-
-        if (screen instanceof AbstractContainerScreen && (screen.showsActiveEffects() || StylishEffects.CONFIG.get(
-                ClientConfig.class).inventoryRendering.effectMenus.effectsEverywhere)) {
-            if (screen instanceof AbstractRecipeBookScreen<?> abstractRecipeBookScreen) {
-                if (abstractRecipeBookScreen.recipeBookComponent.isVisible()) {
-                    return StylishEffects.CONFIG.get(ClientConfig.class).inventoryRendering.screenSide.isRight();
+                return null;
+            } else if (abstractContainerScreen.showsActiveEffects()
+                    || StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets.effectMenus.effectsEverywhere) {
+                if (StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets.effectPositions.screenSide.isLeft()
+                        && abstractContainerScreen instanceof AbstractRecipeBookScreen<?> abstractRecipeBookScreen
+                        && abstractRecipeBookScreen.recipeBookComponent.isVisible()) {
+                    return null;
+                } else {
+                    return abstractContainerScreen;
                 }
+            } else {
+                return null;
             }
-
-            return true;
+        } else {
+            return null;
         }
-
-        return false;
     }
 }

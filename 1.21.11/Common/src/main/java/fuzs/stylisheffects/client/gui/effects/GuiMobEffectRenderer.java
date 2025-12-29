@@ -1,6 +1,9 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
+import com.mojang.datafixers.util.Either;
+import fuzs.stylisheffects.config.WidgetType;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
@@ -18,7 +21,7 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
     protected static final Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE = Identifier.withDefaultNamespace(
             "hud/effect_background_ambient");
 
-    public GuiMobEffectRenderer(EffectRendererEnvironment environment) {
+    public GuiMobEffectRenderer(Either<Gui, AbstractContainerScreen<?>> environment) {
         super(environment);
     }
 
@@ -34,7 +37,7 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
 
     @Override
     public int getRows() {
-        if (this.rendererConfig().separateEffects()) {
+        if (this.config.separateEffects()) {
             int beneficialEffectsAmount = this.getBeneficialEffectsAmount(this.activeEffects);
             return this.splitByColumns(beneficialEffectsAmount) + this.splitByColumns(
                     this.activeEffects.size() - beneficialEffectsAmount);
@@ -81,7 +84,7 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
         for (MobEffectInstance effect : activeEffects) {
             int counter;
             boolean isBeneficial =
-                    !this.rendererConfig().separateEffects() || effect.getEffect().value().isBeneficial();
+                    !this.config.separateEffects() || effect.getEffect().value().isBeneficial();
             if (isBeneficial) {
                 counter = beneficialCounter++;
             } else {
@@ -98,7 +101,7 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
         }
 
         // sorting is need for rendering in condensed mode (when too many effects are active and the widgets overlap), so that the overlap is in the right order
-        if (this.rendererConfig().separateEffects()) {
+        if (this.config.separateEffects()) {
             mobEffectPositions.sort(Comparator.<Pair<MobEffectInstance, Vector2ic>, Boolean>comparing((Pair<MobEffectInstance, Vector2ic> pair) -> pair.getLeft()
                     .getEffect()
                     .value()
@@ -127,14 +130,14 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
 
     public static class Small extends GuiMobEffectRenderer {
 
-        public Small(EffectRendererEnvironment environment) {
+        public Small(Either<Gui, AbstractContainerScreen<?>> environment) {
             super(environment);
         }
     }
 
     public static class Large extends GuiMobEffectRenderer {
 
-        public Large(EffectRendererEnvironment environment) {
+        public Large(Either<Gui, AbstractContainerScreen<?>> environment) {
             super(environment);
         }
 
@@ -144,7 +147,7 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
         }
 
         @Override
-        public EffectRendererEnvironment.@Nullable Factory getFallbackRenderer() {
+        public WidgetType.@Nullable Factory getFallbackRenderer() {
             return Small::new;
         }
     }

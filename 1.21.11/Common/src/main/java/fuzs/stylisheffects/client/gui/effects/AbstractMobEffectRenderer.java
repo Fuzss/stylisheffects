@@ -1,13 +1,14 @@
 package fuzs.stylisheffects.client.gui.effects;
 
 import com.google.common.collect.Lists;
+import com.mojang.datafixers.util.Either;
+import fuzs.puzzleslib.api.client.gui.v2.AnchorPoint;
 import fuzs.puzzleslib.api.client.gui.v2.ScreenHelper;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
 import fuzs.stylisheffects.client.util.TimeFormattingHelper;
 import fuzs.stylisheffects.config.ClientConfig;
-import fuzs.stylisheffects.config.EffectAmplifier;
 import fuzs.stylisheffects.config.ScreenSide;
+import fuzs.stylisheffects.config.WidgetType;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
@@ -23,6 +24,7 @@ import net.minecraft.network.chat.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Unit;
 import net.minecraft.world.effect.MobEffectInstance;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joml.Vector2i;
@@ -35,11 +37,9 @@ import java.util.stream.Collectors;
 public abstract class AbstractMobEffectRenderer {
     public static final float DEFAULT_WIDGET_SCALE = 4.0F;
     protected static final int MOB_EFFECT_SPRITE_SIZE = 18;
+    protected static final int TINY_NUMBER_WIDTH = 3;
+    protected static final int TINY_NUMBER_HEIGHT = 5;
     protected static final Component INFINITY_COMPONENT = Component.literal("\u221e");
-    protected static final Identifier EFFECT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace(
-            "container/inventory/effect_background");
-    protected static final Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE = Identifier.withDefaultNamespace(
-            "container/inventory/effect_background_ambient");
     private static final List<Identifier> TINY_NUMBER_SPRITES = List.of(StylishEffects.id("number/zero"),
             StylishEffects.id("number/one"),
             StylishEffects.id("number/two"),
@@ -51,38 +51,35 @@ public abstract class AbstractMobEffectRenderer {
             StylishEffects.id("number/eight"),
             StylishEffects.id("number/nine"));
 
-    private final EffectRendererEnvironment environment;
-    protected Object screen;
+    protected Either<Gui, AbstractContainerScreen<?>> environment;
+    protected final ClientConfig.EffectWidgetsConfig config;
     private int availableWidth;
     private int availableHeight;
     private int startX;
     private int startY;
-    private ScreenSide screenSide;
     protected List<MobEffectInstance> activeEffects;
 
-    protected AbstractMobEffectRenderer(EffectRendererEnvironment environment) {
+    protected AbstractMobEffectRenderer(Either<Gui, AbstractContainerScreen<?>> environment) {
         this.environment = environment;
+        this.config = this.environment.map((Gui gui) -> {
+            return StylishEffects.CONFIG.get(ClientConfig.class).guiWidgets;
+        }, (AbstractContainerScreen<?> screen) -> {
+            return StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets;
+        });
     }
 
-    public void setScreenDimensions(Object screen, int availableWidth, int availableHeight, int startX, int startY, ScreenSide screenSide) {
-        this.screen = screen;
-        this.availableWidth = availableWidth;
-        this.availableHeight = availableHeight;
-        this.startX = startX;
-        this.startY = startY;
-        this.screenSide = screenSide;
-        switch (this.environment) {
-            case GUI -> {
-                this.screenSide = this.screenSide.cycle();
-                this.availableWidth -= ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetX;
-                this.availableHeight -= ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetY;
-                this.startX += (this.screenSide.isRight() ? 1 : -1)
-                        * ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetX;
-                this.startY += ((ClientConfig.GuiRendererConfig) this.rendererConfig()).offsetY;
-            }
-            case INVENTORY ->
-                    this.availableWidth -= ((ClientConfig.InventoryRendererConfig) this.rendererConfig()).screenBorderDistance;
-        }
+    public void setScreenDimensions(int availableWidth, int availableHeight, int startX, int startY) {
+        this.availableWidth = availableWidth - this.config.horizontalOffset();
+        this.availableHeight = availableHeight - this.config.verticalOffset();
+        this.environment.map((Gui gui) -> {
+            this.startX = startX + (this.getScreenSide().isRight() ? 1 : -1) * this.config.horizontalOffset();
+            this.startY = startY + this.config.verticalOffset();
+            return Unit.INSTANCE;
+        }, (AbstractContainerScreen<?> screen) -> {
+            this.startX = startX;
+            this.startY = startY;
+            return Unit.INSTANCE;
+        });
     }
 
     public final void setActiveEffects(Collection<MobEffectInstance> activeEffects) {
@@ -94,15 +91,16 @@ public abstract class AbstractMobEffectRenderer {
     }
 
     private boolean isEffectAllowedToShow(MobEffectInstance mobEffect) {
-        if (mobEffect.isInfiniteDuration() && this.rendererConfig().skipInfiniteEffects) {
+        if (mobEffect.isInfiniteDuration() && this.config.skipInfiniteEffects) {
             return false;
-        } else if (!mobEffect.showIcon() && !this.rendererConfig().ignoreHideParticles) {
+        } else if (!mobEffect.showIcon() && !this.config.ignoreHideParticles) {
             return false;
         } else {
-            return switch (this.environment) {
-                case GUI -> ScreenHelper.isEffectVisibleInGui(mobEffect);
-                case INVENTORY -> ScreenHelper.isEffectVisibleInInventory(mobEffect);
-            };
+            return this.environment.map((Gui gui) -> {
+                return ScreenHelper.isEffectVisibleInGui(mobEffect);
+            }, (AbstractContainerScreen<?> screen) -> {
+                return ScreenHelper.isEffectVisibleInInventory(mobEffect);
+            });
         }
     }
 
@@ -111,11 +109,11 @@ public abstract class AbstractMobEffectRenderer {
     }
 
     public final boolean isValid() {
-        return !this.rendererConfig().allowFallback || this.getMaxRows() > 0 && this.getMaxColumns() > 0;
+        return !this.config.allowFallback || this.getMaxRows() > 0 && this.getMaxColumns() > 0;
     }
 
     public final float getWidgetScale() {
-        return (float) (this.rendererConfig().scale / DEFAULT_WIDGET_SCALE);
+        return (float) (this.config.widgetScale / DEFAULT_WIDGET_SCALE);
     }
 
     public abstract int getWidth();
@@ -148,19 +146,22 @@ public abstract class AbstractMobEffectRenderer {
 
     protected abstract int getAmplifierOffsetY();
 
-    public EffectRendererEnvironment.@Nullable Factory getFallbackRenderer() {
+    protected ScreenSide getScreenSide() {
+        return this.environment.map((Gui gui) -> {
+            return this.config.effectPositions.screenSide.flip();
+        }, (AbstractContainerScreen<?> screen) -> {
+            return this.config.effectPositions.screenSide;
+        });
+    }
+
+    public WidgetType.@Nullable Factory getFallbackRenderer() {
         return null;
     }
 
     public final List<Rect2i> getRenderAreas() {
-        return this.getEffectPositions(this.activeEffects)
-                .stream()
-                .map(Pair::getValue)
-                .map((Vector2ic position) -> new Rect2i(position.x(),
-                        position.y(),
-                        this.getScaledWidth(),
-                        this.getScaledHeight()))
-                .collect(Collectors.toList());
+        return this.getEffectPositions(this.activeEffects).stream().map(Pair::getValue).map((Vector2ic position) -> {
+            return new Rect2i(position.x(), position.y(), this.getScaledWidth(), this.getScaledHeight());
+        }).collect(Collectors.toList());
     }
 
     public List<Pair<MobEffectInstance, Vector2ic>> getEffectPositions(List<MobEffectInstance> activeEffects) {
@@ -180,13 +181,13 @@ public abstract class AbstractMobEffectRenderer {
     }
 
     protected Vector2ic translateMobEffectWidgetPosition(int posX, int posY) {
-        return switch (this.screenSide) {
+        return switch (this.getScreenSide()) {
             case LEFT -> new Vector2i(this.startX - (this.getScaledWidth() + 1)
-                    - (this.getScaledWidth() + this.rendererConfig().horizontalSpacing) * posX,
+                    - (this.getScaledWidth() + this.config.effectPositions.horizontalSpacing) * posX,
                     this.startY + this.getTopOffset() + this.getAdjustedHeight() * posY);
 
             case RIGHT -> new Vector2i(
-                    this.startX + 1 + (this.getScaledWidth() + this.rendererConfig().horizontalSpacing) * posX,
+                    this.startX + 1 + (this.getScaledWidth() + this.config.effectPositions.horizontalSpacing) * posX,
                     this.startY + this.getTopOffset() + this.getAdjustedHeight() * posY);
         };
     }
@@ -213,35 +214,37 @@ public abstract class AbstractMobEffectRenderer {
 
     private int getAvailableWidth() {
         return Math.min(this.availableWidth,
-                this.rendererConfig().maxColumns * (this.getScaledWidth() + this.rendererConfig().horizontalSpacing));
+                this.config.effectPositions.maxColumns * (this.getScaledWidth()
+                        + this.config.effectPositions.horizontalSpacing));
     }
 
     private int getAvailableHeight() {
         return Math.min(this.availableHeight,
-                this.rendererConfig().maxRows * (this.getScaledHeight() + this.rendererConfig().verticalSpacing));
+                this.config.effectPositions.maxRows * (this.getScaledHeight()
+                        + this.config.effectPositions.verticalSpacing));
     }
 
     private int getMaxColumns() {
-        return this.getAvailableWidth() / (this.getScaledWidth() + this.rendererConfig().horizontalSpacing);
+        return this.getAvailableWidth() / (this.getScaledWidth() + this.config.effectPositions.horizontalSpacing);
     }
 
     public int getMaxClampedColumns() {
-        return Mth.clamp(this.getMaxColumns(), 1, this.rendererConfig().maxColumns);
+        return Mth.clamp(this.getMaxColumns(), 1, this.config.effectPositions.maxColumns);
     }
 
     private int getAdjustedHeight() {
         if (this.getRows() > this.getMaxClampedRows()) {
             return (this.getAvailableHeight() - this.getScaledHeight()) / Math.max(1, this.getRows() - 1);
         }
-        return this.getScaledHeight() + this.rendererConfig().verticalSpacing;
+        return this.getScaledHeight() + this.config.effectPositions.verticalSpacing;
     }
 
     private int getMaxRows() {
-        return this.getAvailableHeight() / (this.getScaledHeight() + this.rendererConfig().verticalSpacing);
+        return this.getAvailableHeight() / (this.getScaledHeight() + this.config.effectPositions.verticalSpacing);
     }
 
     public int getMaxClampedRows() {
-        return Mth.clamp(this.getMaxRows(), 1, this.rendererConfig().maxRows);
+        return Mth.clamp(this.getMaxRows(), 1, this.config.effectPositions.maxRows);
     }
 
     public int getRows() {
@@ -250,20 +253,6 @@ public abstract class AbstractMobEffectRenderer {
 
     protected int splitByColumns(int beneficialEffectsAmount) {
         return (int) Math.ceil(beneficialEffectsAmount / (float) this.getMaxClampedColumns());
-    }
-
-    protected ClientConfig.EffectRendererConfig rendererConfig() {
-        return switch (this.environment) {
-            case INVENTORY -> StylishEffects.CONFIG.get(ClientConfig.class).inventoryRendering;
-            case GUI -> StylishEffects.CONFIG.get(ClientConfig.class).guiRendering;
-        };
-    }
-
-    protected ClientConfig.EffectWidgetConfig widgetConfig() {
-        return switch (this.environment) {
-            case INVENTORY -> StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets;
-            case GUI -> StylishEffects.CONFIG.get(ClientConfig.class).guiWidgets;
-        };
     }
 
     public final void renderWidget(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
@@ -275,25 +264,23 @@ public abstract class AbstractMobEffectRenderer {
             posY /= scale;
         }
 
-        this.renderBackground(guiGraphics, posX, posY, mobEffect);
         this.renderContents(guiGraphics, posX, posY, mobEffect);
-        this.renderLabels(guiGraphics, posX, posY, mobEffect);
         guiGraphics.pose().popMatrix();
     }
 
     protected ActiveTextCollector activeTextCollector(GuiGraphics guiGraphics) {
         ActiveTextCollector activeTextCollector = guiGraphics.textRenderer(GuiGraphics.HoveredTextEffects.NONE);
         activeTextCollector.defaultParameters(activeTextCollector.defaultParameters()
-                .withOpacity((float) this.rendererConfig().alpha));
+                .withOpacity((float) this.config.widgetAlpha));
         return activeTextCollector;
     }
 
     protected void renderBackground(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
-        Identifier effectBackgroundSprite = this.getEffectBackgroundSprite(
-                mobEffect.isAmbient() && this.widgetConfig().ambientBorder);
-        int colorValue = ARGB.white((float) this.rendererConfig().alpha);
+        Identifier backgroundSprite = this.getEffectBackgroundSprite(
+                mobEffect.isAmbient() && this.config.ambientBorder);
+        int colorValue = ARGB.white((float) this.config.widgetAlpha);
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
-                effectBackgroundSprite,
+                backgroundSprite,
                 posX,
                 posY,
                 this.getWidth(),
@@ -301,26 +288,26 @@ public abstract class AbstractMobEffectRenderer {
                 colorValue);
     }
 
-    protected Identifier getEffectBackgroundSprite(boolean isAmbient) {
-        return isAmbient ? EFFECT_BACKGROUND_AMBIENT_SPRITE : EFFECT_BACKGROUND_SPRITE;
-    }
+    protected abstract Identifier getEffectBackgroundSprite(boolean isAmbient);
 
     protected void renderContents(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
-        if (!this.drawCustomEffect(guiGraphics, posX, posY, mobEffect)) {
-            this.drawEffectSprite(guiGraphics, posX, posY, mobEffect);
+        this.renderBackground(guiGraphics, posX, posY, mobEffect);
+        if (!this.renderCustomSprite(guiGraphics, posX, posY, mobEffect)) {
+            this.renderSprite(guiGraphics, posX, posY, mobEffect);
         }
 
-        if (this.widgetConfig().effectAmplifier != EffectAmplifier.NONE) {
-            this.drawEffectAmplifier(guiGraphics, posX, posY, mobEffect);
+        this.renderLabels(guiGraphics, posX, posY, mobEffect);
+        if (this.config.effectAmplifier.effectAmplifier) {
+            this.renderForeground(guiGraphics, posX, posY, mobEffect);
         }
     }
 
-    protected void drawEffectSprite(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
-        float blinkingAlpha = this.widgetConfig().blinkingAlpha ? this.getBlinkingAlpha(mobEffect) : 1.0F;
-        int colorValue = ARGB.white(blinkingAlpha * (float) this.rendererConfig().alpha);
-        Identifier identifier = Gui.getMobEffectSprite(mobEffect.getEffect());
+    protected void renderSprite(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
+        float blinkingAlpha = this.config.blinkingSprite ? this.getBlinkingAlpha(mobEffect) : 1.0F;
+        int colorValue = ARGB.white(blinkingAlpha * (float) this.config.widgetAlpha);
+        Identifier mobEffectSprite = Gui.getMobEffectSprite(mobEffect.getEffect());
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
-                identifier,
+                mobEffectSprite,
                 posX + this.getSpriteOffsetX(),
                 posY + this.getSpriteOffsetY(this.getEffectDuration(mobEffect, -1) == null),
                 MOB_EFFECT_SPRITE_SIZE,
@@ -328,32 +315,30 @@ public abstract class AbstractMobEffectRenderer {
                 colorValue);
     }
 
-    private boolean drawCustomEffect(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
-        // we make it possible to display effects on any container screen, so this is sometimes unusable
-        if (this.screen instanceof AbstractContainerScreen<?> screen && screen.showsActiveEffects()) {
-            return ClientAbstractions.INSTANCE.renderInventoryIcon(mobEffect, screen, guiGraphics, posX, posY, 0);
-        } else if (this.screen instanceof Gui gui) {
+    private boolean renderCustomSprite(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
+        return this.environment.map((Gui gui) -> {
             return ClientAbstractions.INSTANCE.renderGuiIcon(mobEffect,
                     gui,
                     guiGraphics,
                     posX,
                     posY,
                     0,
-                    this.getBlinkingAlpha(mobEffect) * (float) this.rendererConfig().alpha);
-        } else {
-            return false;
-        }
+                    this.getBlinkingAlpha(mobEffect) * (float) this.config.widgetAlpha);
+        }, (AbstractContainerScreen<?> screen) -> {
+            return ClientAbstractions.INSTANCE.renderInventoryIcon(mobEffect, screen, guiGraphics, posX, posY, 0);
+        });
     }
 
-    protected void drawEffectAmplifier(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
+    protected void renderForeground(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
         if (mobEffect.getAmplifier() >= 1 && mobEffect.getAmplifier() <= 8) {
-            int mobEffectColor = this.widgetConfig().amplifierColor.getMobEffectColor(mobEffect);
-            // subtract amplifier width of 3
-            int offsetX = this.widgetConfig().effectAmplifier == EffectAmplifier.TOP_LEFT ? this.getAmplifierOffsetX() :
-                    this.getWidth() - this.getAmplifierOffsetX() - 3;
-            int offsetY = this.getAmplifierOffsetY();
-            // drop shadow on all sides
-            int backgroundColorValue = ARGB.color((float) this.rendererConfig().alpha, 0);
+            int mobEffectColor = this.config.effectAmplifier.amplifierColor.getMobEffectColor(mobEffect);
+            AnchorPoint.Positioner positioner = this.config.effectAmplifier.amplifierPosition.createPositioner(this.getWidth(),
+                    this.getHeight(),
+                    TINY_NUMBER_WIDTH,
+                    TINY_NUMBER_HEIGHT);
+            int offsetX = positioner.getPosX(this.getAmplifierOffsetX());
+            int offsetY = positioner.getPosY(this.getAmplifierOffsetY());
+            int backgroundColorValue = ARGB.color((float) this.config.widgetAlpha, 0);
             Identifier numberSprite = TINY_NUMBER_SPRITES.get(mobEffect.getAmplifier() + 1);
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
@@ -362,21 +347,20 @@ public abstract class AbstractMobEffectRenderer {
                                 numberSprite,
                                 posX + offsetX + i,
                                 posY + offsetY + j,
-                                3,
-                                5,
+                                TINY_NUMBER_WIDTH,
+                                TINY_NUMBER_HEIGHT,
                                 backgroundColorValue);
                     }
                 }
             }
 
-            // actual number
-            int colorValue = ARGB.color((float) this.rendererConfig().alpha, mobEffectColor);
+            int colorValue = ARGB.color((float) this.config.widgetAlpha, mobEffectColor);
             guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
                     numberSprite,
                     posX + offsetX,
                     posY + offsetY,
-                    3,
-                    5,
+                    TINY_NUMBER_WIDTH,
+                    TINY_NUMBER_HEIGHT,
                     colorValue);
         }
     }
@@ -395,32 +379,32 @@ public abstract class AbstractMobEffectRenderer {
                                 backgroundComponent,
                                 x + i,
                                 y + j,
-                                ARGB.white((float) this.rendererConfig().alpha),
+                                ARGB.white((float) this.config.widgetAlpha),
                                 false);
                     }
                 }
             }
 
-            Style durationStyle = this.widgetConfig().durationColor.getMobEffectStyle(mobEffect);
+            Style durationStyle = this.config.effectDuration.durationColor.getMobEffectStyle(mobEffect);
             guiGraphics.drawString(Minecraft.getInstance().font,
                     ComponentUtils.mergeStyles(component, durationStyle),
                     x,
                     y,
-                    ARGB.white((float) this.rendererConfig().alpha),
+                    ARGB.white((float) this.config.widgetAlpha),
                     false);
         }
     }
 
     protected final @Nullable Component getEffectDuration(MobEffectInstance mobEffect, int maxWidth) {
-        if (mobEffect.isAmbient() && !this.widgetConfig().ambientDuration) {
+        if (mobEffect.isAmbient() && !this.config.effectDuration.ambientDuration) {
             return null;
         }
 
         if (mobEffect.isInfiniteDuration()) {
-            return this.widgetConfig().infiniteDuration ? INFINITY_COMPONENT : null;
+            return this.config.effectDuration.infiniteDuration ? INFINITY_COMPONENT : null;
         }
 
-        if (this.widgetConfig().shortenEffectDuration) {
+        if (this.config.effectDuration.shortenEffectDuration) {
             return Component.literal(TimeFormattingHelper.applyShortTickDurationFormat(mobEffect.getDuration()));
         } else {
             Component component = Component.literal(TimeFormattingHelper.applyLongTickDurationFormat(mobEffect.getDuration()));
@@ -433,11 +417,11 @@ public abstract class AbstractMobEffectRenderer {
     }
 
     public Optional<List<Component>> getHoveredEffectTooltip(AbstractContainerScreen<?> screen, int mouseX, int mouseY) {
-        if (this.rendererConfig().hoveringTooltip()) {
+        if (this.config.hoveringTooltip()) {
             return this.getHoveredEffect(mouseX, mouseY).map((MobEffectInstance mobEffect) -> {
                 List<Component> tooltipLines = new ArrayList<>(Collections.singletonList(this.getEffectDisplayName(
                         mobEffect,
-                        this.rendererConfig().tooltipDuration())));
+                        this.config.tooltipDuration())));
                 // call the event here, so we still have access to the effect instance
                 ClientAbstractions.INSTANCE.onGatherEffectScreenTooltip(screen, mobEffect, tooltipLines);
                 return tooltipLines;

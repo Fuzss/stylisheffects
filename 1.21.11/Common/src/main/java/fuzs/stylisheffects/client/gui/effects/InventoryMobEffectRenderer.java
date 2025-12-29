@@ -1,19 +1,26 @@
 package fuzs.stylisheffects.client.gui.effects;
 
-import fuzs.stylisheffects.client.handler.EffectRendererEnvironment;
+import com.mojang.datafixers.util.Either;
+import fuzs.stylisheffects.config.WidgetType;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffectInstance;
 
 public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRenderer {
+    protected static final Identifier EFFECT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace(
+            "container/inventory/effect_background");
+    protected static final Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE = Identifier.withDefaultNamespace(
+            "container/inventory/effect_background_ambient");
 
-    public InventoryMobEffectRenderer(EffectRendererEnvironment environment) {
+    public InventoryMobEffectRenderer(Either<Gui, AbstractContainerScreen<?>> environment) {
         super(environment);
     }
 
@@ -52,9 +59,14 @@ public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRender
         return this.getHeight() - 13;
     }
 
+    @Override
+    protected Identifier getEffectBackgroundSprite(boolean isAmbient) {
+        return isAmbient ? EFFECT_BACKGROUND_AMBIENT_SPRITE : EFFECT_BACKGROUND_SPRITE;
+    }
+
     public static class Small extends InventoryMobEffectRenderer {
 
-        public Small(EffectRendererEnvironment environment) {
+        public Small(Either<Gui, AbstractContainerScreen<?>> environment) {
             super(environment);
         }
 
@@ -64,14 +76,14 @@ public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRender
         }
 
         @Override
-        public EffectRendererEnvironment.Factory getFallbackRenderer() {
+        public WidgetType.Factory getFallbackRenderer() {
             return GuiMobEffectRenderer.Large::new;
         }
     }
 
     public static class Large extends InventoryMobEffectRenderer {
 
-        public Large(EffectRendererEnvironment environment) {
+        public Large(Either<Gui, AbstractContainerScreen<?>> environment) {
             super(environment);
         }
 
@@ -86,21 +98,15 @@ public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRender
         }
 
         @Override
-        public EffectRendererEnvironment.Factory getFallbackRenderer() {
+        public WidgetType.Factory getFallbackRenderer() {
             return Small::new;
         }
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
-            if (!(this.screen instanceof AbstractContainerScreen<?> screen) || !screen.showsActiveEffects()
-                    || !ClientAbstractions.INSTANCE.renderInventoryText(mobEffect,
-                    screen,
-                    guiGraphics,
-                    posX,
-                    posY,
-                    0)) {
+            if (!this.renderCustomLabels(guiGraphics, posX, posY, mobEffect)) {
                 Component displayNameComponent = this.getEffectDisplayName(mobEffect, false);
-                Style displayNameStyle = this.widgetConfig().nameColor.getMobEffectStyle(mobEffect);
+                Style displayNameStyle = this.config.nameColor.getMobEffectStyle(mobEffect);
                 int minX = posX + 12 + 18;
                 int maxX = posX + this.getWidth() - 7;
                 Component durationComponent = this.getEffectDuration(mobEffect, maxX - minX);
@@ -118,12 +124,18 @@ public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRender
                 }
 
                 if (durationComponent != null) {
-                    Style durationStyle = this.widgetConfig().durationColor.getMobEffectStyle(mobEffect);
+                    Style durationStyle = this.config.effectDuration.durationColor.getMobEffectStyle(mobEffect);
                     activeTextCollector.accept(minX,
                             minY + 1 + 11,
                             ComponentUtils.mergeStyles(durationComponent, durationStyle));
                 }
             }
+        }
+
+        protected boolean renderCustomLabels(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
+            return this.environment.right().map((AbstractContainerScreen<?> screen) -> {
+                return ClientAbstractions.INSTANCE.renderInventoryText(mobEffect, screen, guiGraphics, posX, posY, 0);
+            }).orElse(Boolean.FALSE);
         }
     }
 }
