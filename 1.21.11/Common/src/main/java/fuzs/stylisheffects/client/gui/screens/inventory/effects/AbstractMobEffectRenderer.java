@@ -288,7 +288,8 @@ public abstract class AbstractMobEffectRenderer {
                 this.getHeight(),
                 ARGB.white((float) this.config.widgetTransparency));
         if (!mobEffect.isAmbient() || this.config.effectBar.ambientBar) {
-            float durationScale = EffectDurationHandler.getMobEffectDurationScale(mobEffect, this.config.effectBar.unknownStartingDuration);
+            float durationScale = EffectDurationHandler.getMobEffectDurationScale(mobEffect,
+                    this.config.effectBar.unknownStartingDuration);
             if (durationScale > 0.0F && this.config.effectBar.effectBar) {
                 BarPosition barPosition = this.config.effectBar.barPosition;
                 Identifier barSprite = this.getEffectBarSprite(barPosition);
@@ -421,6 +422,10 @@ public abstract class AbstractMobEffectRenderer {
     }
 
     protected final @Nullable Component getEffectDuration(MobEffectInstance mobEffect, int maxWidth) {
+        if (!this.config.effectDuration.effectDuration) {
+            return null;
+        }
+
         if (mobEffect.isAmbient() && !this.config.effectDuration.ambientDuration) {
             return null;
         }

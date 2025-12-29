@@ -168,7 +168,7 @@ public class ClientConfig implements ConfigCore {
         @Config(description = "Render active status effects in every menu screen, not just in the player inventory.")
         public boolean effectsEverywhere = false;
         @Config(name = "menus_never_with_effects",
-                description = "Exclude certain menus from showing active status effects. Useful when effect icons overlap with other screen elements.")
+                description = "Exclude certain menus from showing active status effects. Useful when the widgets overlap with other screen elements.")
         List<String> menuBlacklistRaw = new ArrayList<>(Arrays.asList("curios:curios_container",
                 "curios:curios_container_v2",
                 "tconstruct:*",
@@ -192,6 +192,8 @@ public class ClientConfig implements ConfigCore {
     }
 
     public static class EffectDurationConfig implements ConfigCore {
+        @Config(description = "Show the remaining effect duration  as text on widgets.")
+        public boolean effectDuration = true;
         @Config(description = "The effect duration color (when available).")
         public EffectColorConfig durationColor = new EffectColorConfig(DyeColor.GRAY, true);
         @Config(description = "Show duration for ambient effects.")
@@ -203,16 +205,16 @@ public class ClientConfig implements ConfigCore {
     }
 
     public static class EffectAmplifierConfig implements ConfigCore {
-        @Config(description = "Show a tiny effect effect amplifier on effect widgets (when available).")
+        @Config(description = "Show a tiny effect amplifier on widgets (when available).")
         public boolean effectAmplifier = true;
-        @Config(description = "The position on the effect widget to draw the tiny effect amplifier at.")
+        @Config(description = "The position on the effect widget to draw the tiny amplifier at.")
         public AnchorPoint amplifierPosition = AnchorPoint.TOP_RIGHT;
         @Config(description = "The effect amplifier color.")
         public EffectColorConfig amplifierColor = new EffectColorConfig(DyeColor.WHITE);
     }
 
     public static class EffectBarConfig implements ConfigCore {
-        @Config(description = "Show a slim bar on effect widgets representing the passing duration of the effect.")
+        @Config(description = "Show a slim bar on widgets representing the passing duration of the effect.")
         public boolean effectBar = true;
         @Config(description = "The effect bar color.")
         public EffectColorConfig barColor = new EffectColorConfig();
