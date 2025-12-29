@@ -26,7 +26,7 @@ public class StylishEffectsJeiPlugin implements IModPlugin {
         registration.addGenericGuiContainerHandler(AbstractContainerScreen.class, new IGuiContainerHandler<>() {
             @Override
             public List<Rect2i> getGuiExtraAreas(AbstractContainerScreen<?> screen) {
-                return EffectScreenHandler.INSTANCE.getInventoryRenderAreas(screen);
+                return EffectScreenHandler.getGuiExtraAreas(screen);
             }
         });
     }

@@ -24,15 +24,14 @@ import net.minecraft.network.chat.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Unit;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Player;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joml.Vector2i;
 import org.joml.Vector2ic;
 import org.jspecify.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class AbstractMobEffectRenderer {
     public static final float DEFAULT_WIDGET_SCALE = 4.0F;
@@ -53,11 +52,10 @@ public abstract class AbstractMobEffectRenderer {
 
     protected Either<Gui, AbstractContainerScreen<?>> environment;
     protected final ClientConfig.EffectWidgetsConfig config;
-    private int availableWidth;
-    private int availableHeight;
+    private int screenWidth;
+    private int screenHeight;
     private int startX;
     private int startY;
-    protected List<MobEffectInstance> activeEffects;
 
     protected AbstractMobEffectRenderer(Either<Gui, AbstractContainerScreen<?>> environment) {
         this.environment = environment;
@@ -66,31 +64,37 @@ public abstract class AbstractMobEffectRenderer {
         }, (AbstractContainerScreen<?> screen) -> {
             return StylishEffects.CONFIG.get(ClientConfig.class).inventoryWidgets;
         });
+        this.init();
     }
 
-    public void setScreenDimensions(int availableWidth, int availableHeight, int startX, int startY) {
-        this.availableWidth = availableWidth - this.config.horizontalOffset();
-        this.availableHeight = availableHeight - this.config.verticalOffset();
-        this.environment.map((Gui gui) -> {
-            this.startX = startX + (this.getScreenSide().isRight() ? 1 : -1) * this.config.horizontalOffset();
-            this.startY = startY + this.config.verticalOffset();
-            return Unit.INSTANCE;
-        }, (AbstractContainerScreen<?> screen) -> {
-            this.startX = startX;
-            this.startY = startY;
-            return Unit.INSTANCE;
-        });
+    public void init() {
+        this.environment.ifLeft(this::initGui).ifRight(this::initScreen);
     }
 
-    public final void setActiveEffects(Collection<MobEffectInstance> activeEffects) {
-        if (activeEffects.isEmpty()) {
-            this.activeEffects = null;
-        } else {
-            this.activeEffects = activeEffects.stream().filter(this::isEffectAllowedToShow).sorted().toList();
-        }
+    private void initGui(Gui gui) {
+        this.screenWidth = gui.minecraft.getWindow().getGuiScaledWidth() - this.config.horizontalOffset() * 2;
+        this.screenHeight = gui.minecraft.getWindow().getGuiScaledHeight() - this.config.verticalOffset() * 2;
+        this.startX = this.config.effectPositions.screenSide.isRight() ?
+                gui.minecraft.getWindow().getGuiScaledWidth() - this.config.horizontalOffset() :
+                this.config.horizontalOffset();
+        this.startY = this.config.verticalOffset();
     }
 
-    private boolean isEffectAllowedToShow(MobEffectInstance mobEffect) {
+    private void initScreen(AbstractContainerScreen<?> screen) {
+        this.screenWidth = (this.config.effectPositions.screenSide.isLeft() ? screen.leftPos :
+                screen.width - screen.imageWidth - screen.leftPos) - this.config.horizontalOffset();
+        this.screenHeight = screen.imageHeight - this.config.verticalOffset();
+        this.startX =
+                this.config.effectPositions.screenSide.isLeft() ? screen.leftPos : screen.leftPos + screen.imageWidth;
+        this.startY = screen.topPos;
+    }
+
+    public List<MobEffectInstance> getMobEffects(@Nullable Player player) {
+        return player != null ? player.getActiveEffects().stream().filter(this::isShowingMobEffect).sorted().toList() :
+                Collections.emptyList();
+    }
+
+    private boolean isShowingMobEffect(MobEffectInstance mobEffect) {
         if (mobEffect.isInfiniteDuration() && this.config.skipInfiniteEffects) {
             return false;
         } else if (!mobEffect.showIcon() && !this.config.ignoreHideParticles) {
@@ -104,12 +108,8 @@ public abstract class AbstractMobEffectRenderer {
         }
     }
 
-    public final boolean isActive() {
-        return this.activeEffects != null && !this.activeEffects.isEmpty();
-    }
-
-    public final boolean isValid() {
-        return !this.config.allowFallback || this.getMaxRows() > 0 && this.getMaxColumns() > 0;
+    public final boolean hasEnoughSpace() {
+        return this.getMaxRows() > 0 && this.getMaxColumns() > 0;
     }
 
     public final float getWidgetScale() {
@@ -158,19 +158,19 @@ public abstract class AbstractMobEffectRenderer {
         return null;
     }
 
-    public final List<Rect2i> getRenderAreas() {
-        return this.getEffectPositions(this.activeEffects).stream().map(Pair::getValue).map((Vector2ic position) -> {
+    public final List<Rect2i> getGuiExtraAreas(List<MobEffectInstance> mobEffects) {
+        return this.getEffectPositions(mobEffects).stream().map(Pair::getValue).map((Vector2ic position) -> {
             return new Rect2i(position.x(), position.y(), this.getScaledWidth(), this.getScaledHeight());
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
-    public List<Pair<MobEffectInstance, Vector2ic>> getEffectPositions(List<MobEffectInstance> activeEffects) {
+    public List<Pair<MobEffectInstance, Vector2ic>> getEffectPositions(List<MobEffectInstance> mobEffects) {
         List<Pair<MobEffectInstance, Vector2ic>> mobEffectPositions = new ArrayList<>();
-        for (int counter = 0; counter < activeEffects.size(); counter++) {
+        for (int counter = 0; counter < mobEffects.size(); counter++) {
             int posX = counter % this.getMaxClampedColumns();
             int posY = counter / this.getMaxClampedColumns();
-            mobEffectPositions.add(Pair.of(activeEffects.get(counter),
-                    this.translateMobEffectWidgetPosition(posX, posY)));
+            mobEffectPositions.add(Pair.of(mobEffects.get(counter),
+                    this.translateMobEffectWidgetPosition(posX, posY, mobEffects)));
         }
 
         return mobEffectPositions;
@@ -180,20 +180,20 @@ public abstract class AbstractMobEffectRenderer {
         return 0;
     }
 
-    protected Vector2ic translateMobEffectWidgetPosition(int posX, int posY) {
+    protected Vector2ic translateMobEffectWidgetPosition(int posX, int posY, List<MobEffectInstance> mobEffects) {
         return switch (this.getScreenSide()) {
             case LEFT -> new Vector2i(this.startX - (this.getScaledWidth() + 1)
                     - (this.getScaledWidth() + this.config.effectPositions.horizontalSpacing) * posX,
-                    this.startY + this.getTopOffset() + this.getAdjustedHeight() * posY);
+                    this.startY + this.getTopOffset() + this.getAdjustedHeight(mobEffects) * posY);
 
             case RIGHT -> new Vector2i(
                     this.startX + 1 + (this.getScaledWidth() + this.config.effectPositions.horizontalSpacing) * posX,
-                    this.startY + this.getTopOffset() + this.getAdjustedHeight() * posY);
+                    this.startY + this.getTopOffset() + this.getAdjustedHeight(mobEffects) * posY);
         };
     }
 
-    public void renderEffects(GuiGraphics guiGraphics) {
-        for (Pair<MobEffectInstance, Vector2ic> entry : this.getEffectPositions(this.activeEffects)) {
+    public void renderEffectWidgets(GuiGraphics guiGraphics, List<MobEffectInstance> mobEffects) {
+        for (Pair<MobEffectInstance, Vector2ic> entry : this.getEffectPositions(mobEffects)) {
             this.renderWidget(guiGraphics, entry.getValue().x(), entry.getValue().y(), entry.getKey());
         }
     }
@@ -213,13 +213,13 @@ public abstract class AbstractMobEffectRenderer {
     }
 
     private int getAvailableWidth() {
-        return Math.min(this.availableWidth,
+        return Math.min(this.screenWidth,
                 this.config.effectPositions.maxColumns * (this.getScaledWidth()
                         + this.config.effectPositions.horizontalSpacing));
     }
 
     private int getAvailableHeight() {
-        return Math.min(this.availableHeight,
+        return Math.min(this.screenHeight,
                 this.config.effectPositions.maxRows * (this.getScaledHeight()
                         + this.config.effectPositions.verticalSpacing));
     }
@@ -232,9 +232,9 @@ public abstract class AbstractMobEffectRenderer {
         return Mth.clamp(this.getMaxColumns(), 1, this.config.effectPositions.maxColumns);
     }
 
-    private int getAdjustedHeight() {
-        if (this.getRows() > this.getMaxClampedRows()) {
-            return (this.getAvailableHeight() - this.getScaledHeight()) / Math.max(1, this.getRows() - 1);
+    private int getAdjustedHeight(List<MobEffectInstance> mobEffects) {
+        if (this.getRows(mobEffects) > this.getMaxClampedRows()) {
+            return (this.getAvailableHeight() - this.getScaledHeight()) / Math.max(1, this.getRows(mobEffects) - 1);
         }
         return this.getScaledHeight() + this.config.effectPositions.verticalSpacing;
     }
@@ -247,8 +247,8 @@ public abstract class AbstractMobEffectRenderer {
         return Mth.clamp(this.getMaxRows(), 1, this.config.effectPositions.maxRows);
     }
 
-    public int getRows() {
-        return this.splitByColumns(this.activeEffects.size());
+    public int getRows(List<MobEffectInstance> mobEffects) {
+        return this.splitByColumns(mobEffects.size());
     }
 
     protected int splitByColumns(int beneficialEffectsAmount) {
@@ -416,23 +416,27 @@ public abstract class AbstractMobEffectRenderer {
         }
     }
 
-    public Optional<List<Component>> getHoveredEffectTooltip(AbstractContainerScreen<?> screen, int mouseX, int mouseY) {
+    public Optional<List<Component>> getHoveredEffectTooltip(int mouseX, int mouseY, List<MobEffectInstance> mobEffects) {
         if (this.config.hoveringTooltip()) {
-            return this.getHoveredEffect(mouseX, mouseY).map((MobEffectInstance mobEffect) -> {
-                List<Component> tooltipLines = new ArrayList<>(Collections.singletonList(this.getEffectDisplayName(
-                        mobEffect,
-                        this.config.tooltipDuration())));
-                // call the event here, so we still have access to the effect instance
-                ClientAbstractions.INSTANCE.onGatherEffectScreenTooltip(screen, mobEffect, tooltipLines);
-                return tooltipLines;
+            return this.environment.map((Gui gui) -> {
+                return Optional.empty();
+            }, (AbstractContainerScreen<?> screen) -> {
+                return this.getHoveredEffect(mouseX, mouseY, mobEffects).map((MobEffectInstance mobEffect) -> {
+                    List<Component> tooltipLines = new ArrayList<>(Collections.singletonList(this.getEffectDisplayName(
+                            mobEffect,
+                            this.config.tooltipDuration())));
+                    // call the event here, so we still have access to the effect instance
+                    ClientAbstractions.INSTANCE.onGatherEffectScreenTooltip(screen, mobEffect, tooltipLines);
+                    return tooltipLines;
+                });
             });
         } else {
             return Optional.empty();
         }
     }
 
-    public Optional<MobEffectInstance> getHoveredEffect(int mouseX, int mouseY) {
-        for (Map.Entry<MobEffectInstance, Vector2ic> entry : Lists.reverse(this.getEffectPositions(this.activeEffects))) {
+    public Optional<MobEffectInstance> getHoveredEffect(int mouseX, int mouseY, List<MobEffectInstance> mobEffects) {
+        for (Map.Entry<MobEffectInstance, Vector2ic> entry : Lists.reverse(this.getEffectPositions(mobEffects))) {
             if (ScreenHelper.isHovering(entry.getValue().x(),
                     entry.getValue().y(),
                     this.getScaledWidth(),

@@ -15,21 +15,21 @@ import java.util.List;
 public final class NeoForgeClientAbstractions implements ClientAbstractions {
 
     @Override
-    public boolean renderInventoryText(MobEffectInstance effectInstance, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
-        return IClientMobEffectExtensions.of(effectInstance)
-                .renderInventoryText(effectInstance, screen, guiGraphics, x, y, blitOffset);
+    public boolean renderInventoryText(MobEffectInstance mobEffect, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
+        return IClientMobEffectExtensions.of(mobEffect)
+                .renderInventoryText(mobEffect, screen, guiGraphics, x, y, blitOffset);
     }
 
     @Override
-    public boolean renderInventoryIcon(MobEffectInstance effectInstance, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
-        return IClientMobEffectExtensions.of(effectInstance)
-                .renderInventoryIcon(effectInstance, screen, guiGraphics, x, y, blitOffset);
+    public boolean renderInventoryIcon(MobEffectInstance mobEffect, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
+        return IClientMobEffectExtensions.of(mobEffect)
+                .renderInventoryIcon(mobEffect, screen, guiGraphics, x, y, blitOffset);
     }
 
     @Override
-    public boolean renderGuiIcon(MobEffectInstance effectInstance, Gui gui, GuiGraphics guiGraphics, int x, int y, float z, float alpha) {
-        return IClientMobEffectExtensions.of(effectInstance)
-                .renderGuiIcon(effectInstance, gui, guiGraphics, x, y, z, alpha);
+    public boolean renderGuiIcon(MobEffectInstance mobEffect, Gui gui, GuiGraphics guiGraphics, int x, int y, float z, float alpha) {
+        return IClientMobEffectExtensions.of(mobEffect)
+                .renderGuiIcon(mobEffect, gui, guiGraphics, x, y, z, alpha);
     }
 
     @Override

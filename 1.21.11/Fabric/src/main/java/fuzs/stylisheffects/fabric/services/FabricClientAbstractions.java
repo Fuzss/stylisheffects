@@ -13,17 +13,17 @@ import java.util.List;
 public final class FabricClientAbstractions implements ClientAbstractions {
 
     @Override
-    public boolean renderInventoryText(MobEffectInstance effectInstance, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
+    public boolean renderInventoryText(MobEffectInstance mobEffect, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
         return false;
     }
 
     @Override
-    public boolean renderInventoryIcon(MobEffectInstance effectInstance, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
+    public boolean renderInventoryIcon(MobEffectInstance mobEffect, AbstractContainerScreen<?> screen, GuiGraphics guiGraphics, int x, int y, int blitOffset) {
         return false;
     }
 
     @Override
-    public boolean renderGuiIcon(MobEffectInstance effectInstance, Gui gui, GuiGraphics guiGraphics, int x, int y, float z, float alpha) {
+    public boolean renderGuiIcon(MobEffectInstance mobEffect, Gui gui, GuiGraphics guiGraphics, int x, int y, float z, float alpha) {
         return false;
     }
 

@@ -36,13 +36,13 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
     }
 
     @Override
-    public int getRows() {
+    public int getRows(List<MobEffectInstance> mobEffects) {
         if (this.config.separateEffects()) {
-            int beneficialEffectsAmount = this.getBeneficialEffectsAmount(this.activeEffects);
+            int beneficialEffectsAmount = this.getBeneficialEffectsAmount(mobEffects);
             return this.splitByColumns(beneficialEffectsAmount) + this.splitByColumns(
-                    this.activeEffects.size() - beneficialEffectsAmount);
+                    mobEffects.size() - beneficialEffectsAmount);
         } else {
-            return super.getRows();
+            return super.getRows(mobEffects);
         }
     }
 
@@ -77,14 +77,13 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
     }
 
     @Override
-    public List<Pair<MobEffectInstance, Vector2ic>> getEffectPositions(List<MobEffectInstance> activeEffects) {
-        int beneficialRows = this.splitByColumns(this.getBeneficialEffectsAmount(activeEffects));
+    public List<Pair<MobEffectInstance, Vector2ic>> getEffectPositions(List<MobEffectInstance> mobEffects) {
+        int beneficialRows = this.splitByColumns(this.getBeneficialEffectsAmount(mobEffects));
         int beneficialCounter = 0, harmfulCounter = 0;
         List<Pair<MobEffectInstance, Vector2ic>> mobEffectPositions = new ArrayList<>();
-        for (MobEffectInstance effect : activeEffects) {
+        for (MobEffectInstance effect : mobEffects) {
             int counter;
-            boolean isBeneficial =
-                    !this.config.separateEffects() || effect.getEffect().value().isBeneficial();
+            boolean isBeneficial = !this.config.separateEffects() || effect.getEffect().value().isBeneficial();
             if (isBeneficial) {
                 counter = beneficialCounter++;
             } else {
@@ -97,7 +96,7 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
                 posY += beneficialRows;
             }
 
-            mobEffectPositions.add(Pair.of(effect, this.translateMobEffectWidgetPosition(posX, posY)));
+            mobEffectPositions.add(Pair.of(effect, this.translateMobEffectWidgetPosition(posX, posY, mobEffects)));
         }
 
         // sorting is need for rendering in condensed mode (when too many effects are active and the widgets overlap), so that the overlap is in the right order
@@ -108,7 +107,7 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
                     .isBeneficial()).reversed());
         }
 
-        if (beneficialCounter + harmfulCounter != activeEffects.size()) {
+        if (beneficialCounter + harmfulCounter != mobEffects.size()) {
             throw new RuntimeException("Effects amount mismatch");
         }
 

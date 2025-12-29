@@ -38,8 +38,6 @@ public class ClientConfig implements ConfigCore {
         public boolean ignoreHideParticles = false;
         @Config(description = "Prevent status effects with infinite duration from showing.")
         public boolean skipInfiniteEffects = false;
-        @Config(description = "Allow effect widgets to use a smaller variant if not enough screen space exists (when available). Otherwise effect widgets might run off-screen.")
-        public boolean allowFallback = true;
         @Config(description = "Custom scale for the effect widgets.")
         @Config.DoubleRange(min = 1.0, max = 16.0)
         public double widgetScale = AbstractMobEffectRenderer.DEFAULT_WIDGET_SCALE;
@@ -75,6 +73,8 @@ public class ClientConfig implements ConfigCore {
         public final EffectMenusConfig effectMenus = new EffectMenusConfig();
         @Config
         public final EffectTooltipsConfig effectTooltips = new EffectTooltipsConfig();
+        @Config(description = "Allow effect widgets to use a smaller variant if not enough screen space exists (when available). Otherwise effect widgets might run off-screen.")
+        public boolean supportUsingSmallerWidgets = true;
         @Config(description = "Minimum screen border distance for effect widgets.")
         @Config.IntRange(min = 0)
         public int screenBorderDistance = 3;
@@ -84,7 +84,6 @@ public class ClientConfig implements ConfigCore {
             this.effectPositions.screenSide = ScreenSide.LEFT;
             this.widgetAlpha = 1.0;
             this.ignoreHideParticles = true;
-            this.allowFallback = true;
         }
 
         @Override
@@ -128,7 +127,6 @@ public class ClientConfig implements ConfigCore {
             this.effectPositions.screenSide = ScreenSide.RIGHT;
             this.widgetAlpha = 0.85;
             this.ignoreHideParticles = false;
-            this.allowFallback = false;
         }
 
         @Override
@@ -200,6 +198,10 @@ public class ClientConfig implements ConfigCore {
         public boolean infiniteDuration = false;
         @Config(description = "Display effect duration in a more compact way. This is used automatically when the default duration formatting is too long.")
         public boolean shortenEffectDuration = false;
+
+        public EffectDurationConfig() {
+            this.durationColor.applyMobEffectColor = true;
+        }
     }
 
     public static class EffectAmplifierConfig implements ConfigCore {
