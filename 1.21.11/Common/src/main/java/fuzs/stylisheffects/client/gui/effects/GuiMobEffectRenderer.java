@@ -1,6 +1,10 @@
 package fuzs.stylisheffects.client.gui.effects;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
+import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.config.BarPosition;
 import fuzs.stylisheffects.config.WidgetType;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -15,11 +19,20 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
     protected static final Identifier EFFECT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace("hud/effect_background");
     protected static final Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE = Identifier.withDefaultNamespace(
             "hud/effect_background_ambient");
+    protected static final Map<BarPosition, Identifier> EFFECT_BACKGROUND_OVERLAY_SPRITES = Maps.immutableEnumMap(
+            ImmutableMap.<BarPosition, Identifier>builder()
+                    .put(BarPosition.CENTER, StylishEffects.id("hud/effect_background_overlay"))
+                    .put(BarPosition.TOP, StylishEffects.id("hud/effect_background_overlay_top"))
+                    .put(BarPosition.RIGHT, StylishEffects.id("hud/effect_background_overlay_right"))
+                    .put(BarPosition.BOTTOM, StylishEffects.id("hud/effect_background_overlay_bottom"))
+                    .put(BarPosition.LEFT, StylishEffects.id("hud/effect_background_overlay_left"))
+                    .build());
 
     public GuiMobEffectRenderer(Either<Gui, AbstractContainerScreen<?>> environment) {
         super(environment);
@@ -125,6 +138,11 @@ public abstract class GuiMobEffectRenderer extends AbstractMobEffectRenderer {
     @Override
     protected Identifier getEffectBackgroundSprite(boolean isAmbient) {
         return isAmbient ? EFFECT_BACKGROUND_AMBIENT_SPRITE : EFFECT_BACKGROUND_SPRITE;
+    }
+
+    @Override
+    protected Identifier getEffectBarSprite(BarPosition barPosition) {
+        return EFFECT_BACKGROUND_OVERLAY_SPRITES.get(barPosition);
     }
 
     public static class Small extends GuiMobEffectRenderer {

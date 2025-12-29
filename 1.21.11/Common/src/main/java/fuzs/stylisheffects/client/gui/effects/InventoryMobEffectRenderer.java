@@ -1,6 +1,10 @@
 package fuzs.stylisheffects.client.gui.effects;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
+import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.config.BarPosition;
 import fuzs.stylisheffects.config.WidgetType;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.Minecraft;
@@ -14,11 +18,21 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffectInstance;
 
+import java.util.Map;
+
 public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRenderer {
     protected static final Identifier EFFECT_BACKGROUND_SPRITE = Identifier.withDefaultNamespace(
             "container/inventory/effect_background");
     protected static final Identifier EFFECT_BACKGROUND_AMBIENT_SPRITE = Identifier.withDefaultNamespace(
             "container/inventory/effect_background_ambient");
+    protected static final Map<BarPosition, Identifier> EFFECT_BACKGROUND_OVERLAY_SPRITES = Maps.immutableEnumMap(
+            ImmutableMap.<BarPosition, Identifier>builder()
+                    .put(BarPosition.CENTER, StylishEffects.id("container/inventory/effect_background_overlay"))
+                    .put(BarPosition.TOP, StylishEffects.id("container/inventory/effect_background_overlay_top"))
+                    .put(BarPosition.RIGHT, StylishEffects.id("container/inventory/effect_background_overlay_right"))
+                    .put(BarPosition.BOTTOM, StylishEffects.id("container/inventory/effect_background_overlay_bottom"))
+                    .put(BarPosition.LEFT, StylishEffects.id("container/inventory/effect_background_overlay_left"))
+                    .build());
 
     public InventoryMobEffectRenderer(Either<Gui, AbstractContainerScreen<?>> environment) {
         super(environment);
@@ -62,6 +76,11 @@ public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRender
     @Override
     protected Identifier getEffectBackgroundSprite(boolean isAmbient) {
         return isAmbient ? EFFECT_BACKGROUND_AMBIENT_SPRITE : EFFECT_BACKGROUND_SPRITE;
+    }
+
+    @Override
+    protected Identifier getEffectBarSprite(BarPosition barPosition) {
+        return EFFECT_BACKGROUND_OVERLAY_SPRITES.get(barPosition);
     }
 
     public static class Small extends InventoryMobEffectRenderer {

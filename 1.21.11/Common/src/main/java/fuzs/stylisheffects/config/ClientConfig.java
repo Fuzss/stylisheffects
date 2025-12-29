@@ -29,9 +29,11 @@ public class ClientConfig implements ConfigCore {
         public final EffectDurationConfig effectDuration = new EffectDurationConfig();
         @Config
         public final EffectAmplifierConfig effectAmplifier = new EffectAmplifierConfig();
+        @Config
+        public final EffectBarConfig effectBar = new EffectBarConfig();
         @Config(description = {
                 "The effect renderer to use.",
-                "This setting might not be respected when not enough screen space is available. To force this setting disable \"allow_fallback\"."
+                "This setting might not be respected when not enough screen space is available."
         })
         public WidgetType widgetType = WidgetType.GUI_RECTANGLE;
         @Config(description = "Bypass vanilla's \"hideParticles\" flag which prevents a status effect from showing when set via commands.")
@@ -41,9 +43,9 @@ public class ClientConfig implements ConfigCore {
         @Config(description = "Custom scale for the effect widgets.")
         @Config.DoubleRange(min = 1.0, max = 16.0)
         public double widgetScale = AbstractMobEffectRenderer.DEFAULT_WIDGET_SCALE;
-        @Config(description = "Transparency value for effect widgets.")
+        @Config(description = "The transparency value for effect widgets with one making it opaque, and zero making it fully invisible.")
         @Config.DoubleRange(min = 0.0, max = 1.0)
-        public double widgetAlpha = 1.0;
+        public double widgetTransparency = 1.0;
         @Config(description = "Should the effect icon start to blink when the effect is running out.")
         public boolean blinkingSprite = true;
         @Config(description = "Should ambient effect widgets have a cyan colored border.")
@@ -73,7 +75,7 @@ public class ClientConfig implements ConfigCore {
         public final EffectMenusConfig effectMenus = new EffectMenusConfig();
         @Config
         public final EffectTooltipsConfig effectTooltips = new EffectTooltipsConfig();
-        @Config(description = "Allow effect widgets to use a smaller variant if not enough screen space exists (when available). Otherwise effect widgets might run off-screen.")
+        @Config(description = "Allow effect widgets to use a smaller variant (when available) if not enough screen space is available. Otherwise widgets might run off-screen.")
         public boolean supportUsingSmallerWidgets = true;
         @Config(description = "Minimum screen border distance for effect widgets.")
         @Config.IntRange(min = 0)
@@ -82,7 +84,7 @@ public class ClientConfig implements ConfigCore {
         public InventoryWidgetsConfig() {
             this.effectDuration.ambientDuration = true;
             this.effectPositions.screenSide = ScreenSide.LEFT;
-            this.widgetAlpha = 1.0;
+            this.widgetTransparency = 1.0;
             this.ignoreHideParticles = true;
         }
 
@@ -125,7 +127,7 @@ public class ClientConfig implements ConfigCore {
         public GuiWidgetsConfig() {
             this.effectDuration.ambientDuration = false;
             this.effectPositions.screenSide = ScreenSide.RIGHT;
-            this.widgetAlpha = 0.85;
+            this.widgetTransparency = 0.85;
             this.ignoreHideParticles = false;
         }
 
@@ -191,17 +193,13 @@ public class ClientConfig implements ConfigCore {
 
     public static class EffectDurationConfig implements ConfigCore {
         @Config(description = "The effect duration color (when available).")
-        public EffectColorConfig durationColor = new EffectColorConfig(DyeColor.GRAY);
+        public EffectColorConfig durationColor = new EffectColorConfig(DyeColor.GRAY, true);
         @Config(description = "Show duration for ambient effects.")
         public boolean ambientDuration = true;
         @Config(description = "Show infinity symbol for effects with infinite duration.")
         public boolean infiniteDuration = false;
         @Config(description = "Display effect duration in a more compact way. This is used automatically when the default duration formatting is too long.")
         public boolean shortenEffectDuration = false;
-
-        public EffectDurationConfig() {
-            this.durationColor.applyMobEffectColor = true;
-        }
     }
 
     public static class EffectAmplifierConfig implements ConfigCore {
@@ -213,14 +211,44 @@ public class ClientConfig implements ConfigCore {
         public EffectColorConfig amplifierColor = new EffectColorConfig(DyeColor.WHITE);
     }
 
+    public static class EffectBarConfig implements ConfigCore {
+        @Config(description = "Show a slim bar on effect widgets representing the passing duration of the effect.")
+        public boolean effectBar = true;
+        @Config(description = "The effect bar color.")
+        public EffectColorConfig barColor = new EffectColorConfig();
+        @Config(description = "The position of the bar on the effect widget.")
+        public BarPosition barPosition = BarPosition.RIGHT;
+        @Config(description = "The transparency value for the bar with one making it opaque, and zero making it fully invisible.")
+        @Config.DoubleRange(min = 0.0, max = 1.0)
+        public double barTransparency = 0.5;
+        @Config(description = "Switch the direction in which the effect bar is shrinking to.")
+        public boolean flipAxis = false;
+        @Config(description = {
+                "Include bars for effects that were already on the player before the starting duration could be stored.",
+                "This is usually the case when logging in."
+        })
+        public boolean unknownStartingDuration = false;
+        @Config(description = "Show bar for ambient effects.")
+        public boolean ambientBar = false;
+    }
+
     public static class EffectColorConfig implements ConfigCore {
         @Config(description = "The text color.")
         DyeColor color;
         @Config(description = "Override the color to use the potion color from the mob effect.")
-        boolean applyMobEffectColor = false;
+        boolean applyMobEffectColor;
+
+        public EffectColorConfig() {
+            this(DyeColor.WHITE, true);
+        }
 
         public EffectColorConfig(DyeColor color) {
+            this(color, false);
+        }
+
+        public EffectColorConfig(DyeColor color, boolean applyMobEffectColor) {
             this.color = color;
+            this.applyMobEffectColor = applyMobEffectColor;
         }
 
         public int getMobEffectColor(MobEffectInstance mobEffect) {

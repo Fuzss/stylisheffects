@@ -5,7 +5,9 @@ import com.mojang.datafixers.util.Either;
 import fuzs.puzzleslib.api.client.gui.v2.AnchorPoint;
 import fuzs.puzzleslib.api.client.gui.v2.ScreenHelper;
 import fuzs.stylisheffects.StylishEffects;
+import fuzs.stylisheffects.client.handler.EffectDurationHandler;
 import fuzs.stylisheffects.client.util.TimeFormattingHelper;
+import fuzs.stylisheffects.config.BarPosition;
 import fuzs.stylisheffects.config.ClientConfig;
 import fuzs.stylisheffects.config.ScreenSide;
 import fuzs.stylisheffects.config.WidgetType;
@@ -271,24 +273,47 @@ public abstract class AbstractMobEffectRenderer {
     protected ActiveTextCollector activeTextCollector(GuiGraphics guiGraphics) {
         ActiveTextCollector activeTextCollector = guiGraphics.textRenderer(GuiGraphics.HoveredTextEffects.NONE);
         activeTextCollector.defaultParameters(activeTextCollector.defaultParameters()
-                .withOpacity((float) this.config.widgetAlpha));
+                .withOpacity((float) this.config.widgetTransparency));
         return activeTextCollector;
     }
 
     protected void renderBackground(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
         Identifier backgroundSprite = this.getEffectBackgroundSprite(
                 mobEffect.isAmbient() && this.config.ambientBorder);
-        int colorValue = ARGB.white((float) this.config.widgetAlpha);
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
                 backgroundSprite,
                 posX,
                 posY,
                 this.getWidth(),
                 this.getHeight(),
-                colorValue);
+                ARGB.white((float) this.config.widgetTransparency));
+        if (!mobEffect.isAmbient() || this.config.effectBar.ambientBar) {
+            float durationScale = EffectDurationHandler.getMobEffectDurationScale(mobEffect, this.config.effectBar.unknownStartingDuration);
+            if (durationScale > 0.0F && this.config.effectBar.effectBar) {
+                BarPosition barPosition = this.config.effectBar.barPosition;
+                Identifier barSprite = this.getEffectBarSprite(barPosition);
+                int borderSize = this.getBorderSize() * 2;
+                int scaledWidth =
+                        borderSize + Mth.ceil(barPosition.getScaledWidth(this.getWidth() - borderSize, durationScale));
+                int scaledHeight = borderSize + Mth.ceil(barPosition.getScaledHeight(this.getHeight() - borderSize,
+                        durationScale));
+                boolean flipAxis = barPosition.flipAxis != this.config.effectBar.flipAxis;
+                int mobEffectColor = this.config.effectBar.barColor.getMobEffectColor(mobEffect);
+                guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
+                        barSprite,
+                        posX + (flipAxis ? this.getWidth() - scaledWidth : 0),
+                        posY + (flipAxis ? this.getHeight() - scaledHeight : 0),
+                        scaledWidth,
+                        scaledHeight,
+                        ARGB.color((float) (this.config.widgetTransparency * this.config.effectBar.barTransparency),
+                                mobEffectColor));
+            }
+        }
     }
 
     protected abstract Identifier getEffectBackgroundSprite(boolean isAmbient);
+
+    protected abstract Identifier getEffectBarSprite(BarPosition barPosition);
 
     protected void renderContents(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
         this.renderBackground(guiGraphics, posX, posY, mobEffect);
@@ -304,7 +329,7 @@ public abstract class AbstractMobEffectRenderer {
 
     protected void renderSprite(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
         float blinkingAlpha = this.config.blinkingSprite ? this.getBlinkingAlpha(mobEffect) : 1.0F;
-        int colorValue = ARGB.white(blinkingAlpha * (float) this.config.widgetAlpha);
+        int colorValue = ARGB.white(blinkingAlpha * (float) this.config.widgetTransparency);
         Identifier mobEffectSprite = Gui.getMobEffectSprite(mobEffect.getEffect());
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
                 mobEffectSprite,
@@ -323,7 +348,7 @@ public abstract class AbstractMobEffectRenderer {
                     posX,
                     posY,
                     0,
-                    this.getBlinkingAlpha(mobEffect) * (float) this.config.widgetAlpha);
+                    this.getBlinkingAlpha(mobEffect) * (float) this.config.widgetTransparency);
         }, (AbstractContainerScreen<?> screen) -> {
             return ClientAbstractions.INSTANCE.renderInventoryIcon(mobEffect, screen, guiGraphics, posX, posY, 0);
         });
@@ -338,7 +363,7 @@ public abstract class AbstractMobEffectRenderer {
                     TINY_NUMBER_HEIGHT);
             int offsetX = positioner.getPosX(this.getAmplifierOffsetX());
             int offsetY = positioner.getPosY(this.getAmplifierOffsetY());
-            int backgroundColorValue = ARGB.color((float) this.config.widgetAlpha, 0);
+            int backgroundColorValue = ARGB.color((float) this.config.widgetTransparency, 0);
             Identifier numberSprite = TINY_NUMBER_SPRITES.get(mobEffect.getAmplifier() + 1);
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
@@ -354,7 +379,7 @@ public abstract class AbstractMobEffectRenderer {
                 }
             }
 
-            int colorValue = ARGB.color((float) this.config.widgetAlpha, mobEffectColor);
+            int colorValue = ARGB.color((float) this.config.widgetTransparency, mobEffectColor);
             guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED,
                     numberSprite,
                     posX + offsetX,
@@ -379,7 +404,7 @@ public abstract class AbstractMobEffectRenderer {
                                 backgroundComponent,
                                 x + i,
                                 y + j,
-                                ARGB.white((float) this.config.widgetAlpha),
+                                ARGB.white((float) this.config.widgetTransparency),
                                 false);
                     }
                 }
@@ -390,7 +415,7 @@ public abstract class AbstractMobEffectRenderer {
                     ComponentUtils.mergeStyles(component, durationStyle),
                     x,
                     y,
-                    ARGB.white((float) this.config.widgetAlpha),
+                    ARGB.white((float) this.config.widgetTransparency),
                     false);
         }
     }

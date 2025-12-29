@@ -1,7 +1,10 @@
 package fuzs.stylisheffects.client.handler;
 
 import com.mojang.datafixers.util.Either;
+import fuzs.puzzleslib.api.event.v1.core.EventResult;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
+import fuzs.puzzleslib.api.event.v1.data.MutableBoolean;
+import fuzs.puzzleslib.api.event.v1.data.MutableInt;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.client.gui.effects.AbstractMobEffectRenderer;
 import fuzs.stylisheffects.config.ClientConfig;
@@ -66,6 +69,12 @@ public class EffectScreenHandler {
         // When opening the creative mode inventory, there always is a trailing init call for the survival inventory that messes this up otherwise.
         if (screen == screen.minecraft.screen) {
             inventoryMobEffectRenderer = createInventoryRenderer(screen);
+        }
+    }
+
+    public static void onRemove(AbstractContainerScreen<?> screen) {
+        if (screen == screen.minecraft.screen) {
+            inventoryMobEffectRenderer = null;
         }
     }
 
@@ -138,6 +147,10 @@ public class EffectScreenHandler {
         }
 
         return Collections.emptyList();
+    }
+
+    public static EventResult onPrepareInventoryMobEffects(Screen screen, int maxWidth, MutableBoolean smallWidgets, MutableInt horizontalPosition) {
+        return EventResult.INTERRUPT;
     }
 
     public static EventResultHolder<@Nullable Screen> onScreenOpening(@Nullable Screen oldScreen, @Nullable Screen newScreen) {
