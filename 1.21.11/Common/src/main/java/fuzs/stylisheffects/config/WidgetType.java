@@ -1,7 +1,5 @@
 package fuzs.stylisheffects.config;
 
-import java.util.Locale;
-
 /**
  * type of renderer that is used
  */
@@ -13,29 +11,17 @@ public enum WidgetType {
     /**
      * vanilla's native effect rendering on the in-game gui
      */
-    GUI_SMALL,
+    GUI_SQUARE,
     /**
-     * our default rendering, similar to {@link #GUI_SMALL}, just slightly larger with more information
+     * our default rendering, similar to {@link #GUI_SQUARE}, just slightly larger with more information
      */
-    GUI_COMPACT,
+    GUI_RECTANGLE,
     /**
      * vanilla's compact inventory widgets
      */
-    INVENTORY_COMPACT,
+    INVENTORY_SQUARE,
     /**
      * vanilla's full sized inventory widgets
      */
-    INVENTORY_FULL_SIZE;
-
-    /**
-     * @return is this widget using a compact renderer that does not show the mob effect name as proper text
-     */
-    public boolean isCompact() {
-        return this != NONE && this != INVENTORY_FULL_SIZE;
-    }
-
-    @Override
-    public String toString() {
-        return this.name().toLowerCase(Locale.ROOT) + "_widget";
-    }
+    INVENTORY_RECTANGLE
 }
