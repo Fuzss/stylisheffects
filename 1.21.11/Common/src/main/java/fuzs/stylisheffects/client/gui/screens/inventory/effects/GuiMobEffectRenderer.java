@@ -1,4 +1,4 @@
-package fuzs.stylisheffects.client.gui.effects;
+package fuzs.stylisheffects.client.gui.screens.inventory.effects;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

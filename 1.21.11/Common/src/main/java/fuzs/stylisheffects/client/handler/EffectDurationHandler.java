@@ -61,9 +61,9 @@ public class EffectDurationHandler {
                             || Math.abs(MOB_EFFECT_INITIAL_DURATIONS.getOrDefault(mobEffectKey, Integer.MAX_VALUE))
                             < mobEffect.getDuration()) {
                         MOB_EFFECT_INITIAL_DURATIONS.put(mobEffectKey, mobEffect.getDuration());
-                    } else {
-                        // Since this is a catch-all case, we do not want to override existing durations.
-                        MOB_EFFECT_INITIAL_DURATIONS.putIfAbsent(mobEffectKey, -mobEffect.getDuration());
+                    } else if (MOB_EFFECT_INITIAL_DURATIONS.getInt(mobEffectKey) <= 0) {
+                        // Allow ticking down running effects, so they can be superseded by new effects with longer durations (since that is allowed on the server-side).
+                        MOB_EFFECT_INITIAL_DURATIONS.put(mobEffectKey, -mobEffect.getDuration());
                     }
                 }
             }

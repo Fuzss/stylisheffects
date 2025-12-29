@@ -4,7 +4,7 @@ import fuzs.puzzleslib.api.client.gui.v2.AnchorPoint;
 import fuzs.puzzleslib.api.config.v3.Config;
 import fuzs.puzzleslib.api.config.v3.ConfigCore;
 import fuzs.puzzleslib.api.config.v3.serialization.ConfigDataSet;
-import fuzs.stylisheffects.client.gui.effects.AbstractMobEffectRenderer;
+import fuzs.stylisheffects.client.gui.screens.inventory.effects.AbstractMobEffectRenderer;
 import fuzs.stylisheffects.client.util.ColorUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Style;

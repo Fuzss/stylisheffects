@@ -1,9 +1,9 @@
 package fuzs.stylisheffects.config;
 
 import com.mojang.datafixers.util.Either;
-import fuzs.stylisheffects.client.gui.effects.AbstractMobEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.GuiMobEffectRenderer;
-import fuzs.stylisheffects.client.gui.effects.InventoryMobEffectRenderer;
+import fuzs.stylisheffects.client.gui.screens.inventory.effects.AbstractMobEffectRenderer;
+import fuzs.stylisheffects.client.gui.screens.inventory.effects.GuiMobEffectRenderer;
+import fuzs.stylisheffects.client.gui.screens.inventory.effects.InventoryMobEffectRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 

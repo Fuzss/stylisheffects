@@ -6,7 +6,7 @@ import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.puzzleslib.api.event.v1.data.MutableBoolean;
 import fuzs.puzzleslib.api.event.v1.data.MutableInt;
 import fuzs.stylisheffects.StylishEffects;
-import fuzs.stylisheffects.client.gui.effects.AbstractMobEffectRenderer;
+import fuzs.stylisheffects.client.gui.screens.inventory.effects.AbstractMobEffectRenderer;
 import fuzs.stylisheffects.config.ClientConfig;
 import fuzs.stylisheffects.config.WidgetType;
 import net.minecraft.client.DeltaTracker;
