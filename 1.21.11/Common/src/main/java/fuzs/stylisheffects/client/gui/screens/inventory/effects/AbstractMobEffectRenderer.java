@@ -257,6 +257,13 @@ public abstract class AbstractMobEffectRenderer {
         return (int) Math.ceil(beneficialEffectsAmount / (float) this.getMaxClampedColumns());
     }
 
+    protected ActiveTextCollector activeTextCollector(GuiGraphics guiGraphics) {
+        ActiveTextCollector activeTextCollector = guiGraphics.textRenderer(GuiGraphics.HoveredTextEffects.NONE);
+        activeTextCollector.defaultParameters(activeTextCollector.defaultParameters()
+                .withOpacity((float) this.config.widgetTransparency));
+        return activeTextCollector;
+    }
+
     public final void renderWidget(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
         guiGraphics.pose().pushMatrix();
         float scale = this.getWidgetScale();
@@ -270,11 +277,16 @@ public abstract class AbstractMobEffectRenderer {
         guiGraphics.pose().popMatrix();
     }
 
-    protected ActiveTextCollector activeTextCollector(GuiGraphics guiGraphics) {
-        ActiveTextCollector activeTextCollector = guiGraphics.textRenderer(GuiGraphics.HoveredTextEffects.NONE);
-        activeTextCollector.defaultParameters(activeTextCollector.defaultParameters()
-                .withOpacity((float) this.config.widgetTransparency));
-        return activeTextCollector;
+    protected void renderContents(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
+        this.renderBackground(guiGraphics, posX, posY, mobEffect);
+        if (!this.renderCustomSprite(guiGraphics, posX, posY, mobEffect)) {
+            this.renderSprite(guiGraphics, posX, posY, mobEffect);
+        }
+
+        this.renderLabels(guiGraphics, posX, posY, mobEffect);
+        if (this.config.effectAmplifier.effectAmplifier) {
+            this.renderForeground(guiGraphics, posX, posY, mobEffect);
+        }
     }
 
     protected void renderBackground(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
@@ -315,18 +327,6 @@ public abstract class AbstractMobEffectRenderer {
     protected abstract Identifier getEffectBackgroundSprite(boolean isAmbient);
 
     protected abstract Identifier getEffectBarSprite(BarPosition barPosition);
-
-    protected void renderContents(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
-        this.renderBackground(guiGraphics, posX, posY, mobEffect);
-        if (!this.renderCustomSprite(guiGraphics, posX, posY, mobEffect)) {
-            this.renderSprite(guiGraphics, posX, posY, mobEffect);
-        }
-
-        this.renderLabels(guiGraphics, posX, posY, mobEffect);
-        if (this.config.effectAmplifier.effectAmplifier) {
-            this.renderForeground(guiGraphics, posX, posY, mobEffect);
-        }
-    }
 
     protected void renderSprite(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
         float blinkingAlpha = this.config.blinkingSprite ? this.getBlinkingAlpha(mobEffect) : 1.0F;
@@ -483,8 +483,9 @@ public abstract class AbstractMobEffectRenderer {
     protected Component getEffectDisplayName(MobEffectInstance mobEffect, boolean includeDuration) {
         MutableComponent component = mobEffect.getEffect().value().getDisplayName().copy();
         String translationKey = "enchantment.level." + (mobEffect.getAmplifier() + 1);
-        if (mobEffect.getAmplifier() >= 1 && mobEffect.getAmplifier() <= 9 || Language.getInstance()
-                .has(translationKey)) {
+        // Support mods or resource packs that localize roman numerals above ten.
+        if (mobEffect.getAmplifier() >= 1 && (mobEffect.getAmplifier() <= 9 || Language.getInstance()
+                .has(translationKey))) {
             component.append(" ").append(Component.translatable(translationKey));
         }
 

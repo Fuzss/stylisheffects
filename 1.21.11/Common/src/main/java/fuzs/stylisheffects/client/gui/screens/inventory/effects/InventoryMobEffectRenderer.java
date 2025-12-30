@@ -3,18 +3,18 @@ package fuzs.stylisheffects.client.gui.screens.inventory.effects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
+import fuzs.puzzleslib.api.util.v1.ComponentHelper;
 import fuzs.stylisheffects.StylishEffects;
 import fuzs.stylisheffects.config.BarPosition;
 import fuzs.stylisheffects.config.WidgetType;
 import fuzs.stylisheffects.services.ClientAbstractions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ActiveTextCollector;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentUtils;
-import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffectInstance;
 
@@ -124,17 +124,34 @@ public abstract class InventoryMobEffectRenderer extends AbstractMobEffectRender
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int posX, int posY, MobEffectInstance mobEffect) {
             if (!this.renderCustomLabels(guiGraphics, posX, posY, mobEffect)) {
+                Font font = Minecraft.getInstance().font;
                 Component displayNameComponent = this.getEffectDisplayName(mobEffect, false);
                 Style displayNameStyle = this.config.nameColor.getMobEffectStyle(mobEffect);
                 int minX = posX + 12 + 18;
                 int maxX = posX + this.getWidth() - 7;
                 Component durationComponent = this.getEffectDuration(mobEffect, maxX - minX);
                 int minY = posY + 6 + (durationComponent == null ? 4 : 0);
-                int maxY = minY + Minecraft.getInstance().font.lineHeight;
+                int maxY = minY + font.lineHeight;
                 ActiveTextCollector activeTextCollector = this.activeTextCollector(guiGraphics);
-                if (Minecraft.getInstance().font.width(displayNameComponent) > maxX - minX) {
-                    activeTextCollector.acceptScrollingWithDefaultCenter(ComponentUtils.mergeStyles(displayNameComponent,
-                            displayNameStyle), minX, maxX, minY, maxY);
+                int displayNameComponentWidth = font.width(displayNameComponent);
+                if (displayNameComponentWidth > maxX - minX) {
+                    // The scissor area is messed up when the scale is smaller than one; might be a vanilla bug.
+                    // So, we work around that by just adding an ellipsis.
+                    if (this.getWidgetScale() < 1.0F) {
+                        FormattedText formattedText = font.substrByWidth(displayNameComponent,
+                                displayNameComponentWidth - font.width(CommonComponents.ELLIPSIS));
+                        displayNameComponent = ComponentHelper.getAsComponent(formattedText);
+                        activeTextCollector.accept(minX,
+                                minY + 1,
+                                Component.empty()
+                                        .append(displayNameComponent)
+                                        .append(CommonComponents.ELLIPSIS)
+                                        .setStyle(displayNameStyle));
+                    } else {
+                        activeTextCollector.acceptScrollingWithDefaultCenter(ComponentUtils.mergeStyles(
+                                displayNameComponent,
+                                displayNameStyle), minX, maxX, minY, maxY);
+                    }
                 } else {
                     // The text renderer defaults to centering in the middle when the text fits; we do not want that.
                     activeTextCollector.accept(minX,
