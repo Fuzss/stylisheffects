@@ -52,13 +52,13 @@
     ],
     "links": [
         {
-            "name": "github",
-            "slug": "stylisheffects"
-        },
-        {
             "name": "curseforge",
             "slug": "stylish-effects",
             "id": "543661"
+        },
+        {
+            "name": "github",
+            "slug": "stylisheffects"
         },
         {
             "name": "modrinth",

@@ -482,9 +482,10 @@ public abstract class AbstractMobEffectRenderer {
 
     protected Component getEffectDisplayName(MobEffectInstance mobEffect, boolean includeDuration) {
         MutableComponent component = mobEffect.getEffect().value().getDisplayName().copy();
-        String translationKey = "enchantment.level." + (mobEffect.getAmplifier() + 1);
-        // Support mods or resource packs that localize roman numerals above ten.
-        if (mobEffect.getAmplifier() >= 1 && (mobEffect.getAmplifier() <= 9 || Language.getInstance()
+        String translationKey = "potion.potency." + mobEffect.getAmplifier();
+        // Potion amplifier translations are shifted, meaning 1 -> II, 2 -> III, etc.
+        // Also, support mods or resource packs that localize roman numerals above VI.
+        if (mobEffect.getAmplifier() > 0 && (mobEffect.getAmplifier() <= 5 || Language.getInstance()
                 .has(translationKey))) {
             component.append(" ").append(Component.translatable(translationKey));
         }
